@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Données "démo" (vous pourrez les remplacer par une BD plus tard)
+// Navigation (avant dans le header)
 $nav = [
     ["label" => "Accueil", "href" => "#top"],
     ["label" => "Catalogue", "href" => "#catalogue"],
@@ -40,36 +40,8 @@ $slides = [
     ["img" => "assets/slide3.jpg", "alt" => "Bouquet personnalisé"]
 ];
 
+include 'app/includes/header.php';
 ?>
-<!doctype html>
-<html lang="fr" id="top">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DK Bloom — Fleurs & Créations</title>
-    <meta name="description" content="DK Bloom : bouquets, roses éternelles, personnalisation et livraison soignée." />
-    <link rel="preload" href="assets/img/logo.jpg" as="image">
-    <link rel="stylesheet" href="assets/css/style.css" />
-</head>
-<body class="theme-dark">
-<!-- Pétales décoratifs -->
-<div class="petals" aria-hidden="true"></div>
-
-<!-- Header -->
-<header class="site-header">
-    <div class="container">
-        <a class="brand" href="#top">
-            <img src="assets/img/logo.jpg" alt="Logo DK Bloom" height="48" />
-            <span class="sr-only">DK Bloom</span>
-        </a>
-        <button class="menu-toggle" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
-        <nav class="site-nav" data-nav>
-            <?php foreach ($nav as $item): ?>
-                <a href="<?= htmlspecialchars($item['href']) ?>"><?= htmlspecialchars($item['label']) ?></a>
-            <?php endforeach; ?>
-        </nav>
-    </div>
-</header>
 
 <!-- Hero -->
 <section class="hero container reveal">
@@ -117,49 +89,6 @@ $slides = [
     </div>
 </section>
 
-<!-- Footer -->
-<footer class="site-footer">
-    <div class="container footer-grid">
-        <p>© <?= date('Y') ?> DK Bloom. Tous droits réservés.</p>
-        <nav class="footer-nav">
-            <a href="mentions.php">Mentions légales</a>
-            <a href="contact.php">Contact</a>
-            <a href="login.php">Espace client</a>
-        </nav>
-    </div>
-</footer>
-
-<!-- JS (sans lib) -->
-<script>
-    // Menu mobile
-    const toggle = document.querySelector('.menu-toggle');
-    const nav = document.querySelector('[data-nav]');
-    toggle.addEventListener('click', () => {
-        const open = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', String(!open));
-        nav.classList.toggle('open');
-    });
-
-    // Révélations au scroll (fade & translate)
-    const io = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-            if (e.isIntersecting) e.target.classList.add('reveal--visible');
-        });
-    }, { threshold: 0.15 });
-    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-
-    // Carrousel minimal
-    const track = document.querySelector('[data-track]');
-    const slides = Array.from(track.children);
-    let index = 0;
-
-    function goto(i) {
-        index = (i + slides.length) % slides.length;
-        track.style.transform = `translateX(${index * -100}%)`;
-    }
-    document.querySelector('[data-prev]').addEventListener('click', () => goto(index - 1));
-    document.querySelector('[data-next]').addEventListener('click', () => goto(index + 1));
-    setInterval(() => goto(index + 1), 5000); // auto-slide
-</script>
-</body>
-</html>
+<?php
+include 'app/includes/footer.php';
+?>
