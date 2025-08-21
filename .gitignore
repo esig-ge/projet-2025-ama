@@ -1,0 +1,23 @@
+# --- IDE / PhpStorm ---
+.idea/
+*.iml
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Logs & temporaires ---
+*.log
+*.tmp
+*.cache
+*.bak
+
+# --- Composer ---
+/vendor/
+/composer.lock
+
+# --- Environnements locaux ---
+.env
+
+# --- Autres fichiers sensibles ---
+/config/*.local.php
