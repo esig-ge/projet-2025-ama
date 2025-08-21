@@ -1,15 +1,6 @@
 <?php
 session_start();
 
-// Navigation (avant dans le header)
-$nav = [
-    ["label" => "Accueil", "href" => "#top"],
-    ["label" => "Catalogue", "href" => "#catalogue"],
-    ["label" => "Personnalisation", "href" => "#custom"],
-    ["label" => "Livraison", "href" => "#shipping"],
-    ["label" => "Connexion", "href" => "login.php"]
-];
-
 $features = [
     [
         "id" => "catalogue",
