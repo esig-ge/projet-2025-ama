@@ -26,9 +26,12 @@ $features = [
 ];
 
 $slides = [
-    ["img" => "assets/slide1.jpg", "alt" => "Bouquet rouge profond"],
-    ["img" => "assets/slide2.jpg", "alt" => "Roses éternelles en boîte"],
-    ["img" => "assets/slide3.jpg", "alt" => "Bouquet personnalisé"]
+    ["img" => "assets/img/12Roses.png", "alt" => "Demande au mariage ou engagement"],
+    ["img" => "assets/img/20Roses.png", "alt" => "Engagement sincère"],
+    ["img" => "assets/img/36Roses.png", "alt" => "Amour romantique et passionnel"],
+    ["img" => "assets/img/50Roses.png", "alt" => "Amour incontionnel et sans limite"],
+    ["img" => "assets/img/66Roses.png", "alt" => "Mon amour pour toi ne changera pas"],
+    ["img" => "assets/img/100Roses.png", "alt" => "Dévouement absolu"]
 ];
 
 include 'app/includes/header.php';

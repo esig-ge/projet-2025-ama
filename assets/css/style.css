@@ -68,7 +68,17 @@ a{ color:var(--ink); text-decoration:none; }
 .carousel{ margin: 48px auto 72px; }
 .carousel-track{ display:flex; transition: transform .5s ease; will-change: transform; }
 .slide{ min-width:100%; padding: 10px; }
-.slide img{ border-radius: var(--radius); border:1px solid #ffffff12; box-shadow: var(--shadow); }
+.slide img{
+    border-radius: var(--radius);
+    border:1px solid #ffffff12;
+    box-shadow: var(--shadow);
+
+    /* >>> AJOUTS pour réduire la taille <<< */
+    max-width: 70%;       /* réduit la largeur (ajuste entre 60-80%) */
+    max-height: 500px;    /* limite la hauteur */
+    margin: 0 auto;       /* centre l’image */
+    object-fit: contain;  /* garde les proportions */
+}
 .slide figcaption{ color:var(--muted); font-size:.95rem; margin-top:.5rem; text-align:center; }
 .carousel-controls{ display:flex; gap:.5rem; justify-content:center; margin-top:.5rem; }
 
