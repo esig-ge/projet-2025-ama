@@ -66,6 +66,7 @@ include 'app/includes/header.php';
         <?php foreach ($slides as $s): ?>
             <figure class="slide">
                 <img src="assets/img/bouquet.png" alt="<?= htmlspecialchars($s['alt']) ?>" />
+                <img src="assets/img/boxefleur.png">
                 <figcaption><?= htmlspecialchars($s['alt']) ?></figcaption>
                 <img src="">
             </figure>
