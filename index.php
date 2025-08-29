@@ -15,13 +15,6 @@ $features = [
         "desc"  => "Couleurs, lettres, paillettes et message — créez la pièce parfaite.",
         "btn"   => "Personnaliser",
         "href"  => "personnalisation.php"
-    ],
-    [
-        "id" => "shipping",
-        "title" => "Livraison",
-        "desc"  => "Retrait en main propre à Genève ou livraison soignée à domicile.",
-        "btn"   => "Options de livraison",
-        "href"  => "livraison.php"
     ]
 ];
 
@@ -41,8 +34,8 @@ include 'app/includes/header.php';
 <section class="hero container reveal">
     <div class="hero-grid">
         <div class="hero-copy">
-            <h1>La fleur, version <span class="accent">élégance</span>.</h1>
-            <p>Des créations florales intemporelles, une expérience simple et raffinée.</p>
+            <h1>Bienvenu <span class="accent">élégance</span>.</h1>
+            <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
             <div class="cta-row">
                 <a class="btn btn-primary" href="catalogue.php">Découvrir nos créations</a>
                 <a class="btn btn-ghost" href="personnalisation.php">Créer la vôtre</a>

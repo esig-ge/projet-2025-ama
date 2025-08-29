@@ -1,4 +1,4 @@
-<?php
+ <?php
 // Données nav disponibles globalement
 if (!isset($nav)) {
     $nav = [
