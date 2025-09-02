@@ -15,7 +15,7 @@
                 <li><a href="prestations.php">A propos</a></li>
                 <li><a href="reservation.php">Catalogue</a></li>
                 <li><a href="contact.php">Contact</a></li>
-                <li><a href="inscription.php">S'inscrire</a></li>
+                <li><a href="../../inscription.php">S'inscrire</a></li>
             </ul>
         </nav>
 

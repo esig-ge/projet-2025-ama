@@ -4,11 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Inscription</title>
-    <link rel="stylesheet" href="csss.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<?php include 'includes/header.php'; ?>
-
 <div class="conteneur_formulaire">
     <h2>S'inscrire</h2>
     <form action="traitement_inscription.php" method="POST">
@@ -30,6 +28,7 @@
         <input type="submit" value="S'inscrire">
     </form>
 </div>
+
 
 
 
