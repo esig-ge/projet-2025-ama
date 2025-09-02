@@ -5,7 +5,6 @@
     <link rel="stylesheet" href="css/styleCatalogue.css">
     <title>emballages</title>
 </head>
-<a>
 <h1>Emballage</h1>
 <div id="emballage">
     <div>
