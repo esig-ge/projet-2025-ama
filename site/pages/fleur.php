@@ -5,23 +5,23 @@
 <head>
     <meta charset="UTF-8">
     <title>Inscription</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="css/styleFleurUnique.css">
 </head>
 <body>
 <section class="catalogue">
     <h2 class="section-title">Nos fleurs</h2>
 
-    <div class="product">
-        <div class="product-media">
-            <!-- Image par défaut (rouge) -->
-            <img src="img/rosesBlanche.png" alt="Rose" class="product-img" />
+    <div class="produit">
+        <div class="rose">
+            <img src="img/rosesBlanche.png" alt="Rose" class="product-img" width="500px"/>
         </div>
 
-        <div class="product-info">
-            <h3 class="product-title">Fleurs</h3>
-            <p class="product-desc">
-                Une rose incarne l’unicité. Elle est le symbole d’un amour né au premier regard.
-            </p>
+        <div class="produit-info">
+               <h3 class="product-title">Fleurs</h3>
+               <p class="product-desc">
+                   Une rose incarne l’unicité. Elle est le symbole d’un amour né au premier regard.
+               </p>
+
 
             <!-- Variantes couleur -->
             <fieldset class="swatches" aria-label="Couleur de la rose">
@@ -61,8 +61,8 @@
                            data-img="assets/img/rose-bleue.png" />
                     <span style="--swatch:#0418a5"></span>
                 </label>
-            </fieldset>
 
+            </fieldset>
             <button class="btn">Sélectionner</button>
         </div>
     </div>

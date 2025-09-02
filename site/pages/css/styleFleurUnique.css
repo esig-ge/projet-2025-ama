@@ -1,0 +1,35 @@
+.produit{
+    display: flex;
+    justify-content: space-evenly;
+    padding: 40px;
+}
+
+.produit-info{
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items:center;
+    justify-items: center;
+    align-content: center;
+    padding-top: 80px;
+
+
+}
+
+
+.btn {
+
+    background: darkred;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+}
+.btn:hover {
+    background: indianred;
+    transform: scale(1.05);
+}
