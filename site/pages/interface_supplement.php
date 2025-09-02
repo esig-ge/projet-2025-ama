@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="assets/css/styleCatalogue.css">
+    <link rel="stylesheet" href="css/styleCatalogue.css">
     <title>supplément</title>
 </head>
 <body>
@@ -10,7 +10,7 @@
 <div>
     <div id="supplement">
         <div>
-            <img src="assets/img/ours_blanc.PNG"/>
+            <img src="img/ours_blanc.PNG"/>
             <h3>Mini ourson</h3>
             <p>2 CHF</p>
             <button class="add-to-cart"
@@ -24,7 +24,7 @@
 
         </div>
         <div>
-            <img src="assets/img/happybirthday.PNG"/>
+            <img src="img/happybirthday.PNG"/>
             <h3>Décoration anniversaire</h3>
             <p>2 CHF</p>
             <button class="add-to-cart"
@@ -38,7 +38,7 @@
 
         </div>
         <div>
-            <img src="assets/img/papillon_doree.PNG"/>
+            <img src="img/papillon_doree.PNG"/>
             <h3>Papillons</h3>
             <p>2 CHF</p>
             <button class="add-to-cart"
@@ -52,7 +52,7 @@
 
         </div>
         <div>
-            <img src="assets/img/baton_coeur.PNG"/>
+            <img src="img/baton_coeur.PNG"/>
             <h3>Baton coeur</h3>
             <p>2 CHF</p>
             <button class="add-to-cart"
@@ -66,7 +66,7 @@
 
         </div>
         <div>
-            <img src="assets/img/diamant.PNG"/>
+            <img src="img/diamant.PNG"/>
             <h3>Diamant</h3>
             <p>5 CHF</p>
             <button class="add-to-cart"
@@ -81,7 +81,7 @@
         </div>
 
         <div>
-            <img src="assets/img/couronne.PNG"/>
+            <img src="img/couronne.PNG"/>
             <h3>Couronne</h3>
             <p>5 CHF</p>
             <button class="add-to-cart"
@@ -95,7 +95,7 @@
 
         </div>
         <div>
-            <img src="assets/img/paillette_argent.PNG"/>
+            <img src="img/paillette_argent.PNG"/>
             <h3>Paillettes</h3>
             <p>9 CHF</p>
             <button class="add-to-cart"
@@ -109,7 +109,7 @@
 
         </div>
         <div>
-            <img src="assets/img/lettre.JPG"/>
+            <img src="img/lettre.JPG"/>
             <h3>Lettre</h3>
             <p>10 CHF</p>
             <button class="add-to-cart"
@@ -123,7 +123,7 @@
 
         </div>
         <div>
-            <img src="assets/img/carte.PNG"/>
+            <img src="img/carte.PNG"/>
             <h3>Carte pour mot</h3>
             <p>3 CHF</p>
             <button class="add-to-cart"

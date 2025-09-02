@@ -2,14 +2,13 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="/public/assets/css/styleCatalogue.css">
+    <link rel="stylesheet" href="css/styleCatalogue.css">
     <title>emballages</title>
 </head>
-<a>
 <h1>Emballage</h1>
 <div id="emballage">
     <div>
-        <img src="/public/assets/img/emballage_blanc.PNG" alt="Emballage blanc">
+        <img src="img/emballage_blanc.PNG" alt="Emballage blanc">
         <button class="add-to-cart"
                 data-id="BQ-20"
                 data-sku="BQ-20"
@@ -21,7 +20,7 @@
     </div>
 
     <div>
-        <img src="/public/assets/img/emballage_noir.PNG" alt="Emballage noir">
+        <img src="img/emballage_noir.PNG" alt="Emballage noir">
         <button class="add-to-cart"
                 data-id="BQ-20"
                 data-sku="BQ-20"
@@ -33,31 +32,31 @@
     </div>
 
     <div>
-        <img src="/public/assets/img/emballage_rose.PNG" alt="Emballage rose">
+        <img src="img/emballage_rose.PNG" alt="Emballage rose">
         <button class="add-to-cart"
                 data-id="BQ-20"
                 data-sku="BQ-20"
                 data-name="20 roses"
                 data-price="40"
-                data-img="/public/assets/img/20Roses.png">
+                data-img="assets/img/20Roses.png">
             Ajouter
         </button>
     </div>
 
     <div>
-        <img src="/public/assets/img/emballage_gris.PNG" alt="Emballage gris">
+        <img src="img/emballage_gris.PNG" alt="Emballage gris">
         <button class="add-to-cart"
                 data-id="BQ-20"
                 data-sku="BQ-20"
                 data-name="20 roses"
                 data-price="40"
-                data-img="/public/assets/img/20Roses.png">
+                data-img="assets/img/20Roses.png">
             Ajouter
         </button>
     </div>
 
     <div>
-        <img src="/public/assets/img/emballage_violet.PNG" alt="Emballage violet">
+        <img src="img/emballage_violet.PNG" alt="Emballage violet">
         <button class="add-to-cart"
                 data-id="BQ-20"
                 data-sku="BQ-20"
@@ -69,7 +68,7 @@
     </div>
 </div>
 
-<a href="/app/views/interface_supplement.php" class="button">Retour</a>
+<a href="interface_supplement.php" class="button">Retour</a>
     <a href=""
        class="add-to-cart"
        data-id="<?= htmlspecialchars($produit['id']) ?>"
@@ -80,5 +79,5 @@
         Ajouter
     </a>
 
-</a>
+</body>
 </html>
