@@ -5,6 +5,12 @@
     <link rel="stylesheet" href="css/styleCatalogue.css">
     <title>emballages</title>
 </head>
+
+<?php
+include("includes/header.php")
+?>
+
+<body>
 <h1>Emballage</h1>
 <div id="emballage">
     <div>
@@ -76,7 +82,7 @@
        data-name="<?= htmlspecialchars($produit['nom']) ?>"
        data-price="<?= htmlspecialchars($produit['prix']) ?>"
        data-img="../assets/img/<?= htmlspecialchars($produit['image']) ?>">
-        Ajouter
+        Ajouter à la commande
     </a>
 
 </body>
