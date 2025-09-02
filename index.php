@@ -65,13 +65,13 @@ include 'app/includes/header.php';
     <div class="carousel-track" data-track>
         <?php foreach ($slides as $s): ?>
             <figure class="slide">
-                <img src="assets/img/bouquet-removebg-preview.png" alt="1" />
-                <img src="assets/img/boxefleur-removebg-preview.png" alt="2"/>
-                <img src="assets/img/boxefleur-removebg-preview.png" alt="3"/>
+                <img src="assets/img/singlefleur-removebg-preview.png" alt="1" />
+                <img src="assets/img/bouquet-removebg-preview.png" alt="2"/>
+                <img src="assets/img/boxefleur.jpeg " alt="3"/>
 
-                <img src="assets/img/bouquet-removebg-preview.png" alt="1" />
-                <img src="assets/img/boxefleur-removebg-preview.png" alt="2"/>
-                <img src="assets/img/boxefleur-removebg-preview.png" alt="3"/>
+                <img src="assets/img/singlefleur-removebg-preview.png" alt="1" />
+                <img src="assets/img/bouquet-removebg-preview.png" alt="2"/>
+                <img src="assets/img/boxefleur.jpeg" alt="3"/>
                 <figcaption><?= htmlspecialchars($s['alt']) ?></figcaption>
             </figure>
         <?php endforeach; ?>
