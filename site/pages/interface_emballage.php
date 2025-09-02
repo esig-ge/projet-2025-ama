@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,11 +10,8 @@
 </head>
 
 
-<?php
-include("includes/header.php");
-?>
-
 <body>
+
 <h1>Emballage</h1>
 <div id="emballage">
     <div>
