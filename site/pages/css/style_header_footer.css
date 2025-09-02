@@ -1,0 +1,163 @@
+/* Reset basique */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Header principal */
+.site-header {
+    width: 100%;
+    background: darkred;
+    color: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Titre du site */
+.titre {
+    font-size: 1.8rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: white;
+}
+
+/* Hamburger */
+.hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 22px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1100;
+}
+
+.hamburger span {
+    display: block;
+    height: 4px;
+    width: 100%;
+    background: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* Hamburger ouvert */
+.hamburger[aria-expanded="true"] span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+.hamburger[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+.hamburger[aria-expanded="true"] span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Menu nav */
+.nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 250px;
+    height: 100%;
+    background: #222;
+    transition: right 0.3s ease;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1050;
+}
+
+.nav.active {
+    right: 0;
+}
+
+/* Bouton fermer menu */
+.close-menu {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #fff;
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    cursor: pointer;
+}
+
+/* Liste menu */
+.menu {
+    list-style: none;
+    margin-top: 40px;
+}
+
+.menu li {
+    margin-bottom: 20px;
+}
+
+.menu li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: color 0.3s;
+}
+
+.menu li a:hover {
+    color: darkred;
+}
+
+/* Icônes */
+.icon a img {
+    margin-left: 15px;
+    vertical-align: middle;
+    transition: transform 0.3s;
+}
+
+.icon a img:hover {
+    transform: scale(1.1);
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .hamburger {
+        display: none;
+    }
+
+    .nav {
+        position: static;
+        width: auto;
+        height: auto;
+        background: transparent;
+        padding: 0;
+        flex-direction: row;
+        justify-content: flex-end;
+        transition: none;
+    }
+
+    .menu {
+        display: flex;
+        margin: 0;
+    }
+
+    .menu li {
+        margin: 0 15px;
+    }
+
+    .close-menu {
+        display: none;
+    }
+}
