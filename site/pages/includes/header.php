@@ -14,11 +14,12 @@
         <nav id="nav-menu" class="nav">
             <button class="close-menu" aria-label="Fermer le menu">&times;</button>
             <ul class="menu">
-                <li><a href="index.php">Accueil</a></li>
-                <li><a href="prestations.php">A propos</a></li>
-                <li><a href="reservation.php">Catalogue</a></li>
-                <li><a href="contact.php">Contact</a></li>
-                <li><a href="../../inscription.php">S'inscrire</a></li>
+                <li><a href="../index.php">Accueil</a></li>
+                <li><a href="">A propos</a></li>
+                <li><a href="">Catalogue</a></li>
+                <li><a href="">Contact</a></li>
+                <li><a href="../inscription.php">S'inscrire</a></li>
+                <li><a href="../interface_connexion.php">Se connecter</a></li>
             </ul>
         </nav>
 
