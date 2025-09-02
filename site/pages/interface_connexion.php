@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="assets/css/style_connexion_inscription.css">
+    <link rel="stylesheet" href="/public/assets/css/style_connexion_inscription.css">
     <title>connexion</title>
 </head>
 <body>
@@ -19,7 +19,7 @@
   <br><br>
 
   <input type="submit" value="Connexion">
-  <p><a href="interface_modification_mdp.php">Mot de passe oublié ?</a></p>
+  <p><a href="/app/views/interface_modification_mdp.php">Mot de passe oublié ?</a></p>
 
 </form>
 </div>
