@@ -22,7 +22,7 @@ session_start();
 <header class="dkb-header">
     <div class="wrap headbar">
         <a class="brand" href="index.php">
-            <img src="/public/assets/img/logo.jpg" alt="DK Bloom" class="logo">
+            <img src="img/logo.jpg" alt="DK Bloom" class="logo">
             <span class="brand-text">DK Bloom</span>
         </a>
         <nav class="head-actions">
