@@ -60,7 +60,7 @@ session_start();
             </div>
 
             <div class="help">
-                <p>Une question ? Contactez-nous au <a href="tel:+4122XXXXXXX">+41 XX XXX XX XX</a></p>
+                <p>Une question ? Contactez-nous au <a href="tel:+4122XXXXXXX">+41 76 569 85 41</a></p>
                 <ul>
                     <li>Expédition sous 24–48h (si disponible)</li>
                     <li>Frais offerts dès 80 CHF</li>

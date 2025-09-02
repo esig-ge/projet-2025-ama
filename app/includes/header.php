@@ -7,7 +7,7 @@
 
         <p class="titre">DkBloom</p>
 
-        <!-- ⚠️ Enlève 'hidden' pour que le JS n'ait pas à le gérer -->
+        <!-- Enlève 'hidden' pour que le JS n'ait pas à le gérer -->
         <nav id="nav-menu" class="nav">
             <!--<button class="close-menu" aria-label="Fermer le menu">&times;</button>-->
             <ul class="menu">
