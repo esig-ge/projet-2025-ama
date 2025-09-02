@@ -1,93 +1,106 @@
- :root{
-     --bg:#faf7fb;
-     --card:#ffffff;
-     --ink:#2c2230;
-     --muted:#84738c;
-     --accent:#b35dc6;       /* violet DK Bloom */
-     --accent-weak:#ecdaf3;
-     --ok:#34a853;
- }
-*{box-sizing:border-box}
-body{
-    margin:0; font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    color:var(--ink); background:var(--bg);
+:root{
+    /* Palette DK Bloom : fond sombre, texte clair, accent rouge pétales */
+    --bg:#0a0a0a;
+    --card:#121214;
+    --ink:#ffffff;
+    --muted:#c6c6c8;
+    --accent:#e31d3b;      /* rouge pétales */
+    --accent-weak:#341016; /* rouge très foncé pour hover */
+    --stroke:#1e1e22;
+    --shadow:0 10px 20px rgba(0,0,0,.25);
 }
-.wrap{max-width:1100px;margin:auto;padding:24px}
-h1{margin:0 0 12px;font-size:clamp(22px,3.2vw,32px)}
-.sub{color:var(--muted);margin:0 0 24px}
 
-/* Layout */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+    margin:0; color:var(--ink); background:var(--bg);
+    font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+
+/* Layout de base */
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.page-title{margin:18px 0 12px;text-align:center}
+
 .grid{
     display:grid; gap:18px;
     grid-template-columns: 1.6fr .9fr;
 }
-@media (max-width:900px){ .grid{grid-template-columns:1fr} }
+@media (max-width:900px){ .grid{grid-template-columns: 1fr} }
 
-/* Card */
+/* Header */
+.dkb-header{border-bottom:1px solid var(--stroke); background:linear-gradient(0deg, #0a0a0a, #0e0e10)}
+.headbar{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--stroke)}
+.brand-text{font-weight:700;letter-spacing:.6px}
+.head-actions .link{color:var(--muted);text-decoration:none}
+.head-actions .link:hover{color:#fff}
+
+/* Cart Cards */
 .card{
-    background:var(--card); border:1px solid #eee; border-radius:16px;
-    box-shadow:0 8px 18px rgba(20,0,40,.06);
+    background:var(--card);
+    border:1px solid var(--stroke);
+    border-radius:14px;
+    box-shadow:var(--shadow);
 }
-.card h2{
-    font-size:18px;margin:0;padding:16px;border-bottom:1px solid #eee
-}
-.card .inner{padding:12px 16px 16px}
 
-/* Table Panier */
-table{
-    width:100%; border-collapse:collapse; font-size:15px
+/* Lignes produits */
+.cart-item{
+    display:grid;
+    grid-template-columns: 72px 1fr auto auto 32px;
+    gap:12px; align-items:center;
+    padding:14px; border-bottom:1px solid var(--stroke);
 }
-thead th{
-    text-align:left; font-weight:600; color:var(--muted);
-    padding:10px 8px; border-bottom:1px solid #eee
+.cart-item:last-child{border-bottom:none}
+.item-img{
+    width:72px;height:72px;border-radius:10px;object-fit:cover;
+    border:1px solid var(--stroke);background:#000;
 }
-tbody td{
-    padding:12px 8px; vertical-align:middle; border-bottom:1px solid #f2edf4
-}
-.prod{
-    display:flex; align-items:center; gap:12px
-}
-.prod img{
-    width:60px; height:60px; object-fit:cover; border-radius:10px; border:1px solid #eee
-}
-.tag{font-size:12px;color:var(--muted)}
+.item-title{font-weight:600}
+.item-sub{color:var(--muted);font-size:13px}
+
 .qty{
-    width:82px; display:flex; align-items:center; justify-content:space-between;
-    border:1px solid #e6d8ee; border-radius:10px; overflow:hidden
+    display:flex; align-items:center; gap:8px; justify-self:end;
 }
 .qty button{
-    all:unset; padding:4px 10px; cursor:default; color:var(--accent);
-    background:var(--accent-weak); font-weight:700
+    width:28px;height:28px;border-radius:8px;border:1px solid var(--stroke);
+    background:#0f0f12;color:var(--ink);font-weight:700;cursor:pointer
 }
 .qty input{
-    width:36px; text-align:center; border:0; outline:0; padding:6px 0; background:#fff
+    width:42px; text-align:center; background:#0f0f12; color:var(--ink);
+    border:1px solid var(--stroke); border-radius:8px; padding:6px 0;
 }
+
+.price, .line-total{justify-self:end;font-weight:600}
 .remove{
-    border:0; background:transparent; color:#c53a3a; cursor:default
+    width:28px;height:28px;border-radius:8px;border:1px solid var(--stroke);
+    background:#0f0f12;color:#ff6b6b;cursor:pointer
 }
 
 /* Résumé */
-.sum-row{display:flex; justify-content:space-between; margin:10px 0}
-.sum-row small{color:var(--muted)}
-.total{font-size:20px; font-weight:700}
-.btn{
-    display:inline-block; width:100%; text-align:center;
-    padding:12px 16px; border-radius:12px; border:1px solid var(--accent);
-    background:var(--accent); color:#fff; text-decoration:none; font-weight:600;
-    transition:.15s transform ease;
-}
-.btn:hover{transform:translateY(-1px)}
-.hint{font-size:13px; color:var(--muted); margin-top:10px}
+.summary{padding:16px}
+.sum-row{display:flex;justify-content:space-between;margin:6px 0;color:var(--muted)}
+.sum-total{display:flex;justify-content:space-between;margin:12px 0;font-size:20px;font-weight:800}
 
-/* Bloc “Tests” (checklist visuelle) */
-.tests{
-    margin-top:22px; padding:16px; border-radius:14px; background:#fff;
-    border:1px solid #eee
+.btn-primary{
+    display:block;text-align:center;padding:12px 16px;border-radius:12px;
+    background:var(--accent);color:#fff;text-decoration:none;font-weight:700;
+    margin:10px 0 6px;border:1px solid var(--accent);
 }
-.tests h3{margin:0 0 8px; font-size:16px}
-.check{display:flex; gap:10px; align-items:center; margin:8px 0}
-.dot{
-    width:10px;height:10px;border-radius:50%;
-    background:var(--ok); box-shadow:0 0 0 3px rgba(52,168,83,.18)
+.btn-primary:hover{background:var(--accent-weak);border-color:var(--accent-weak)}
+
+.coupon{display:flex;gap:8px;margin:10px 0}
+.coupon input{
+    flex:1;border-radius:10px;border:1px solid var(--stroke);
+    background:#0f0f12;color:var(--ink);padding:10px 12px
 }
-.pts{margin-left:auto; color:var(--muted); font-weight:600}
+.btn-ghost{
+    border-radius:10px;border:1px solid var(--stroke);
+    background:#0f0f12;color:var(--ink);padding:10px 12px
+}
+
+.help{border-top:1px solid var(--stroke);margin-top:10px;padding-top:10px}
+.help ul{margin:8px 0 0 16px;color:var(--muted)}
+
+/* Footer */
+.dkb-footer{border-top:1px solid var(--stroke);margin-top:30px;color:var(--muted)}
