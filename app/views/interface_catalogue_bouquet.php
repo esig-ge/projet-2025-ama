@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="assets/css/styleCatalogue.css">
+    <title>catalogue bouquet</title>
+</head>
+
+<body>
+<h1>Catalogue boouquet</h1>
+<div id="produit_bouquet">
+<div>
+    <img src="assets/img/12Roses.png"/>
+    <h3>12 roses</h3>
+    <p>30 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+<div>
+    <img src="/public/assets/img/20Roses.png"/>
+    <h3>20 roses</h3>
+    <p>40 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+<div>
+    <img src="assets/img/20Roses.png"/>
+    <h3>24 roses</h3>
+    <p>45 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+<div>
+    <img src="assets/img/36Roses.png"/>
+    <h3>36 roses</h3>
+    <p>60 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+<div>
+    <img src="assets/img/50Roses.png"/>
+    <h3>50 roses</h3>
+    <p>70 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+
+<div>
+    <img src="assets/img/66Roses.png"/>
+    <h3>66 roses</h3>
+    <p>85 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+<div>
+    <img src="assets/img/100Roses.png"/>
+    <h3>99 roses</h3>
+    <p>110 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+<div>
+    <img src="assets/img/100Roses.png"/>
+    <h3>100 roses</h3>
+    <p>112 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+<div>
+    <img src="assets/img/100Roses.png"/>
+    <h3>101 roses</h3>
+    <p>115 CHF</p>
+    <button class="add-to-cart"
+            data-id="BQ-20"
+            data-sku="BQ-20"
+            data-name="20 roses"
+            data-price="40"
+            data-img="assets/img/20Roses.png">
+        Ajouter
+    </button>
+
+</div>
+</div>
+
+<a href="interface_supplement.php" class="button">suivant</a>
+</body>
+</html>
