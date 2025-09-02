@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../config/stripe.php';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Checkout</title>
-    <link rel="stylesheet" href="/public/assets/css/checkout.css?v=1">
+    <link rel="stylesheet" href="css/checkout.css?v=1">
 
     <script src="https://js.stripe.com/v3/"></script>
 </head>
@@ -40,4 +40,4 @@ require_once __DIR__ . '/../../config/stripe.php';
 </main>
 
 <script>window.__STRIPE_PK__ = "<?= STRIPE_PUBLISHABLE_KEY ?>";</script>
-<script src="/assets/js/checkout.js?v=1" defer></script>
+<script src="js/checkout.js?v=1" defer></script>

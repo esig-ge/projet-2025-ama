@@ -6,9 +6,7 @@
     <title>emballages</title>
 </head>
 
-<?php
-include("includes/header.php")
-?>
+
 
 <body>
 <h1>Emballage</h1>

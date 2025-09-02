@@ -1,13 +1,13 @@
 :root{
-    /* Palette DK Bloom */
-    --bg:#0a0a0a;
-    --card:#121214;
-    --ink:#ffffff;
-    --muted:#c6c6c8;
-    --accent:#e31d3b;      /* rouge pétales */
-    --accent-weak:#341016; /* rouge foncé hover */
-    --stroke:#1e1e22;
-    --shadow:0 10px 20px rgba(0,0,0,.25);
+    /* Palette claire alignée sur Emballage */
+    --bg:#ffffff;
+    --card:#ffffff;
+    --ink:#1a1a1a;
+    --muted:#6b6b6b;
+    --accent:#8d0e0e;      /* bordeaux */
+    --accent-weak:#5e0808; /* hover bordeaux foncé */
+    --stroke:#e7e7ea;
+    --shadow:0 10px 24px rgba(0,0,0,.06);
 }
 
 *{box-sizing:border-box}
@@ -32,19 +32,25 @@ body{
 .card{
     background:var(--card);
     border:1px solid var(--stroke);
-    border-radius:14px;
+    border-radius:16px;
     box-shadow:var(--shadow);
     padding:16px;
 }
 .card h2{margin-top:0;font-size:18px}
 
 /* Champs formulaire */
-fieldset{border:1px solid var(--stroke);border-radius:12px;padding:12px;margin:0 0 12px}
+fieldset{
+    border:1px solid var(--stroke);
+    border-radius:12px;
+    padding:12px;
+    margin:0 0 12px;
+    background:#fff;
+}
 legend{padding:0 6px;color:var(--muted);font-size:14px}
 input{
-    width:100%;padding:10px 12px;margin:6px 0;
-    border-radius:10px;border:1px solid var(--stroke);
-    background:#0f0f12;color:var(--ink);
+    width:100%;padding:12px 14px;margin:6px 0;
+    border-radius:12px;border:1px solid var(--stroke);
+    background:#fff;color:var(--ink);
 }
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .check{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--muted)}
@@ -54,7 +60,7 @@ input{
 #payment-element{
     margin-top:12px;
     padding:12px;
-    background:#0f0f12;
+    background:#fff;
     border:1px solid var(--stroke);
     border-radius:12px;
 }
@@ -62,29 +68,46 @@ input{
 /* Résumé commande */
 .summary h2{margin-top:0}
 .sum-row{display:flex;justify-content:space-between;margin:6px 0;color:var(--muted)}
-.sum-total{display:flex;justify-content:space-between;margin:12px 0;font-size:20px;font-weight:800}
+.sum-total{display:flex;justify-content:space-between;margin:12px 0;font-size:22px;font-weight:800}
 
 /* Boutons */
 .btn-primary{
     display:block;width:100%;text-align:center;
-    padding:12px 16px;margin-top:14px;
-    border-radius:12px;
+    padding:12px 18px;margin-top:14px;
+    border-radius:999px;
     background:var(--accent);color:#fff;
-    font-weight:700;text-decoration:none;
+    font-weight:800;text-decoration:none;
     border:1px solid var(--accent);
+    transition:background .15s ease, border-color .15s ease;
 }
 .btn-primary:hover{background:var(--accent-weak);border-color:var(--accent-weak)}
 
-.link{color:var(--muted);text-decoration:none}
-.link:hover{color:#fff}
+.link{color:var(--accent);text-decoration:none;font-weight:600}
+.link:hover{color:var(--accent-weak)}
 
+/* Petites aides */
 .hint{color:var(--muted);font-size:14px;margin-top:8px}
 
 /* Lignes panier dans le résumé */
-.cart-line{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--stroke);align-items:center}
-.cart-line img{width:50px;height:50px;border-radius:10px;object-fit:cover;border:1px solid var(--stroke)}
+.cart-line{
+    display:flex;gap:10px;padding:10px 0;
+    border-bottom:1px solid var(--stroke);align-items:center
+}
+.cart-line img{
+    width:50px;height:50px;border-radius:10px;
+    object-fit:cover;border:1px solid var(--stroke);background:#fafafa
+}
 .cart-line .name{flex:1}
 .cart-line .qty{color:var(--muted);font-size:14px}
 
 /* Footer */
-.dkb-footer{border-top:1px solid var(--stroke);margin-top:30px;padding:16px;color:var(--muted);text-align:center}
+.dkb-footer{
+    border-top:1px solid var(--stroke);
+    margin-top:30px;padding:16px;
+    color:var(--muted);text-align:center;background:#fff
+}
+
+/* Focus visible */
+a:focus,button:focus,input:focus{
+    outline:2px solid rgba(141,14,14,.35); outline-offset:2px;
+}
