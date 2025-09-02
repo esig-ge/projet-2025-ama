@@ -7,9 +7,8 @@
 
         <p class="titre">DkBloom</p>
 
-        <!-- Enlève 'hidden' pour que le JS n'ait pas à le gérer -->
         <nav id="nav-menu" class="nav">
-            <!--<button class="close-menu" aria-label="Fermer le menu">&times;</button>-->
+            <button class="close-menu" aria-label="Fermer le menu">&times;</button>
             <ul class="menu">
                 <li><a href="index.php">Accueil</a></li>
                 <li><a href="prestations.php">A propos</a></li>

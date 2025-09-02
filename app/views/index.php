@@ -2,7 +2,7 @@
 
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <title>index</title>
@@ -11,36 +11,6 @@
 
 <?php include 'app/includes/header.php';
 ?>
-<script>
-    (function () {
-        // Ciblage selon ta structure
-        const track  = document.querySelector('[data-track]');
-        const slide  = track.querySelector('.slide');
-        const imgs   = Array.from(slide.querySelectorAll('img'));
-        const prev   = slide.querySelector('[data-prev]');
-        const next   = slide.querySelector('[data-next]');
-        let index = 0;
-
-        // Affiche l'image d'indice i
-        function show(i) {
-            imgs.forEach((img, k) => img.classList.toggle('is-active', k === i));
-            prev.disabled = (i === 0);
-            next.disabled = (i === imgs.length - 1);
-        }
-
-        // Navigation
-        prev.addEventListener('click', () => { if (index > 0) { index--; show(index); } });
-        next.addEventListener('click', () => { if (index < imgs.length - 1) { index++; show(index); } });
-
-        // Clavier (facultatif)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft')  prev.click();
-            if (e.key === 'ArrowRight') next.click();
-        });
-
-        // Init (active la 1ère image)
-        show(0);
-    })();
 </script>
 
 <body class="corps">
@@ -64,7 +34,7 @@
 </main>
 
 </body>
-
+</html>
 <?php
 include 'app/includes/footer.php';
 ?>
