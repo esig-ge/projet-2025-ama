@@ -8,17 +8,11 @@
 
 <?php include 'includes/header.php'; ?>
 <section class="entete_accueil">
-  <h1> Découvrez le charme des extensions de cils</h1>
-  <p> Sublimez votre regard en prenant rendez-vous </p>
-  <?php if (!empty($_SESSION['utilisateur'])): ?>
-  <div class="welcome"><?= "Bienvenue, " . htmlspecialchars($_SESSION['utilisateur']['prenom']) . " !"; ?></div>
-  <?php endif; ?>
-
-  <?php if (isset($_SESSION['utilisateur'])): ?>
+  <h1> Dk Bloom</h1>
+  <p> des roses éternelles pour des souvenirs qui durent. </p>
   <a href="deconnexion.php" class="deconnexion">Déconnexion</a>
   </p>
-  <?php endif; ?>
-  <div><img class="yeux" src="images/L-2.jpg" alt="" width="200px" height="auto">
+  <div><img class="yeux" src="assets/" alt="" width="200px" height="auto">
   </div>
   <div class="boutons">
     <a class="btn_rdv" href="reservation.php">Prendre rendez-vous</a>

@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <title>index</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="../../public/assets/css/style.css">
 </head>
 
 <?php include 'app/includes/header.php';
@@ -58,7 +58,7 @@
 
             </div>
             <div class="bouquet">
-                <img class="" src="assets/img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
+                <img class="" src="../../public/assets/img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
             </div>
     </section>
 </main>
