@@ -141,3 +141,12 @@ body img{
     justify-content: space-between;
 }
 
+/*---------------------page index--------------------- */
+@font-face {
+    font-family:"mapolice" ;
+    src: url("../police/Milton_One.otf");
+    font-weight: normal;
+    font-style: italic;
+
+}
+
