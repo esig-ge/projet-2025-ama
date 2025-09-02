@@ -1,89 +1,69 @@
-<?php
-session_start();
-require_once __DIR__ . "/config/connexionBDD.php";
+<?php session_start();?>
 
-$features = [
-    [
-        "id" => "catalogue",
-        "title" => "Catalogue",
-        "desc"  => "Roses éternelles, bouquets saisonniers et créations signature.",
-        "btn"   => "Voir le catalogue",
-        "href"  => "catalogue.php"
-    ],
-    [
-        "id" => "custom",
-        "title" => "Personnalisation",
-        "desc"  => "Couleurs, lettres, paillettes et message — créez la pièce parfaite.",
-        "btn"   => "Personnaliser",
-        "href"  => "personnalisation.php"
-    ]
-];
 
-$slides = [
-    ["img" => "assets/img/12Roses.png", "alt" => "Demande au mariage ou engagement"],
-    ["img" => "assets/img/20Roses.png", "alt" => "Engagement sincère"],
-    ["img" => "assets/img/36Roses.png", "alt" => "Amour romantique et passionnel"],
-    ["img" => "assets/img/50Roses.png", "alt" => "Amour incontionnel et sans limite"],
-    ["img" => "assets/img/66Roses.png", "alt" => "Mon amour pour toi ne changera pas"],
-    ["img" => "assets/img/100Roses.png", "alt" => "Dévouement absolu"]
-];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
 
-include 'app/includes/header.php';
+<?php include 'app/includes/header.php';
 ?>
+<script>
+    (function () {
+        // Ciblage selon ta structure
+        const track  = document.querySelector('[data-track]');
+        const slide  = track.querySelector('.slide');
+        const imgs   = Array.from(slide.querySelectorAll('img'));
+        const prev   = slide.querySelector('[data-prev]');
+        const next   = slide.querySelector('[data-next]');
+        let index = 0;
 
-<!-- Hero -->
-<section class="hero container reveal">
-    <div class="hero-grid">
-        <div class="hero-copy">
-            <h1>Bienvenu <span class="accent">élégance</span>.</h1>
-            <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
+        // Affiche l'image d'indice i
+        function show(i) {
+            imgs.forEach((img, k) => img.classList.toggle('is-active', k === i));
+            prev.disabled = (i === 0);
+            next.disabled = (i === imgs.length - 1);
+        }
+
+        // Navigation
+        prev.addEventListener('click', () => { if (index > 0) { index--; show(index); } });
+        next.addEventListener('click', () => { if (index < imgs.length - 1) { index++; show(index); } });
+
+        // Clavier (facultatif)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft')  prev.click();
+            if (e.key === 'ArrowRight') next.click();
+        });
+
+        // Init (active la 1ère image)
+        show(0);
+    })();
+</script>
+
+<body class="corps">
+
+
+<main>
+    <section class="entete_accueil">
+        <div class="boutons">
             <div class="cta-row">
-                <a class="btn btn-primary" href="catalogue.php">Découvrir nos créations</a>
-                <a class="btn btn-ghost" href="personnalisation.php">Créer la vôtre</a>
-                <a class="btn btn-secondary" href="/app/views/accueilAdmin.php">Espace administrateur</a>
+                <h1>Bienvenu <span class="accent">élégance</span>.</h1>
+                <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
+                <br>
+                <a class="btn_catalogue" href="catalogue.php">Découvrir nos créations</a>
+                <a class="btn_creer" href="personnalisation.php">Créer la vôtre</a>
 
             </div>
-        </div>
-        <div class="hero-media">
-            <div class="logo-ring">
-                <img src="assets/img/logo.jpg" alt="DK Bloom" />
+            <div class="bouquet">
+                <img class="" src="assets/img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
             </div>
-        </div>
-    </div>
-</section>
+    </section>
+</main>
 
-<!-- Features -->
-<section class="features container">
-    <?php foreach ($features as $f): ?>
-        <article id="<?= htmlspecialchars($f['id']) ?>" class="card reveal">
-            <h3><?= htmlspecialchars($f['title']) ?></h3>
-            <p><?= htmlspecialchars($f['desc']) ?></p>
-            <a class="btn btn-secondary" href="<?= htmlspecialchars($f['href']) ?>"><?= htmlspecialchars($f['btn']) ?></a>
-        </article>
-    <?php endforeach; ?>
-</section>
-
-<!-- Carrousel -->
-<section class="carousel container reveal" aria-label="Sélection DK Bloom">
-    <div class="carousel-track" data-track>
-        <?php foreach ($slides as $s): ?>
-            <figure class="slide">
-                <img src="assets/img/singlefleur-removebg-preview.png" alt="1" />
-                <img src="assets/img/bouquet-removebg-preview.png" alt="2"/>
-                <img src="assets/img/boxefleur.jpeg " alt="3"/>
-
-                <img src="assets/img/singlefleur-removebg-preview.png" alt="1" />
-                <img src="assets/img/bouquet-removebg-preview.png" alt="2"/>
-                <img src="assets/img/boxefleur.jpeg" alt="3"/>
-                <figcaption><?= htmlspecialchars($s['alt']) ?></figcaption>
-            </figure>
-        <?php endforeach; ?>
-    </div>
-    <div class="carousel-controls">
-        <button class="btn btn-ghost" data-prev aria-label="Image précédente">‹</button>
-        <button class="btn btn-ghost" data-next aria-label="Image suivante">›</button>
-    </div>
-</section>
+</body>
 
 <?php
 include 'app/includes/footer.php';

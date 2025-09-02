@@ -1,0 +1,229 @@
+/* Container header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* espace logo <-> menu */
+    padding: 10px 20px;
+    background: lemonchiffon;
+    position: relative;
+}
+@font-face {
+    font-family:"mapolice" ;
+    src: url("../police/Milton_One.otf");
+    font-weight: normal;
+    font-style: italic;
+
+}
+
+.titre{
+    font-family: mapolice;
+    font-size: 80px;
+    color: darkred;
+    letter-spacing: 3px;
+}
+.icon img {
+    max-height: 40px;
+    color: maroon;
+}
+
+.menu-toggle {
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* Menu horizontal */
+.menu {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 70px;left: 0; right: 0;
+    gap: 30px;
+    list-style: none;
+    margin: 0;
+    padding: 20px 40px;
+    background: #fff;                 /* ← AJOUT */
+    border-top: 1px solid #eee;       /* ← AJOUT */
+    box-shadow: 0 8px 24px rgba(0,0,0,.08); /* ← AJOUT */
+    z-index: 1000;
+}
+
+.menu li a {
+    text-decoration: none;
+    font-size: 20px;
+    color: darkred;
+    transition: color 0.3s;
+}
+
+.menu li a:hover {
+    color: maroon; /* exemple rouge */
+}
+.menu.active {
+    display: flex;
+}
+.close-menu {
+    display: none;
+    align-self: flex-end;
+    font-size: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    margin-bottom: 10px;
+    color: darkred;
+}
+.close-menu:hover {
+    color: maroon;
+}
+.close-menu.active { display: block; }
+/* Bouton hamburger (3 traits) */
+.hamburger {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: darkred;
+}
+.hamburger span {
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: currentColor;
+    transition: transform .25s ease, opacity .2s ease;
+    transform-origin: 6px 1px;
+    color: darkred;
+}
+
+/* Animation en X quand ouvert */
+.hamburger[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(10px) rotate(45deg);
+}
+.hamburger[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+.hamburger[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-10px) rotate(-45deg);
+}
+
+/*------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+ */
+.boutons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.boutons a {
+    text-decoration: none;
+    font-size: large;
+
+}
+
+.btn_catalogue{
+    background-color: darkred;
+    color: white;
+    padding: 25px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+.btn_creer{
+    background-color: darkred;
+    color: white;
+    padding: 25px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.entete_accueil{
+
+}
+footer {
+    background-color:lemonchiffon ;
+    color: darkred;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+}
+
+.reseau_sociaux img {
+    width: 40px;
+    margin: 0 10px;
+}
+
+.reseau_sociaux a {
+    display: inline-block;
+    margin: 0 10px;
+}
+/*------------------------------------------------------------------------------------------------------------------------
+inscription
+------------------------------------------------------------------------------------------------------------------------
+*/
+
+.conteneur_formulaire {
+    width: 600px;
+    height: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: burlywood;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.conteneur_formulaire h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: darkred;
+}
+
+.conteneur_formulaire label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: darkred;
+}
+
+.conteneur_formulaire input[type="text"],
+.conteneur_formulaire input[type="email"],
+.conteneur_formulaire input[type="password"],
+.conteneur_formulaire input[type="tel"],
+.conteneur_formulaire textarea {
+    width: 85%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.conteneur_formulaire input[type="submit"] {
+    width: 50%;
+    padding: 10px;
+    background-color: darkred;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.conteneur_formulaire input[type="submit"]:hover {
+    background-color: white;
+    color: darkred;
+}
+
+.conteneur_formulaire{
+    background-color: blue;
+}
