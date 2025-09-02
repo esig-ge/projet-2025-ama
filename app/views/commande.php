@@ -16,7 +16,7 @@ session_start();
     <title>DK Bloom — Mon panier</title>
 
     <!-- CSS du panier -->
-    <link rel="stylesheet" href="/public/assets/css/styleCommande.css">
+    <link rel="stylesheet" href="/public/assets/css/commande.css">
 </head>
 <body>
 <header class="dkb-header">
