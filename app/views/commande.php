@@ -16,13 +16,13 @@ session_start();
     <title>DK Bloom — Mon panier</title>
 
     <!-- CSS du panier -->
-    <link rel="stylesheet" href="/assets/css/styleCommande.css">
+    <link rel="stylesheet" href="/public/assets/css/styleCommande.css">
 </head>
 <body>
 <header class="dkb-header">
     <div class="wrap headbar">
-        <a class="brand" href="/index.php">
-            <img src="/assets/img/logo.jpg" alt="DK Bloom" class="logo">
+        <a class="brand" href="/public/index.php">
+            <img src="/public/assets/img/logo.jpg" alt="DK Bloom" class="logo">
             <span class="brand-text">DK Bloom</span>
         </a>
         <nav class="head-actions">
@@ -76,6 +76,6 @@ session_start();
 </footer>
 
 <!-- JS du panier -->
-<script src="/assets/js/commande.js"></script>
+<script src="/public/assets/js/commande.js"></script>
 </body>
 </html>
