@@ -16,12 +16,12 @@ session_start();
     <title>DK Bloom — Mon panier</title>
 
     <!-- CSS du panier -->
-    <link rel="stylesheet" href="/public/assets/css/commande.css">
+    <link rel="stylesheet" href="css/commande.css">
 </head>
 <body>
 <header class="dkb-header">
     <div class="wrap headbar">
-        <a class="brand" href="/app/views/index.php">
+        <a class="brand" href="index.php">
             <img src="/public/assets/img/logo.jpg" alt="DK Bloom" class="logo">
             <span class="brand-text">DK Bloom</span>
         </a>
