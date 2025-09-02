@@ -1,4 +1,4 @@
-// /public/assets/js/commande.js
+// js/commande.js
 (function () {
     // ---------- Core panier (réutilisable sur toutes les pages)
     const KEY = 'dkb_cart_v1';
