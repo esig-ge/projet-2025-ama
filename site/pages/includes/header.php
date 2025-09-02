@@ -1,3 +1,7 @@
+
+
+<link rel="stylesheet" href="../css/style_header_footer.css">
+
 <header class="site-header">
     <div class="header">
         <!-- Bouton hamburger -->
@@ -20,8 +24,8 @@
 
         <div class="icon">
             <a href="index.php">
-                <img src="../../assets/img/iconInscrire-removebg-preview.png" alt="inscrire" width="80">
-                <img src="../../assets/img/iconLoupe-removebg-preview.png" alt="recherche" width="50">
+                <img src="../img/iconInscrire-removebg-preview.png" alt="inscrire" width="80">
+                <img src="../img/iconLoupe-removebg-preview.png" alt="recherche" width="50">
             </a>
         </div>
     </div>
