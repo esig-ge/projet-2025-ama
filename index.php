@@ -46,7 +46,7 @@ include 'app/includes/header.php';
             <div class="cta-row">
                 <a class="btn btn-primary" href="catalogue.php">Découvrir nos créations</a>
                 <a class="btn btn-ghost" href="personnalisation.php">Créer la vôtre</a>
-                <a href="index.php">Espace administrateur</a>
+                <a class="btn btn-secondary" href="/app/views/accueilAdmin.php">Espace administrateur</a>
 
             </div>
         </div>

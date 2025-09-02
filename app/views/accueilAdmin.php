@@ -1,6 +1,8 @@
 <?php
+session_start();
 // ---- Sécurité & en-tête
 include 'app/includes/header.php';
+
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 // Vérifie le rôle (adapte selon ta structure de session)
