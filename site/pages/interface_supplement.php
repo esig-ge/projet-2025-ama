@@ -8,7 +8,7 @@
 <body>
 <h1>Suppléments</h1>
 <div>
-    <div id="supplement">
+    <div class="catalogue">
         <div>
             <img src="img/ours_blanc.PNG"/>
             <h3>Mini ourson</h3>
