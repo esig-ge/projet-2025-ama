@@ -9,7 +9,7 @@
 </head>
 <body>
 <section class="catalogue">
-    <h2 class="section-title">Nos fleurs</h2>
+    <h1 class="section-title">Nos fleurs</h1>
 
     <div class="produit">
         <div class="rose">

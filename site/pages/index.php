@@ -9,8 +9,7 @@
     <link rel="stylesheet" href="../../public/assets/css/style.css">
 </head>
 
-<?php include 'app/includes/header.php';
-?>
+
 </script>
 
 <body class="corps">
@@ -28,13 +27,11 @@
 
             </div>
             <div class="bouquet">
-                <img class="" src="img/c" alt="" width="200px" height="auto">
+                <img class="" src="img/b" alt="" width="200px" height="auto">
             </div>
     </section>
 </main>
 
 </body>
 </html>
-<?php
-include 'app/includes/footer.php';
-?>
+
