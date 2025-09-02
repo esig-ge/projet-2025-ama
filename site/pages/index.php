@@ -28,7 +28,7 @@
 
             </div>
             <div class="bouquet">
-                <img class="" src="../../public/assets/img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
+                <img class="" src="img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
             </div>
     </section>
 </main>
