@@ -1,11 +1,13 @@
 <?php
 // /app/actions/stripe_webhook.php
-require_once __DIR__ . '/../../config/stripe.php';
-require_once __DIR__ . '/../../config/connexionBdd.php';
+$ROOT = dirname(__DIR__, 2); // …/Projet_sur_Mandat
+require_once $ROOT . '/config/stripe.php';
+require_once $ROOT . '/config/connexionBDD.php';
+
 
 $payload = @file_get_contents('php://input');
 $sig = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
-$endpointSecret = 'whsec_xxxxxxxxxxxxxxxxxxxxx'; // secret du webhook (dashboard)
+$endpointSecret = $endpointSecret = STRIPE_WEBHOOK_SECRET; // secret du webhook (dashboard)
 
 try {
     $event = \Stripe\Webhook::constructEvent($payload, $sig, $endpointSecret);
