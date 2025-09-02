@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>DK Bloom — Fleurs Artificielles</title>
+    <link rel="stylesheet" href="test.css">
+
+</head>
+<body>
+<!-- Header -->
+<header class="header" role="banner">
+    <div class="header-inner" aria-label="En-tête">
+        <button class="burger" id="burgerBtn" aria-label="Ouvrir le menu" aria-controls="drawer" aria-expanded="false">
+            <span></span>
+        </button>
+        <div class="brand">DK Bloom • Fleurs Artificielles</div>
+        <div class="spacer"></div>
+        <a class="cta-header" href="catalogue.html">Catalogue</a>
+    </div>
+</header>
+
+<!-- Drawer -->
+<aside class="drawer" id="drawer" aria-hidden="true">
+    <header>
+        <strong>Menu</strong>
+        <button id="closeDrawer" aria-label="Fermer le menu">✕</button>
+    </header>
+    <nav aria-label="Navigation latérale">
+        <a href="index.html">Accueil</a>
+        <a href="#apropos">À propos</a>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="#contact">Contact</a>
+    </nav>
+</aside>
+
+<!-- Hero -->
+<main>
+    <section class="hero" aria-label="Section principale">
+        <div class="hero-left">
+            <div class="kicker">Élégance intemporelle</div>
+            <h1 class="title">Bouquets artificiels de prestige</h1>
+            <p class="subtitle">
+                Un art floral raffiné, sans contrainte d’entretien. Offrez la beauté éternelle,
+                parfaite pour sublimer vos espaces ou célébrer vos instants uniques.
+            </p>
+            <div class="actions">
+                <a class="btn-primary" href="catalogue.html">Découvrir le catalogue</a>
+                <a class="btn-ghost" href="#slider">Voir les best-sellers</a>
+            </div>
+        </div>
+        <div class="hero-right">
+            <img src="assets/img/boxefleur.jpeg" alt="Bouquet de fleurs artificielles luxueuses" />
+        </div>
+    </section>
+
+
+    <!-- Carousel -->
+    <section class="section" id="slider" aria-label="Défilant de bouquets">
+        <h2>Nos bouquets coups de cœur</h2>
+        <div class="carousel">
+            <button class="arrow left" id="prevBtn" aria-label="Précédent">‹</button>
+            <div class="track" id="track" aria-live="polite">
+                <!-- Cartes produits (exemples) -->
+                <article class="card">
+                    <img src="assets/img/singlefleur-removebg-preview.png" alt="Bouquet rose poudré" />
+                    <div class="info">
+                        <div class="name">Rose Poudré</div>
+                        <div class="muted">Arrangement romantique</div>
+                        <div class="price">CHF 69.–</div>
+                    </div>
+                </article>
+                <article class="card">
+                    <img src="assets/img/boxefleur.jpeg" alt="Bouquet blanc minimaliste" />
+                    <div class="info">
+                        <div class="name">Blanc Minimal</div>
+                        <div class="muted">Pur & intemporel</div>
+                        <div class="price">CHF 59.–</div>
+                    </div>
+                </article>
+                <article class="card">
+                    <img src="assets/img/bouquet-removebg-preview.png" alt="Bouquet champêtre coloré" />
+                    <div class="info">
+                        <div class="name">Champêtre</div>
+                        <div class="muted">Couleurs de saison</div>
+                        <div class="price">CHF 79.–</div>
+                    </div>
+                </article>
+            </div>
+            <button class="arrow right" id="nextBtn" aria-label="Suivant">›</button>
+        </div>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer id="contact">
+    <div class="footer-inner">
+        <div>
+            <h4>DK Bloom</h4>
+            <p class="muted">Fleurs artificielles haut de gamme — Genève</p>
+            <div class="badge">Ouvert • Lun–Sam 9:00–18:00</div>
+        </div>
+        <div>
+            <h4>Contact</h4>
+            <p class="muted">Email : <a href="mail:contact@dkbloom.ch">contact@dkbloom.ch</a><br>
+                Téléphone : <a href="tel:+41225556677">+41 22 555 66 77</a><br>
+                Adresse : Rue des Roses 12, 1200 Genève</p>
+        </div>
+        <div>
+            <h4>Réseaux</h4>
+            <div class="social">
+                <a class="badge" href="#" aria-label="Instagram">📷 Instagram</a>
+                <a class="badge" href="#" aria-label="Facebook">📘 Facebook</a>
+                <a class="badge" href="#" aria-label="TikTok">🎵 TikTok</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Drawer (menu hamburger)
+    const drawer = document.getElementById('drawer');
+    const burger = document.getElementById('burgerBtn');
+    const closeDrawer = document.getElementById('closeDrawer');
+
+    function openDrawer(){ drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false'); burger.setAttribute('aria-expanded','true'); }
+    function closeDrawerFn(){ drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); burger.setAttribute('aria-expanded','false'); }
+
+    burger.addEventListener('click', openDrawer);
+    closeDrawer.addEventListener('click', closeDrawerFn);
+    drawer.addEventListener('click', (e)=>{ if(e.target===drawer) closeDrawerFn(); });
+
+    // Carousel
+    const track = document.getElementById('track');
+    const prev = document.getElementById('prevBtn');
+    const next = document.getElementById('nextBtn');
+
+    function cardWidth(){
+        const first = track.querySelector('.card');
+        return first ? first.getBoundingClientRect().width + 16 /* gap */ : 300;
+    }
+    function updateArrows(){
+        prev.disabled = track.scrollLeft <= 0;
+        const max = track.scrollWidth - track.clientWidth - 4;
+        next.disabled = track.scrollLeft >= max;
+    }
+    prev.addEventListener('click', ()=>{ track.scrollBy({left: -cardWidth(), behavior:'smooth'}); });
+    next.addEventListener('click', ()=>{ track.scrollBy({left:  cardWidth(), behavior:'smooth'}); });
+    track.addEventListener('scroll', updateArrows, {passive:true});
+    window.addEventListener('load', updateArrows);
+    window.addEventListener('resize', updateArrows);
+</script>
+</body>
+</html>
+

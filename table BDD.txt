@@ -1,0 +1,138 @@
+mes tables BDD:
+
+
+create table fleur (
+	fleur_id int auto_increment primary key,
+	pro_id int not null,
+	fle_type VARCHAR(50) NOT NULL,
+	fle_couleur VARCHAR(50) NOT NULL,
+	pro_nom VARCHAR(100) NOT NOULL,
+	pro_prix DECIMAL(10,2) NOT NULL,
+
+
+	CHECK (fle_prix > 0),
+	CHECK (fle_couleur IN ('rouge','rose','rose clair','bleu','blanc','noir','violet')),
+
+
+CONSTRAINT fk_fleur_produit
+	foreign key (pro_id) references produit(pro_id)
+)
+
+create table bouquet(
+	bouquet_id int auto_increment primary key,
+	pro_id int NOT NULL,
+	bou_description VARCHAR(600) NOT NULL,
+	bou_type VARCHAR(50) NOT NULL,
+	pro_nom VARCHAR(100) NOT NULL,
+	pro_prix DECIMAL(10,2) NOT NULL,
+
+	CHECK (CHAR_LENGHT(bou_description ) >= 10)),
+	CHECK (bou_type in( 'standard','personnalise','mariage','anniversaire','naissance','deuil','romantique','saisonnier','luxe')),
+
+
+CONSTRAINT fk_bouquet_produit
+	foreign key (pro_id) references produit(pro_id)
+)
+
+
+create table bouquet_fleur(
+	bouquet_fleur_id int auto_increment primary key,
+	bouquet_id int NOT NULL,
+	fleur_id int NOT NULL,
+	bf_qte int NOT NULL,
+	
+
+	CHECK (bf_qte >= 1),
+
+CONSTRAINT fk_bf_bouquet
+foreign key (bouquet_id) references bouquet (bouquet_id),
+
+CONSTRAINT fk_bf_fleur
+foreign key (fleur_id) references fleur (fleur_id)
+
+)
+
+
+create table coffret(
+	coffret_id int auto_increment primary key,
+	pro_id int NOT NULL,
+	co_evenement VARCHAR(100) NOT NULL,
+	pro_nom VARCHAR(100) NOT NULL,
+	pro_prix DECIMAL(10,2) NOT NULL,
+
+
+	CHECK (co_evenement IN ('Saint-valentin','fetes des meres','happy birthday','paques','noel','nouvel an'))
+	
+CONSTRAINT fk_bouquet_produit
+	foreign key (pro_id) references produit(pro_id)
+)
+
+
+create table coffret_bouquet(
+	coffret_bouquet_id int auto_increment primary key,
+	coffret_id int NOT NULL,
+	bouquet_id int NOT NULL,
+	
+CONSTRAINT fk_coffret
+	foreign key (coffret_id ) references coffret (coffret_id),
+	
+CONSTRAINT fk_bouquet
+	foreign key (bouquet_id ) references bouquet (bouquet_id)
+)
+
+
+create table commande(
+	commande_id int auto_increment primary key,
+	per_id int NOT NULL,
+	liv_id int NOT NULL,
+	rab_id int NOT NULL,
+
+	com_statut int VARCHAR(100) NOT NULL,
+	com_date DATE NOT NULL,
+	com_description int NOT NULL,
+	com_pts_cummule INT NOT NULL,
+
+
+	CHECK (com_statut IN ('en préparation','expédiée','livrée','en attente d'exposition','annulée')),
+	CHECK (liv_date > com_date AND liv_date >= DATE_ADD(com_date, INTERVAL 7 DAY)),
+
+
+CONSTRAINT fk_client
+	foreign key (per_id) references client (per_id),
+
+CONSTRAINT fk_livraison
+	foreign key (liv_id) references livraison (liv_id),
+
+CONSTRAINT fk_rabais
+	foreign key (rab_id) references rabais (rab_id)
+
+)
+
+create table commande_produit(
+	commande_produit_id int auto_increment primary key,
+	com_id int NOT NULL,
+	cp_qte_commandee INT NOT NULL,
+	cp_type_produit VARCHAR(50) NOT NULL,
+
+	CHECK (cp_qte_commandee >= 0),
+	CHECK (cp_type_produit IN ('bouquet','fleur','coffret')),
+
+
+CONSTRAINT fk_commande_id
+	foreign key (commande_id) references commande_produit(commande_id)
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
