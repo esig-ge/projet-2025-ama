@@ -1,55 +1,34 @@
-<?php
-session_start();
+<?php session_start();?>
 
-$features = [
-    [
-        "id" => "catalogue",
-        "title" => "Catalogue",
-        "desc"  => "Roses éternelles, bouquets saisonniers et créations signature.",
-        "btn"   => "Voir le catalogue",
-        "href"  => "catalogue.php"
-    ],
-    [
-        "id" => "custom",
-        "title" => "Personnalisation",
-        "desc"  => "Couleurs, lettres, paillettes et message — créez la pièce parfaite.",
-        "btn"   => "Personnaliser",
-        "href"  => "personnalisation.php"
-    ]
-];
 
-$slides = [
-    ["img" => "assets/img/12Roses.png", "alt" => "Demande au mariage ou engagement"],
-    ["img" => "assets/img/20Roses.png", "alt" => "Engagement sincère"],
-    ["img" => "assets/img/36Roses.png", "alt" => "Amour romantique et passionnel"],
-    ["img" => "assets/img/50Roses.png", "alt" => "Amour incontionnel et sans limite"],
-    ["img" => "assets/img/66Roses.png", "alt" => "Mon amour pour toi ne changera pas"],
-    ["img" => "assets/img/100Roses.png", "alt" => "Dévouement absolu"]
-];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LashesBeauty</title>
+    <link rel="stylesheet" href="s">
+</head>
 
-include 'app/includes/header.php';
+<?php include 'app/includes/header.php';
 ?>
+<body class="corps">
 
 <!-- Hero -->
-<section class="hero container reveal">
-    <div class="hero-grid">
-        <div class="hero-copy">
+<section class="entete_accueil">
+    <div class="boutons">
+        <div class="cta-row">
             <h1>Bienvenu <span class="accent">élégance</span>.</h1>
             <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
-            <div class="cta-row">
-                <a class="btn btn-primary" href="catalogue.php">Découvrir nos créations</a>
-                <a class="btn btn-ghost" href="personnalisation.php">Créer la vôtre</a>
-                <a href="index.php">Espace administrateur</a>
-
-            </div>
+            <a class="btn btn-primary" href="catalogue.php">Découvrir nos créations</a>
+            <a class="btn btn-ghost" href="personnalisation.php">Créer la vôtre</a>
+            <a href="index.php">Espace administrateur</a>
         </div>
-        <div class="hero-media">
-            <div class="logo-ring">
-                <img src="assets/img/logo.jpg" alt="DK Bloom" />
-            </div>
+        <div>
+            <img class="" src="assets/img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
         </div>
-    </div>
 </section>
+
+
 
 <!-- Features -->
 <section class="features container">
@@ -83,6 +62,7 @@ include 'app/includes/header.php';
         <button class="btn btn-ghost" data-next aria-label="Image suivante">›</button>
     </div>
 </section>
+</body>
 
 <?php
 include 'app/includes/footer.php';

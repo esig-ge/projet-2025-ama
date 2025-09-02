@@ -1,7 +1,7 @@
 <?php ?>
 <header>
     <div class="logo">
-        <img src="images/logo%20banner.png" width="300px" height="200px">
+        <img src="../../assets/img/logo.jpg" width="300px" height="200px">
         <nav>
             <ul class="menu">
                 <a href="index.php">Accueil</a>
