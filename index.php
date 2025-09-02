@@ -6,11 +6,21 @@
 <head>
     <meta charset="UTF-8">
     <title>LashesBeauty</title>
-    <link rel="stylesheet" href="s">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <?php include 'app/includes/header.php';
 ?>
+<script>
+    const btn = document.querySelector('.hamburger');
+    const nav = document.getElementById('nav-menu');
+
+    btn.addEventListener('click', () => {
+        const open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!open));
+        nav.hidden = open; // si c'était ouvert, on cache; sinon on montre
+    });
+</script>
 <body class="corps">
 
 <!-- Hero -->
