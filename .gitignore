@@ -12,12 +12,19 @@ Thumbs.db
 *.cache
 *.bak
 
-# --- Composer ---
-/vendor/
-/composer.lock
+# --- Composer (même si tu ne l’utilises pas ici)
+vendor/
+composer.lock
 
 # --- Environnements locaux ---
 .env
 
-# --- Autres fichiers sensibles ---
+# --- Config locales spécifiques ---
 /config/*.local.php
+
+# --- Uploads (si tu stockes des images côté serveur)
+public/uploads/
+
+# --- Cache & stockage internes ---
+app/storage/cache/
+app/storage/logs/
