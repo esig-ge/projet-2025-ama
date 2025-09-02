@@ -76,6 +76,8 @@ session_start();
 </footer>
 
 <!-- JS du panier -->
-<script src="/public/assets/js/commande.js"></script>
+<!-- Inclure ce fichier sur TOUTES les pages qui manipulent le panier -->
+<script src="js/commande.js"></script>
+
 </body>
 </html>
