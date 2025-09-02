@@ -14,7 +14,7 @@
     <div class="product">
         <div class="product-media">
             <!-- Image par défaut (rouge) -->
-            <img src="assets/img/rose-rouge.png" alt="Rose rouge" class="product-img" />
+            <img src="img/rosesBlanche.png" alt="Rose" class="product-img" />
         </div>
 
         <div class="product-info">
