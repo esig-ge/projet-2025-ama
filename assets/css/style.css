@@ -4,19 +4,26 @@
     align-items: center;
     justify-content: space-between; /* espace logo <-> menu */
     padding: 10px 20px;
-    background: hotpink;
+    background: lemonchiffon;
+    position: relative;
 }
 @font-face {
     font-family:"mapolice" ;
-    src: url("..");
+    src: url("../police/Milton_One.otf");
     font-weight: normal;
-    font-style: normal;
-}
-.titre{
+    font-style: italic;
 
 }
-.logo img {
-    max-height: 60px;
+
+.titre{
+    font-family: mapolice;
+    font-size: 80px;
+    color: darkred;
+    letter-spacing: 3px;
+}
+.icon img {
+    max-height: 40px;
+    color: maroon;
 }
 
 .menu-toggle {
@@ -26,23 +33,47 @@
 
 /* Menu horizontal */
 .menu {
-    display: flex;
-    gap: 30px; /* espace entre les liens */
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 70px;left: 0; right: 0;
+    gap: 30px;
     list-style: none;
     margin: 0;
-    padding: 0;
+    padding: 20px 40px;
+    background: #fff;                 /* ← AJOUT */
+    border-top: 1px solid #eee;       /* ← AJOUT */
+    box-shadow: 0 8px 24px rgba(0,0,0,.08); /* ← AJOUT */
+    z-index: 1000;
 }
 
 .menu li a {
     text-decoration: none;
-    font-size: 18px;
-    color: #333;
+    font-size: 20px;
+    color: darkred;
     transition: color 0.3s;
 }
 
 .menu li a:hover {
-    color: #b3003c; /* exemple rouge */
+    color: maroon; /* exemple rouge */
 }
+.menu.active {
+    display: flex;
+}
+.close-menu {
+    display: none;
+    align-self: flex-end;
+    font-size: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    margin-bottom: 10px;
+    color: darkred;
+}
+.close-menu:hover {
+    color: maroon;
+}
+.close-menu.active { display: block; }
 /* Bouton hamburger (3 traits) */
 .hamburger {
     display: inline-flex;
@@ -55,19 +86,143 @@
     border: none;
     background: transparent;
     cursor: pointer;
+    color: darkred;
 }
 .hamburger span {
     display: block;
-    width: 26px;
-    height: 2px;
-    background: #222;
+    width: 40px;
+    height: 4px;
+    background: currentColor;
     transition: transform .25s ease, opacity .2s ease;
     transform-origin: 6px 1px;
+    color: darkred;
 }
 
 /* Animation en X quand ouvert */
-.hamburger[aria-expanded="true"] span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
-.hamburger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-.hamburger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+.hamburger[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(10px) rotate(45deg);
+}
+.hamburger[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+.hamburger[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-10px) rotate(-45deg);
+}
+
+/*------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------
+ */
+.boutons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.boutons a {
+    text-decoration: none;
+    font-size: large;
+
+}
+
+.btn_catalogue{
+    background-color: darkred;
+    color: white;
+    padding: 25px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+.btn_creer{
+    background-color: darkred;
+    color: white;
+    padding: 25px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.entete_accueil{
+
+}
+footer {
+    background-color:lemonchiffon ;
+    color: darkred;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+}
+
+.reseau_sociaux img {
+    width: 40px;
+    margin: 0 10px;
+}
+
+.reseau_sociaux a {
+    display: inline-block;
+    margin: 0 10px;
+}
+/*.....
 
 
+ */
+
+
+.conteneur_inscription {
+    width: 600px;
+    height: 300px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: burlywood;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.conteneur_inscription h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: saddlebrown;
+}
+
+.conteneur_inscription label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: saddlebrown;
+}
+
+
+.conteneur_inscription input[type="password"],
+.conteneur_inscription input[type="email"] {
+    width: 85%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+.conteneur_inscription input[type="submit"] {
+    width: 50%;
+    padding: 10px;
+    background-color: saddlebrown;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.conteneur_inscription input[type="submit"]:hover {
+    background-color: white;
+    color: saddlebrown;
+}

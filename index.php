@@ -5,73 +5,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>LashesBeauty</title>
+    <title>index</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <?php include 'app/includes/header.php';
 ?>
 <script>
-    const btn = document.querySelector('.hamburger');
-    const nav = document.getElementById('nav-menu');
+    (function () {
+        // Ciblage selon ta structure
+        const track  = document.querySelector('[data-track]');
+        const slide  = track.querySelector('.slide');
+        const imgs   = Array.from(slide.querySelectorAll('img'));
+        const prev   = slide.querySelector('[data-prev]');
+        const next   = slide.querySelector('[data-next]');
+        let index = 0;
 
-    btn.addEventListener('click', () => {
-        const open = btn.getAttribute('aria-expanded') === 'true';
-        btn.setAttribute('aria-expanded', String(!open));
-        nav.hidden = open; // si c'était ouvert, on cache; sinon on montre
-    });
+        // Affiche l'image d'indice i
+        function show(i) {
+            imgs.forEach((img, k) => img.classList.toggle('is-active', k === i));
+            prev.disabled = (i === 0);
+            next.disabled = (i === imgs.length - 1);
+        }
+
+        // Navigation
+        prev.addEventListener('click', () => { if (index > 0) { index--; show(index); } });
+        next.addEventListener('click', () => { if (index < imgs.length - 1) { index++; show(index); } });
+
+        // Clavier (facultatif)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft')  prev.click();
+            if (e.key === 'ArrowRight') next.click();
+        });
+
+        // Init (active la 1ère image)
+        show(0);
+    })();
 </script>
+
 <body class="corps">
 
-<!-- Hero -->
-<section class="entete_accueil">
-    <div class="boutons">
-        <div class="cta-row">
-            <h1>Bienvenu <span class="accent">élégance</span>.</h1>
-            <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
-            <a class="btn btn-primary" href="catalogue.php">Découvrir nos créations</a>
-            <a class="btn btn-ghost" href="personnalisation.php">Créer la vôtre</a>
-            <a href="index.php">Espace administrateur</a>
-        </div>
-        <div>
-            <img class="" src="assets/img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
-        </div>
-</section>
 
+<main>
+    <section class="entete_accueil">
+        <div class="boutons">
+            <div class="cta-row">
+                <h1>Bienvenu <span class="accent">élégance</span>.</h1>
+                <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
+                <br>
+                <a class="btn_catalogue" href="catalogue.php">Découvrir nos créations</a>
+                <a class="btn_creer" href="personnalisation.php">Créer la vôtre</a>
 
+            </div>
+            <div class="bouquet">
+                <img class="" src="assets/img/bouquet-removebg-preview.png" alt="" width="200px" height="auto">
+            </div>
+    </section>
+</main>
 
-<!-- Features -->
-<section class="features container">
-    <?php foreach ($features as $f): ?>
-        <article id="<?= htmlspecialchars($f['id']) ?>" class="card reveal">
-            <h3><?= htmlspecialchars($f['title']) ?></h3>
-            <p><?= htmlspecialchars($f['desc']) ?></p>
-            <a class="btn btn-secondary" href="<?= htmlspecialchars($f['href']) ?>"><?= htmlspecialchars($f['btn']) ?></a>
-        </article>
-    <?php endforeach; ?>
-</section>
-
-<!-- Carrousel -->
-<section class="carousel container reveal" aria-label="Sélection DK Bloom">
-    <div class="carousel-track" data-track>
-        <?php foreach ($slides as $s): ?>
-            <figure class="slide">
-                <img src="assets/img/singlefleur-removebg-preview.png" alt="1" />
-                <img src="assets/img/bouquet-removebg-preview.png" alt="2"/>
-                <img src="assets/img/boxefleur.jpeg " alt="3"/>
-
-                <img src="assets/img/singlefleur-removebg-preview.png" alt="1" />
-                <img src="assets/img/bouquet-removebg-preview.png" alt="2"/>
-                <img src="assets/img/boxefleur.jpeg" alt="3"/>
-                <figcaption><?= htmlspecialchars($s['alt']) ?></figcaption>
-            </figure>
-        <?php endforeach; ?>
-    </div>
-    <div class="carousel-controls">
-        <button class="btn btn-ghost" data-prev aria-label="Image précédente">‹</button>
-        <button class="btn btn-ghost" data-next aria-label="Image suivante">›</button>
-    </div>
-</section>
 </body>
 
 <?php
