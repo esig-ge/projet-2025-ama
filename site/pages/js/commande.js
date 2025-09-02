@@ -1,121 +1,120 @@
-/* assets/js/cart.js */
+// /public/assets/js/commande.js
+(function () {
+    // ---------- Core panier (réutilisable sur toutes les pages)
+    const KEY = 'dkb_cart_v1';
 
-const LS_KEY = 'dkb_cart_v1';
+    function money(n) {
+        return new Intl.NumberFormat('fr-CH', { style: 'currency', currency: 'CHF' }).format(n);
+    }
+    function getCart() {
+        try { return JSON.parse(localStorage.getItem(KEY)) || { lines: [] }; }
+        catch { return { lines: [] }; }
+    }
+    function saveCart(cart) {
+        localStorage.setItem(KEY, JSON.stringify(cart));
+        window.dispatchEvent(new Event('cart:updated'));
+    }
+    function findIndex(lines, sku) { return lines.findIndex(l => l.sku === sku); }
 
-function loadCart(){
-    try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
-    catch { return []; }
-}
-function saveCart(cart){ localStorage.setItem(LS_KEY, JSON.stringify(cart)); }
-function money(n){ return `${n.toFixed(2)} CHF`; }
+    function addItem({ id, sku, name, price, img, qty = 1 }) {
+        const cart = getCart();
+        const i = findIndex(cart.lines, sku);
+        if (i >= 0) cart.lines[i].qty += qty;
+        else cart.lines.push({ id, sku, name, price: Number(price), img, qty });
+        saveCart(cart);
+    }
+    function updateQty(sku, qty) {
+        const cart = getCart();
+        const i = findIndex(cart.lines, sku);
+        if (i >= 0) { cart.lines[i].qty = Math.max(1, Number(qty)); saveCart(cart); }
+    }
+    function removeItem(sku) {
+        const cart = getCart();
+        cart.lines = cart.lines.filter(l => l.sku !== sku);
+        saveCart(cart);
+    }
+    function clear() { saveCart({ lines: [] }); }
 
-function renderCart(){
-    const $list = document.getElementById('cart-list');
-    const cart = loadCart();
-
-    if (!cart.length){
-        $list.innerHTML = `
-      <div class="cart-item" style="grid-template-columns:1fr;">
-        Votre panier est vide. <a href="catalogue.php" class="link" style="margin-left:8px">Voir le catalogue</a>
-      </div>`;
-        document.getElementById('sum-subtotal').textContent = money(0);
-        document.getElementById('sum-shipping').textContent = '—';
-        document.getElementById('sum-total').textContent = money(0);
-        document.getElementById('btn-checkout').classList.add('disabled');
-        return;
+    function totals({ shippingThreshold = 80, shippingFee = 9.9 } = {}) {
+        const cart = getCart();
+        const subtotal = cart.lines.reduce((s, l) => s + l.price * l.qty, 0);
+        const shipping = subtotal > 0 && subtotal < shippingThreshold ? shippingFee : 0;
+        const total = subtotal + shipping;
+        return {
+            subtotal, shipping, total,
+            fmt: {
+                subtotal: money(subtotal),
+                shipping: shipping ? money(shipping) : '—',
+                total: money(total)
+            }
+        };
     }
 
-    // Construit les lignes
-    $list.innerHTML = cart.map(item => `
-    <div class="cart-item" data-id="${item.id}">
-      <img class="item-img" src="${item.img}" alt="${item.name}">
-      <div>
-        <div class="item-title">${item.name}</div>
-        <div class="item-sub">Ref. ${item.sku || item.id}</div>
-      </div>
-      <div class="price">${money(item.price)}</div>
-      <div class="qty">
-        <button class="btn-dec" aria-label="Diminuer">−</button>
-        <input class="qty-input" type="text" value="${item.qty}" inputmode="numeric">
-        <button class="btn-inc" aria-label="Augmenter">+</button>
-      </div>
-      <div class="line-total">${money(item.price * item.qty)}</div>
-      <button class="remove" title="Supprimer">✕</button>
-    </div>
-  `).join('');
+    // Expose global
+    window.Cart = { getCart, addItem, updateQty, removeItem, clear, totals, money };
 
-    attachRowEvents();
-    updateTotals();
-}
+    // ---------- Rendu UI (uniquement si on est sur la page commande)
+    const list = document.getElementById('cart-list');
+    const sumSubtotal = document.getElementById('sum-subtotal');
+    const sumShipping = document.getElementById('sum-shipping');
+    const sumTotal = document.getElementById('sum-total');
 
-function attachRowEvents(){
-    const $rows = document.querySelectorAll('.cart-item');
-    $rows.forEach(row => {
-        const id = row.dataset.id;
-        row.querySelector('.btn-inc').addEventListener('click', () => changeQty(id, +1));
-        row.querySelector('.btn-dec').addEventListener('click', () => changeQty(id, -1));
-        row.querySelector('.qty-input').addEventListener('change', e => setQty(id, +e.target.value || 1));
-        row.querySelector('.remove').addEventListener('click', () => removeItem(id));
-    });
-}
+    if (list && sumSubtotal && sumShipping && sumTotal) {
+        const SHIPPING_THRESHOLD = 80;
+        const SHIPPING_FEE = 9.9;
 
-function changeQty(id, delta){
-    const cart = loadCart();
-    const it = cart.find(p => p.id === id);
-    if (!it) return;
-    it.qty = Math.max(1, (it.qty || 1) + delta);
-    saveCart(cart);
-    renderCart();
-}
-function setQty(id, value){
-    const cart = loadCart();
-    const it = cart.find(p => p.id === id);
-    if (!it) return;
-    it.qty = Math.max(1, parseInt(value,10) || 1);
-    saveCart(cart);
-    renderCart();
-}
-function removeItem(id){
-    let cart = loadCart();
-    cart = cart.filter(p => p.id !== id);
-    saveCart(cart);
-    renderCart();
-}
+        function lineTpl(l) {
+            const lineTotal = l.price * l.qty;
+            return `
+        <div class="cart-line" data-sku="${l.sku}">
+          <img src="${l.img}" alt="${l.name}" class="thumb">
+          <div class="meta">
+            <div class="name">${l.name}</div>
+            <div class="price">${Cart.money(l.price)}</div>
+          </div>
+          <div class="qty">
+            <button class="btn-ghost" data-action="dec">−</button>
+            <input class="qty-input" type="number" min="1" value="${l.qty}">
+            <button class="btn-ghost" data-action="inc">+</button>
+          </div>
+          <div class="line-total">${Cart.money(lineTotal)}</div>
+          <button class="btn-remove" title="Supprimer" data-action="remove">×</button>
+        </div>
+      `;
+        }
 
-function updateTotals(){
-    const cart = loadCart();
-    const subtotal = cart.reduce((s,p)=> s + p.price * p.qty, 0);
-    const shipping = subtotal >= 80 ? 0 : (cart.length ? 7 : 0);
-    const total = subtotal + shipping;
+        function render() {
+            const cart = Cart.getCart();
+            list.innerHTML = cart.lines.length
+                ? cart.lines.map(lineTpl).join('')
+                : `<p>Votre panier est vide.</p>`;
 
-    document.getElementById('sum-subtotal').textContent = money(subtotal);
-    document.getElementById('sum-shipping').textContent = shipping ? money(shipping) : 'Offert';
-    document.getElementById('sum-total').textContent = money(total);
-}
+            const t = Cart.totals({ shippingThreshold: SHIPPING_THRESHOLD, shippingFee: SHIPPING_FEE });
+            sumSubtotal.textContent = t.fmt.subtotal;
+            sumShipping.textContent = t.fmt.shipping;
+            sumTotal.textContent = t.fmt.total;
+        }
 
-// ----- Hook pour la page catalogue (boutons "ajouter") -----
-// Utilise des boutons avec .add-to-cart et data- attributs
-function addToCart(product){
-    const cart = loadCart();
-    const found = cart.find(p => p.id === product.id);
-    if (found){ found.qty += product.qty || 1; }
-    else { cart.push({...product, qty: product.qty || 1}); }
-    saveCart(cart);
-}
+        list.addEventListener('click', (e) => {
+            const wrap = e.target.closest('.cart-line');
+            if (!wrap) return;
+            const sku = wrap.dataset.sku;
+            const input = wrap.querySelector('.qty-input');
+            const current = Number(input.value) || 1;
 
-// Si on est sur une page avec des boutons .add-to-cart :
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.add-to-cart');
-    if (!btn) return;
-    e.preventDefault();
-    addToCart({
-        id: btn.dataset.id,
-        sku: btn.dataset.sku || btn.dataset.id,
-        name: btn.dataset.name,
-        price: parseFloat(btn.dataset.price),
-        img: btn.dataset.img
-    });
-});
+            if (e.target.matches('[data-action="inc"]')) Cart.updateQty(sku, current + 1);
+            if (e.target.matches('[data-action="dec"]')) Cart.updateQty(sku, Math.max(1, current - 1));
+            if (e.target.matches('[data-action="remove"]')) Cart.removeItem(sku);
+        });
 
-// Rendu initial si on est sur le panier
-document.addEventListener('DOMContentLoaded', renderCart);
+        list.addEventListener('change', (e) => {
+            if (!e.target.matches('.qty-input')) return;
+            const wrap = e.target.closest('.cart-line');
+            Cart.updateQty(wrap.dataset.sku, Number(e.target.value) || 1);
+        });
+
+        window.addEventListener('cart:updated', render);
+        window.addEventListener('storage', (ev) => { if (ev.key === 'dkb_cart_v1') render(); });
+        render();
+    }
+})();
