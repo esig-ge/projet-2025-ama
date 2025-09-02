@@ -19,7 +19,7 @@
   <br><br>
 
   <input type="submit" value="Connexion">
-  <p><a href="interface_modification_mdp.html">Mot de passe oublié ?</a></p>
+  <p><a href="interface_modification_mdp.php">Mot de passe oublié ?</a></p>
 
 </form>
 </div>

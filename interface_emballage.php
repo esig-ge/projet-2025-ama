@@ -69,7 +69,7 @@
     </div>
 </div>
 
-<a href="interface_supplement.html" class="button">Retour</a>
+<a href="interface_supplement.php" class="button">Retour</a>
     <a href=""
        class="add-to-cart"
        data-id="<?= htmlspecialchars($produit['id']) ?>"

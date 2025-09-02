@@ -138,7 +138,7 @@
         </div>
     </div>
 
-    <a href="interface_catalogue_bouquet.html" class="button">retour</a>
+    <a href="interface_catalogue_bouquet.php" class="button">retour</a>
     <a href="interface_emballage.php" class="button">suivant</a>
 
 </div>
