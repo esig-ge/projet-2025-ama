@@ -1,6 +1,6 @@
 
 
-<link rel="stylesheet" href="../css/style_header_footer.css">
+<link rel="stylesheet" href="css/style_header_footer.css">
 
 <header class="site-header">
     <div class="header">
@@ -12,7 +12,7 @@
                     <a href="index.php">Accueil</a>
                     <a href="">A propos</a>
                     <a href="interface_selection_produit.php">Catalogue</a>
-                    <a href="">Contact</a></li>
+                    <a href="">Contact</a>
                     <a href="inscription.php">S'inscrire</a>
                     <a  href="interface_connexion.php">Se connecter</a>
                 </ul>
