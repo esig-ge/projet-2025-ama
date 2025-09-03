@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style_connexion_inscription.css">
     <title>Title</title>
 </head>
 <body>
+<div class="conteneur_form">
 <h2>Changement mot de passe</h2>
 <form action="" method="POST">
 
@@ -21,5 +22,6 @@
 
 
 </form>
+</div>
 </body>
 </html>

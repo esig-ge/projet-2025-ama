@@ -7,7 +7,7 @@
 </head>
 
 <body>
-<h1>Catalogue boouquet</h1>
+<h1>Catalogue bouquet</h1>
 <div id="produit_bouquet">
 <div>
     <img src="img/12Roses.png"/>
