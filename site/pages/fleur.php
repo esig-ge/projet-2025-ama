@@ -71,6 +71,10 @@ include 'includes/header.php';
             <button class="btn">Sélectionner</button>
         </div>
     </div>
+    <div class="btn_accueil">
+        <!--<a class="btn_index" href="">Découvrir nos créations</a>-->
+        <a class="btn_index" href="interface_selection_produit.php">suivant</a>
+    </div>
 </section>
 <?php
 include 'includes/footer.php';
