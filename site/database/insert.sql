@@ -1,24 +1,5 @@
-Fleur :
-INSERT INTO FLEUR VALUES(1, "RoseRou", 5, "Rouge", "Rose")
-INSERT INTO FLEUR VALUES(2, "RoseRoC", 5, "Rose clair", "Rose")
-INSERT INTO FLEUR VALUES(3, "RoseRo", 5, "Rose", "Rose")
-INSERT INTO FLEUR VALUES(4, "RoseBla", 5, "Blanc", "Rose")
-INSERT INTO FLEUR VALUES(5, "RoseBle", 5, "Bleu", "Rose")
-INSERT INTO FLEUR VALUES(6, "RoseN", 5, "Noir", "Rose")
-
-Bouquet :
-                           id    nom    prix   desc type
-INSERT INTO BOUQUET VALUES(1, "RoseRou", 5, "Rouge", "Rose")
-Coffret :
-
-Supplément :
-
-Rabais :
-
-INSERT INTO RABAIS (RAB_ID, RAB_POURCENTAGE, RAB_ACTIF) VALUES( 1, 10), (2, 15), (3, 25);
-
 -- =========================
--- DONNÉES DE TEST
+-- DONNÉES DE TEST (sans IDs explicites car AUTO-INCREMENT)
 -- =========================
 
 -- PERSONNE
@@ -28,10 +9,12 @@ INSERT INTO PERSONNE (PER_NOM, PER_PRENOM, PER_EMAIL, PER_MDP, PER_NUM_TEL) VALU
                                                                                 ('Durand','Sophie','sophie.durand@example.com','Azerty@9','0774567890');
 
 -- CLIENT
-INSERT INTO CLIENT (PER_ID, CLI_DATENAISSANCE, CLI_NB_POINTS_FIDELITE) VALUES
-                                                                           (1,'1990-05-12',100),
-                                                                           (2,'1985-09-23',250),
-                                                                           (3,'2000-01-10',50);
+INSERT INTO CLIENT (PER_ID, CLI_DATENAISSANCE, CLI_NB_POINTS_FIDELITE)
+SELECT PER_ID, '1990-05-12', 100 FROM PERSONNE WHERE PER_EMAIL='alice.dupont@example.com';
+INSERT INTO CLIENT (PER_ID, CLI_DATENAISSANCE, CLI_NB_POINTS_FIDELITE)
+SELECT PER_ID, '1985-09-23', 250 FROM PERSONNE WHERE PER_EMAIL='jean.martin@example.com';
+INSERT INTO CLIENT (PER_ID, CLI_DATENAISSANCE, CLI_NB_POINTS_FIDELITE)
+SELECT PER_ID, '2000-01-10',  50 FROM PERSONNE WHERE PER_EMAIL='sophie.durand@example.com';
 
 -- ADRESSE
 INSERT INTO ADRESSE (ADR_RUE, ADR_NUMERO, ADR_NPA, ADR_VILLE, ADR_PAYS, ADR_TYPE) VALUES
@@ -40,65 +23,139 @@ INSERT INTO ADRESSE (ADR_RUE, ADR_NUMERO, ADR_NPA, ADR_VILLE, ADR_PAYS, ADR_TYPE
                                                                                       ('Chemin des Fleurs','45','1010','Lausanne','Suisse','LIVRAISON');
 
 -- CLIENT_ADRESSE
-INSERT INTO CLIENT_ADRESSE (PER_ID, ADR_ID) VALUES
-                                                (1,1),(2,2),(3,3);
+INSERT INTO CLIENT_ADRESSE (PER_ID, ADR_ID)
+SELECT c.PER_ID, a.ADR_ID
+FROM CLIENT c JOIN ADRESSE a ON a.ADR_RUE='Rue de Lausanne' AND a.ADR_NUMERO='12A'
+WHERE c.PER_ID = (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='alice.dupont@example.com');
 
--- PRODUIT
--- 1..3 = fleurs (rouge/rose/blanc), 4..6 = bouquets (printemps/mariage/romantique), 7..9 = coffrets (SV/noel/fêtes mères)
+INSERT INTO CLIENT_ADRESSE (PER_ID, ADR_ID)
+SELECT c.PER_ID, a.ADR_ID
+FROM CLIENT c JOIN ADRESSE a ON a.ADR_RUE='Avenue du Rhône' AND a.ADR_NUMERO='27'
+WHERE c.PER_ID = (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='jean.martin@example.com');
+
+INSERT INTO CLIENT_ADRESSE (PER_ID, ADR_ID)
+SELECT c.PER_ID, a.ADR_ID
+FROM CLIENT c JOIN ADRESSE a ON a.ADR_RUE='Chemin des Fleurs' AND a.ADR_NUMERO='45'
+WHERE c.PER_ID = (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='sophie.durand@example.com');
+
+-- PRODUIT (fleurs, bouquets, coffrets)
 INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX) VALUES
-                                            ('Rose rouge classique', 10.50),        -- id = 1
-                                            ('Rose rose classique', 10.50),         -- id = 2
-                                            ('Rose blanche classique', 10.50),      -- id = 3
-                                            ('Bouquet printemps', 45.00),           -- id = 4
-                                            ('Bouquet mariage élégant', 120.00),    -- id = 5
-                                            ('Bouquet romantique 12 roses', 60.00), -- id = 6
-                                            ('Coffret Saint-Valentin', 89.90),      -- id = 7
-                                            ('Coffret Noël', 89.90),                -- id = 8
-                                            ('Coffret Fêtes des mères', 89.90);     -- id = 9
+                                            ('Rose Rou', 5.00),
+                                            ('Rose RoC', 5.00),
+                                            ('Rose Ro',  5.00),
+                                            ('Rose Bla', 5.00),
+                                            ('Rose Ble', 5.00),
+                                            ('Rose N',   5.00),
+                                            ('Bouquet 12', 30.00),
+                                            ('Bouquet 20', 40.00),
+                                            ('Bouquet 24', 45.00),
+                                            ('Bouquet 36', 60.00),
+                                            ('Bouquet 50', 70.00),
+                                            ('Bouquet 66', 85.00),
+                                            ('Bouquet 99', 110.00),
+                                            ('Bouquet 100', 112.00),
+                                            ('Bouquet 101', 115.00),
+                                            ('Coffret ANV', 90.00),
+                                            ('Coffret SV',  90.00),
+                                            ('Coffret FdM', 100.00),
+                                            ('Coffret BPT', 100.00),
+                                            ('Coffret MRG', 100.00);
 
 -- SUPPLEMENT
 INSERT INTO SUPPLEMENT (SUP_NOM, SUP_DESCRIPTION, SUP_PRIX_UNITAIRE, SUP_QTE_STOCK) VALUES
-                                                                                        ('Ruban satin','Ruban décoratif rouge',2.50,100),
-                                                                                        ('Carte personnalisée','Petit mot personnalisé',3.00,50),
-                                                                                        ('Vase en verre','Vase cylindrique transparent',15.00,20);
+                                                                                        ('Mini ourson','Petit ourson en peluche blanc',2.00,10),
+                                                                                        ('Décoration anniversaire','Décoration anniversaire sur le bouquet',2.00,15),
+                                                                                        ('Papillons','Papillons dorés en papier',2.00,10),
+                                                                                        ('Baton coeur','Petits batons avec un coeur au dessus',2.00,15),
+                                                                                        ('Diamants','Diamants en plastique',5.00,20),
+                                                                                        ('Couronne','Petite couronne argentée',5.00,20),
+                                                                                        ('Paillettes','Paillettes à mettre sur le bouquet',9.00,30),
+                                                                                        ('Initiale','Initiales du prénom dans le bouquet',10.00,10),
+                                                                                        ('Carte','Carte avec bords dorés pour un petit mot',3.00,30);
 
--- SUPP_PRODUIT
-INSERT INTO SUPP_PRODUIT (SUP_ID, PRO_ID) VALUES
-                                              (1,1),(2,4),(3,7);
+-- SUPP_PRODUIT (liés par noms)
+INSERT INTO SUPP_PRODUIT (SUP_ID, PRO_ID)
+SELECT s.SUP_ID, p.PRO_ID FROM SUPPLEMENT s, PRODUIT p
+WHERE s.SUP_NOM IN ('Mini ourson','Décoration anniversaire','Papillons') AND p.PRO_NOM='Bouquet 12';
+INSERT INTO SUPP_PRODUIT (SUP_ID, PRO_ID)
+SELECT s.SUP_ID, p.PRO_ID FROM SUPPLEMENT s, PRODUIT p
+WHERE s.SUP_NOM='Carte' AND p.PRO_NOM='Coffret ANV';
 
--- FLEUR (1–1 avec PRODUIT)
-INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR) VALUES
-                                                      (1,'Rose','rouge'),
-                                                      (2,'Rose','rose'),
-                                                      (3,'Rose','blanc');
+-- FLEUR (couleurs = enum en minuscules)
+INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
+SELECT PRO_ID, 'Rose éternelle', 'rouge'      FROM PRODUIT WHERE PRO_NOM='Rose Rou';
+INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
+SELECT PRO_ID, 'Rose éternelle', 'rose clair' FROM PRODUIT WHERE PRO_NOM='Rose RoC';
+INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
+SELECT PRO_ID, 'Rose éternelle', 'rose'       FROM PRODUIT WHERE PRO_NOM='Rose Ro';
+INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
+SELECT PRO_ID, 'Rose éternelle', 'blanc'      FROM PRODUIT WHERE PRO_NOM='Rose Bla';
+INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
+SELECT PRO_ID, 'Rose éternelle', 'bleu'       FROM PRODUIT WHERE PRO_NOM='Rose Ble';
+INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
+SELECT PRO_ID, 'Rose éternelle', 'noir'       FROM PRODUIT WHERE PRO_NOM='Rose N';
 
--- BOUQUET (1–1 avec PRODUIT)
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE) VALUES
-                                                            (4,'Bouquet de printemps avec fleurs variées','saisonnier'),
-                                                            (5,'Bouquet mariage élégant avec roses blanches','mariage'),
-                                                            (6,'Bouquet romantique avec 12 roses rouges','romantique');
+-- BOUQUET (types autorisés: standard, personnalise, mariage, anniversaire, naissance, deuil, romantique, saisonnier, luxe)
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 12 roses', 'standard' FROM PRODUIT WHERE PRO_NOM='Bouquet 12';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 20 roses', 'anniversaire' FROM PRODUIT WHERE PRO_NOM='Bouquet 20';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 24 roses', 'mariage' FROM PRODUIT WHERE PRO_NOM='Bouquet 24';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 36 roses', 'deuil' FROM PRODUIT WHERE PRO_NOM='Bouquet 36';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 50 roses', 'luxe' FROM PRODUIT WHERE PRO_NOM='Bouquet 50';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 66 roses', 'saisonnier' FROM PRODUIT WHERE PRO_NOM='Bouquet 66';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 99 roses', 'naissance' FROM PRODUIT WHERE PRO_NOM='Bouquet 99';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 100 roses', 'romantique' FROM PRODUIT WHERE PRO_NOM='Bouquet 100';
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
+SELECT PRO_ID, 'Bouquet de 101 roses', 'personnalise' FROM PRODUIT WHERE PRO_NOM='Bouquet 101';
 
--- BOUQUET_FLEUR (composition des bouquets avec les fleurs 1..3)
-INSERT INTO BOUQUET_FLEUR (BOUQUET_ID, FLEUR_ID, BF_QTE) VALUES
-                                                             (4,1,12),(4,2,8),(4,3,6),     -- printemps
-                                                             (5,3,24),                     -- mariage
-                                                             (6,1,12);                     -- romantique
+-- BOUQUET_FLEUR (exemples)
+INSERT INTO BOUQUET_FLEUR (BOUQUET_ID, FLEUR_ID, BF_QTE)
+SELECT b.PRO_ID, f.PRO_ID, 12
+FROM BOUQUET b
+         JOIN PRODUIT pb ON pb.PRO_ID=b.PRO_ID AND pb.PRO_NOM='Bouquet 12'
+         JOIN FLEUR f ON f.PRO_ID = (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Rou');
 
--- COFFRET (1–1 avec PRODUIT)
-INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT) VALUES
-                                               (7,'saint-valentin'),
-                                               (8,'noel'),
-                                               (9,'fetes des meres');
+INSERT INTO BOUQUET_FLEUR (BOUQUET_ID, FLEUR_ID, BF_QTE)
+SELECT b.PRO_ID, f.PRO_ID, 24
+FROM BOUQUET b
+         JOIN PRODUIT pb ON pb.PRO_ID=b.PRO_ID AND pb.PRO_NOM='Bouquet 24'
+         JOIN FLEUR f ON f.PRO_ID = (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Bla');
 
--- COFFRET_BOUQUET (pas de doublon)
-INSERT INTO COFFRET_BOUQUET (COFFRET_ID, BOUQUET_ID) VALUES
-                                                         (7,6),   -- SV avec bouquet romantique
-                                                         (8,4),   -- Noël avec printemps
-                                                         (9,5);   -- Fêtes mères avec mariage
+-- COFFRET (événements autorisés: 'saint-valentin','fetes des meres','happy birthday','paques','noel','nouvel an')
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'happy birthday' FROM PRODUIT WHERE PRO_NOM='Coffret ANV';
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'saint-valentin' FROM PRODUIT WHERE PRO_NOM='Coffret SV';
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'fetes des meres' FROM PRODUIT WHERE PRO_NOM='Coffret FdM';
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'paques' FROM PRODUIT WHERE PRO_NOM='Coffret BPT';
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'noel' FROM PRODUIT WHERE PRO_NOM='Coffret MRG';
+
+-- COFFRET_BOUQUET (exemples)
+INSERT INTO COFFRET_BOUQUET (COFFRET_ID, BOUQUET_ID)
+SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Coffret SV'),
+       (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Bouquet 100');
+
+INSERT INTO COFFRET_BOUQUET (COFFRET_ID, BOUQUET_ID)
+SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Coffret ANV'),
+       (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Bouquet 20');
+
+INSERT INTO COFFRET_BOUQUET (COFFRET_ID, BOUQUET_ID)
+SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Coffret FdM'),
+       (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Bouquet 24');
 
 -- RABAIS
 INSERT INTO RABAIS (RAB_POURCENTAGE, RAB_ACTIF) VALUES
-                                                    (10.00,1),(20.00,1),(15.00,0);
+                                                    (10.00,1),(15.00,1),(25.00,0);
 
 -- LIVRAISON
 INSERT INTO LIVRAISON (LIV_STATUT, LIV_MODE, LIV_MONTANT_FRAIS, LIV_NOM_TRANSPORTEUR, LIV_NUM_SUIVI_COMMANDE, LIV_DATE) VALUES
@@ -106,38 +163,97 @@ INSERT INTO LIVRAISON (LIV_STATUT, LIV_MODE, LIV_MONTANT_FRAIS, LIV_NOM_TRANSPOR
                                                                                                                             ('en cours','coursier',10.00,'DHL','CH54321','2025-09-12'),
                                                                                                                             ('livrée','retrait',0.00,NULL,NULL,'2025-08-30');
 
--- COMMANDE
-INSERT INTO COMMANDE (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE) VALUES
-                                                                                                         (1,1,1,'en préparation','2025-09-01','Commande bouquet printemps',45),
-                                                                                                         (2,2,2,'expédiée','2025-08-28','Commande coffret Saint-Valentin',90),
-                                                                                                         (3,3,NULL,'livrée','2025-08-20','Commande roses rouges',30);
+-- COMMANDE (référence clients par email + livraisons par (date,mode,statut))
+INSERT INTO COMMANDE (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
+SELECT
+    (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='alice.dupont@example.com'),
+    (SELECT LIV_ID FROM LIVRAISON WHERE LIV_DATE='2025-09-10' AND LIV_MODE='courrier' AND LIV_STATUT='prévue'),
+    (SELECT RAB_ID FROM RABAIS WHERE RAB_POURCENTAGE=10.00 AND RAB_ACTIF=1),
+    'en préparation','2025-09-01','Commande bouquet 12',30;
 
--- COMMANDE_PRODUIT (adapter aux nouveaux IDs)
-INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT) VALUES
-                                                                                     (1,4,1,'bouquet'),  -- bouquet printemps
-                                                                                     (2,7,1,'coffret'),  -- coffret SV
-                                                                                     (3,1,12,'fleur');   -- 12 roses rouges (produit fleur rouge)
+INSERT INTO COMMANDE (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
+SELECT
+    (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='jean.martin@example.com'),
+    (SELECT LIV_ID FROM LIVRAISON WHERE LIV_DATE='2025-09-12' AND LIV_MODE='coursier' AND LIV_STATUT='en cours'),
+    (SELECT RAB_ID FROM RABAIS WHERE RAB_POURCENTAGE=15.00 AND RAB_ACTIF=1),
+    'expédiée','2025-08-28','Commande coffret SV',90;
 
--- COMMANDE_SUPP
-INSERT INTO COMMANDE_SUPP (SUP_ID, COM_ID, CS_QTE_COMMANDEE) VALUES
-                                                                 (1,1,1),(2,2,2),(3,3,1);
+INSERT INTO COMMANDE (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
+SELECT
+    (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='sophie.durand@example.com'),
+    (SELECT LIV_ID FROM LIVRAISON WHERE LIV_DATE='2025-08-30' AND LIV_MODE='retrait' AND LIV_STATUT='livrée'),
+    NULL,
+    'livrée','2025-08-20','Commande roses rouges',30;
+
+-- COMMANDE_PRODUIT
+INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
+SELECT c.COM_ID, p.PRO_ID, 1, 'bouquet'
+FROM COMMANDE c, PRODUIT p
+WHERE c.COM_DESCRIPTION='Commande bouquet 12' AND p.PRO_NOM='Bouquet 12';
+
+INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
+SELECT c.COM_ID, p.PRO_ID, 1, 'coffret'
+FROM COMMANDE c, PRODUIT p
+WHERE c.COM_DESCRIPTION='Commande coffret SV' AND p.PRO_NOM='Coffret SV';
+
+INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
+SELECT c.COM_ID, p.PRO_ID, 12, 'fleur'
+FROM COMMANDE c, PRODUIT p
+WHERE c.COM_DESCRIPTION='Commande roses rouges' AND p.PRO_NOM='Rose Rou';
+
+-- COMMANDE_SUPP (exemples)
+INSERT INTO COMMANDE_SUPP (SUP_ID, COM_ID, CS_QTE_COMMANDEE)
+SELECT s.SUP_ID, c.COM_ID, 1
+FROM SUPPLEMENT s, COMMANDE c
+WHERE s.SUP_NOM='Mini ourson' AND c.COM_DESCRIPTION='Commande bouquet 12';
 
 -- PAIEMENT
 INSERT INTO PAIEMENT (PAI_MODE, PAI_MONTANT, PAI_DATE) VALUES
-                                                           ('Twint',45.00,'2025-09-01'),
-                                                           ('Carte',89.90,'2025-08-28'),
-                                                           ('Revolut',120.00,'2025-08-20');
+                                                           ('Twint',30.00,'2025-09-01'),
+                                                           ('Carte',90.00,'2025-08-28'),
+                                                           ('Revolut',60.00,'2025-08-20');
 
 -- COMMANDE_PAIEMENT
-INSERT INTO COMMANDE_PAIEMENT (COM_ID, PAI_ID) VALUES
-                                                   (1,1),(2,2),(3,3);
+INSERT INTO COMMANDE_PAIEMENT (COM_ID, PAI_ID)
+SELECT c.COM_ID, p.PAI_ID
+FROM COMMANDE c, PAIEMENT p
+WHERE c.COM_DESCRIPTION='Commande bouquet 12' AND p.PAI_MODE='Twint' AND p.PAI_DATE='2025-09-01';
 
--- AVIS (désormais PER_ID doit être un CLIENT)
-INSERT INTO AVIS (PRO_ID, PER_ID, AVI_NOTE, AVI_DESCRIPTION, AVI_DATE) VALUES
-                                                                           (1,1,9,'Très belles roses, fraîcheur impeccable.','2025-09-01'),
-                                                                           (4,2,8,'Bouquet bien arrangé, livraison rapide.','2025-08-29'),
-                                                                           (7,3,7,'Coffret sympa mais un peu cher.','2025-08-21');
+INSERT INTO COMMANDE_PAIEMENT (COM_ID, PAI_ID)
+SELECT c.COM_ID, p.PAI_ID
+FROM COMMANDE c, PAIEMENT p
+WHERE c.COM_DESCRIPTION='Commande coffret SV' AND p.PAI_MODE='Carte' AND p.PAI_DATE='2025-08-28';
+
+INSERT INTO COMMANDE_PAIEMENT (COM_ID, PAI_ID)
+SELECT c.COM_ID, p.PAI_ID
+FROM COMMANDE c, PAIEMENT p
+WHERE c.COM_DESCRIPTION='Commande roses rouges' AND p.PAI_MODE='Revolut' AND p.PAI_DATE='2025-08-20';
+
+-- AVIS (réservé aux clients)
+INSERT INTO AVIS (PRO_ID, PER_ID, AVI_NOTE, AVI_DESCRIPTION, AVI_DATE)
+SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Rou'),
+       (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='alice.dupont@example.com'),
+       9,'Très belles roses, fraîcheur impeccable.','2025-09-01';
+
+INSERT INTO AVIS (PRO_ID, PER_ID, AVI_NOTE, AVI_DESCRIPTION, AVI_DATE)
+SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Bouquet 12'),
+       (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='jean.martin@example.com'),
+       8,'Bouquet bien arrangé, livraison rapide.','2025-08-29';
+
+INSERT INTO AVIS (PRO_ID, PER_ID, AVI_NOTE, AVI_DESCRIPTION, AVI_DATE)
+SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Coffret SV'),
+       (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='sophie.durand@example.com'),
+       7,'Coffret sympa mais un peu cher.','2025-08-21';
 
 -- CLIENT_RABAIS
-INSERT INTO CLIENT_RABAIS (RAB_ID, PER_ID) VALUES
-                                               (1,1),(2,2),(3,3);
+INSERT INTO CLIENT_RABAIS (RAB_ID, PER_ID)
+SELECT r.RAB_ID, (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='alice.dupont@example.com')
+FROM RABAIS r WHERE r.RAB_POURCENTAGE=10.00 AND r.RAB_ACTIF=1;
+
+INSERT INTO CLIENT_RABAIS (RAB_ID, PER_ID)
+SELECT r.RAB_ID, (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='jean.martin@example.com')
+FROM RABAIS r WHERE r.RAB_POURCENTAGE=15.00 AND r.RAB_ACTIF=1;
+
+INSERT INTO CLIENT_RABAIS (RAB_ID, PER_ID)
+SELECT r.RAB_ID, (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='sophie.durand@example.com')
+FROM RABAIS r WHERE r.RAB_POURCENTAGE=25.00 AND r.RAB_ACTIF=0;
