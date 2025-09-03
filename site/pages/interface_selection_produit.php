@@ -11,6 +11,7 @@
 <?php
 include 'includes/header.php';
 ?>
+
 <h1>Nos produits</h1>
 <div id="select_produit">
     <a href="fleur.php">Fleurs</a>

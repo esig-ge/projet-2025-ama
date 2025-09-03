@@ -16,11 +16,12 @@ header {
 }
 .h{
      display: flex;
-     flex-direction: row;
-     justify-content: space-between;
+    flex-direction: row;
+    justify-content: space-between;
      margin: 10px;
  }
 .titre{
+    display: flex;
     color: white;
     font-size: 60px;
     font-family: mapolice;
@@ -84,7 +85,7 @@ footer a{
    margin-right: 20px;
 }
 main{
-    height: 80%;
+    height: 90%;
     display: flex;
     justify-content: center;
     align-content: center;
