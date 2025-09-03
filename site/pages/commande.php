@@ -38,8 +38,8 @@ session_start();
             <div class="help">
                 <p>Une question ? Contactez-nous au <a href="tel:+41765698541">+41 76 569 85 41</a></p>
                 <ul>
-                    <li>Expédition sous 24–48h (si disponible)</li>
-                    <li>Frais offerts dès 80 CHF</li>
+                    <li>Expédition sous 7 jours (si disponible)</li>
+                    <li>Frais  livraison?</li>
                     <li>Paiement sécurisé</li>
                 </ul>
             </div>

@@ -1,7 +1,7 @@
 <?php
 session_start();
 // ---- Sécurité & en-tête
-include 'app/includes/header.php';
+include 'includes/header.php';
 
 
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -182,4 +182,4 @@ function badge_class($status) {
     </section>
 </main>
 
-<?php include 'app/includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?>

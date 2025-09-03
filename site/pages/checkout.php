@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/connexionBDD.php';
-require_once __DIR__ . '/../../config/stripe.php';
+require_once __DIR__ . '/../database/config/connexionBDD.php';
+require_once __DIR__ . '/../database/config/stripe.php';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -20,7 +20,7 @@ require_once __DIR__ . '/../../config/stripe.php';
     <div class="grid">
         <section class="card">
             <form id="checkout-form">
-                <!-- (tes champs d’adresses ici si besoin) -->
+                <!-- (champs d’adresses ici si besoin) -->
                 <h2>Paiement</h2>
                 <div id="payment-element"></div>
                 <button id="pay-btn" class="btn-primary" type="submit">Payer</button>
