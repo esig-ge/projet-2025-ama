@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Inscription</title>
-    <link rel="stylesheet" href="../../public/assets/css/style_connexion_inscription.css">
+    <link rel="stylesheet" href="css/style_connexion_inscription.css">
 </head>
 <body>
-<div class="conteneur_formulaire">
+<div class="conteneur_form">
     <h2>S'inscrire</h2>
-    <form action="traitement_inscription.php" method="POST">
+    <form action="" method="POST">
         <label for="firstname">Prénom</label>
         <input type="text" id="firstname" name="firstname" required placeholder="Ton prénom"/>
 

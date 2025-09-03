@@ -22,13 +22,14 @@
                 <h1>Bienvenu <span class="accent">élégance</span>.</h1>
                 <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
                 <br>
+                <div class="bouquet">
+                    <img class="" src="img/boxe_rouge_DK.png" alt="" width="200px" height="auto">
+                </div>
                 <a class="btn_catalogue" href="catalogue.php">Découvrir nos créations</a>
                 <a class="btn_creer" href="personnalisation.php">Créer la vôtre</a>
 
             </div>
-            <div class="bouquet">
-                <img class="" src="img/b" alt="" width="200px" height="auto">
-            </div>
+
     </section>
 </main>
 
