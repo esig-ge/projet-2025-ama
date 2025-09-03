@@ -24,28 +24,6 @@ session_start();
         <!-- Liste du panier -->
         <section class="card" id="cart-list" aria-live="polite"></section>
 
-        <script>
-            (async function(){
-                try {
-                    const res = await fetch('../api/cart.php?action=list', {credentials:'same-origin'});
-                    const data = await res.json();
-                    if (!data.ok) return;
-
-                    const wrap = document.getElementById('cart-list');
-                    if (!data.items.length) { wrap.textContent = 'Votre panier est vide.'; return; }
-
-                    wrap.innerHTML = data.items.map(it => `
-      <div class="line">
-        <span>${it.PRO_NOM}</span>
-        <span>x ${it.CP_QTE_COMMANDEE}</span>
-        <span>${Number(it.PRO_PRIX).toFixed(2)} CHF</span>
-      </div>
-    `).join('');
-                } catch(e) { console.error(e); }
-            })();
-        </script>
-
-
         <!-- Résumé -->
         <aside class="card summary" aria-labelledby="sum-title">
             <h2 id="sum-title" class="sr-only">Résumé de commande</h2>
@@ -78,5 +56,38 @@ session_start();
 
 <!-- JS du panier -->
 <script src="js/commande.js"></script>
-</body>
+<script>
+    (async function(){
+        try {
+            const res = await fetch('../api/cart.php?action=list', {credentials:'same-origin'});
+            const data = await res.json();
+            if (!data.ok) return;
+
+            const wrap = document.getElementById('cart-list');
+            if (!data.items.length) {
+                wrap.innerHTML = '<div class="empty"><p><strong>Votre panier est vide</strong></p></div>';
+            } else {
+                wrap.innerHTML = data.items.map(it => {
+                    const pu = Number(it.PRO_PRIX) || 0;
+                    const q  = Number(it.CP_QTE_COMMANDEE) || 0;
+                    const lt = (pu * q).toFixed(2);
+                    return `
+          <div class="cart-brief">
+            <div class="name">${it.PRO_NOM}</div>
+            <div class="qty">x&nbsp;${q}</div>
+            <div class="unit">${pu.toFixed(2)}&nbsp;CHF</div>
+            <div class="total">${lt}&nbsp;CHF</div>
+          </div>
+        `;
+                }).join('');
+            }
+
+            if (window.updateSummaryUI) window.updateSummaryUI(data.items);
+        } catch(e) {
+            console.error(e);
+        }
+    })();
+</script>
+
+
 </html>

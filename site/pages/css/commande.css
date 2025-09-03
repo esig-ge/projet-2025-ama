@@ -137,3 +137,21 @@ main{flex:1}
 }
 
 a:focus,button:focus,input:focus{outline:2px solid rgba(141,14,14,.35); outline-offset:2px}
+
+#btn-checkout[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: .6;
+}
+
+/* Ligne compacte : Nom | xQte | Prix unitaire | Total */
+.cart-brief{
+    display:grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap:12px; align-items:center;
+    padding:16px; border-bottom:1px solid var(--stroke);
+}
+.cart-brief .name{font-weight:700}
+.cart-brief .qty{color:var(--muted)}
+.cart-brief .unit{justify-self:end}
+.cart-brief .total{justify-self:end; font-weight:700}
+

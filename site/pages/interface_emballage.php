@@ -76,7 +76,7 @@ session_start();
 
 <a href="interface_supplement.php" class="button">Retour</a>
 <a href="commande.php"
-   class="add-to-cart"
+   class="button"
    data-id="8"
 data-name="20 roses"
 data-price="40"
