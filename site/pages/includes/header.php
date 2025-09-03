@@ -9,9 +9,9 @@
             <p class="titre">DkBloom</p>
             <nav>
                 <ul class="menu">
-                    <li><a href="../index.php">Accueil</a></li>
-                    <li><a href="">A propos</a></li>
-                    <li><a href="">Catalogue</a></li>
+                    <a href="../index.php">Accueil</a>
+                    <a href="">A propos</a>
+                    <a href="../interface_selection_produit.php">Catalogue</a>
                     <li><a href="">Contact</a></li>
                     <li><a href="../inscription.php">S'inscrire</a></li>
                     <li><a  href="../interface_connexion.php">Se connecter</a></li>
