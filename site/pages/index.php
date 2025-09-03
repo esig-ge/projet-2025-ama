@@ -25,7 +25,7 @@ include 'includes/header.php';
                    <p class="paragraphe">L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
                    <br>
                    <div class="btn_accueil">
-                       <a class="btn_index" href="catalogue.php">Découvrir nos créations</a>
+                       <!--<a class="btn_index" href="">Découvrir nos créations</a>-->
                        <a class="btn_index" href="interface_selection_produit.php">Créer la vôtre</a>
                    </div>
                </div>
