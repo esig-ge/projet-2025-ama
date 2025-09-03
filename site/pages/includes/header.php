@@ -1,6 +1,6 @@
 
 
-<link rel="stylesheet" href="css/style_header_footer.css">
+<link rel="stylesheet" href="../css/squeletteIndex.css">
 
 <header class="site-header">
     <div class="header">
