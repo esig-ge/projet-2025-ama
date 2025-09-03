@@ -13,9 +13,11 @@
     align-content: center;
     padding-top: 80px;
 
-
 }
 
+h1{
+    color: darkred;
+}
 
 .btn {
 

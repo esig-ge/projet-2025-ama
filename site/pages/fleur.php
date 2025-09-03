@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="css/styleFleurUnique.css">
 </head>
 <body>
+<h1 class="section-title">Nos fleurs</h1>
 <section class="catalogue">
-    <h1 class="section-title">Nos fleurs</h1>
+
 
     <div class="produit">
         <div class="rose">
