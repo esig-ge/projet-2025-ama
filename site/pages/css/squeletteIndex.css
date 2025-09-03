@@ -22,8 +22,9 @@ header {
  }
 .titre{
     color: white;
-    font-size: 50px;
+    font-size: 60px;
     font-family: mapolice;
+    font-weight: bold;
 }
 
 .menu {
@@ -38,6 +39,7 @@ header {
     color: white;
     font-weight: bold;
     font-size: 18px;
+    padding-top: 20px;
 }
 
 .menu a:hover {

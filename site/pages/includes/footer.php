@@ -8,14 +8,12 @@
         </nav>
         <div class="reseau_sociaux">
             <a href="https://www.instagram.com" target="_blank">
-                <img src="../images/Instagram_icon.png" alt="Instagram">
+                <img src="../img/" alt="Instagram">
             </a>
-            <a href="https://www.facebook.com" target="_blank">
-                <img src="../images/logo_facebook.png" alt="Facebook">
+            <a href="https://www.tiktok.com/@_dkbloom" target="_blank">
+                <img src="../img" alt="tiktok">
             </a>
-            <a href="https://www.twitter.com" target="_blank">
-                <img src="../images/twitter_icone.png" alt="Twitter">
-            </a>
+
         </div>
     </div>
 </footer>
