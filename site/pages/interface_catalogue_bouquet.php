@@ -5,7 +5,9 @@
     <link rel="stylesheet" href="css/styleCatalogue.css">
     <title>catalogue bouquet</title>
 </head>
-
+<?php
+include 'includes/header.php';
+?>
 <body>
 <h1>Catalogue bouquet</h1>
 <div id="produit_bouquet">
