@@ -155,3 +155,54 @@ a:focus,button:focus,input:focus{outline:2px solid rgba(141,14,14,.35); outline-
 .cart-brief .unit{justify-self:end}
 .cart-brief .total{justify-self:end; font-weight:700}
 
+/* ---------- Titre + conteneur ---------- */
+.wrap{
+    max-width: 1200px;          /* un peu plus large -> le titre tient sur une ligne */
+    margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.page-title{
+    margin: 24px 0 18px;
+    text-align: center;
+    font-size: 40px;            /* plus compact que la très grande taille précédente */
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+/* ---------- Grille + cartes ---------- */
+.grid{
+    display: grid;
+    grid-template-columns: 1.6fr .9fr;  /* liste | résumé */
+    gap: 24px;
+    align-items: start;                 /* évite l’étirement vertical de la ligne */
+}
+
+/* chaque carte suit la hauteur de son contenu (ne s'étire pas à la hauteur de l'autre) */
+.grid > .card{
+    align-self: start;
+}
+
+.card{
+    background: var(--card);
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+/* ---------- Ligne compacte dans la liste ---------- */
+/* (si tu utilises .cart-brief comme plus haut) */
+.cart-brief{
+    display: grid;
+    grid-template-columns: 1fr auto auto auto; /* Nom | xQte | PU | Total */
+    gap: 12px;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--stroke);
+}
+.cart-brief .name{ font-weight: 700; }
+.cart-brief .qty{ color: var(--muted); }
+.cart-brief .unit{ justify-self: end; }
+.cart-brief .total{ justify-self: end; font-weight: 700; }
+
+

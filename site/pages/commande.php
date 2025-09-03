@@ -16,6 +16,13 @@ session_start();
 
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
+<script>
+    const h = document.querySelector('.site-header');
+    if (h) {
+        document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+    }
+</script>
+
 
 <main class="wrap" role="main">
     <h1 class="page-title">Récapitulatif de mon panier</h1>
