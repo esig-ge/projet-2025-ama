@@ -9,7 +9,15 @@
 </head>
 
 
+
+<header>
+    <?php
+    include 'includes/header.php';
+    ?>
+</header>
+
 <body>
+
 
 <h1>Suppléments</h1>
 <div>
