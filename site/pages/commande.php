@@ -24,6 +24,28 @@ session_start();
         <!-- Liste du panier -->
         <section class="card" id="cart-list" aria-live="polite"></section>
 
+        <script>
+            (async function(){
+                try {
+                    const res = await fetch('../api/cart.php?action=list', {credentials:'same-origin'});
+                    const data = await res.json();
+                    if (!data.ok) return;
+
+                    const wrap = document.getElementById('cart-list');
+                    if (!data.items.length) { wrap.textContent = 'Votre panier est vide.'; return; }
+
+                    wrap.innerHTML = data.items.map(it => `
+      <div class="line">
+        <span>${it.PRO_NOM}</span>
+        <span>x ${it.CP_QTE_COMMANDEE}</span>
+        <span>${Number(it.PRO_PRIX).toFixed(2)} CHF</span>
+      </div>
+    `).join('');
+                } catch(e) { console.error(e); }
+            })();
+        </script>
+
+
         <!-- Résumé -->
         <aside class="card summary" aria-labelledby="sum-title">
             <h2 id="sum-title" class="sr-only">Résumé de commande</h2>

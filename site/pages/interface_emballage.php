@@ -17,12 +17,11 @@ session_start();
     <div>
         <img src="img/emballage_blanc.PNG" alt="Emballage blanc">
         <button class="add-to-cart"
-                data-id="1"
-                data-nom=""
-                data-name="20 roses"
-                data-price="40"
-                data-img="assets/img/20Roses.png">
-            Ajouter
+                data-id="8"
+        data-name="20 roses"
+        data-price="40"
+        data-img="assets/img/20Roses.png">
+        Ajouter
         </button>
     </div>
 
@@ -78,16 +77,14 @@ session_start();
 <a href="interface_supplement.php" class="button">Retour</a>
 <a href="commande.php"
    class="add-to-cart"
-   data-id="<?= htmlspecialchars($produit['id']) ?>"
-   data-nom="<?= htmlspecialchars($produit['nom']) ?>"
-   data-prix="<?= htmlspecialchars($produit['prix']) ?>"
-   data-img="../assets/img/<?= htmlspecialchars($produit['image']) ?>">
-    Suivant
+   data-id="8"
+data-name="20 roses"
+data-price="40"
+data-img="assets/img/20Roses.png">
+Suivant
 </a>
 
+<script src="js/commande.js"></script>
 </body>
 </html>
-
-<!-- Inclure ce fichier sur TOUTES les pages qui manipulent le panier -->
-<script src="js/commande.js"></script>
 

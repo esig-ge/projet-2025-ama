@@ -126,4 +126,53 @@
         window.addEventListener('storage', (ev) => { if (ev.key === KEY) render(); });
         render();
     }
+
+    // site/pages/js/commande.js
+    document.addEventListener('DOMContentLoaded', () => {
+        const callAdd = async (proId, qty = 1) => {
+            const form = new FormData();
+            form.append('action', 'add');
+            form.append('pro_id', String(proId));
+            form.append('qty', String(qty));
+
+            const res = await fetch('../api/cart.php?action=add', {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin'
+            });
+            return res.json();
+        };
+
+        const wire = (el, redirectAfter = false) => {
+            el.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const proId = Number(el.dataset.id || el.dataset.proId);
+                const qty   = Number(el.dataset.qty || 1);
+                if (!proId) { alert('Produit invalide: data-id manquant'); return; }
+
+                try {
+                    const data = await callAdd(proId, qty);
+                    if (!data.ok) {
+                        if (data.error === 'auth_required') { window.location.href = 'interface_connexion.php'; return; }
+                        throw new Error(data.error || 'Erreur panier');
+                    }
+                    if (redirectAfter) {
+                        window.location.href = 'commande.php';
+                    } else {
+                        el.textContent = 'Ajouté ✓';
+                        setTimeout(() => (el.textContent = 'Ajouter'), 1200);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Impossible d'ajouter au panier.");
+                }
+            });
+        };
+
+        document.querySelectorAll('button.add-to-cart').forEach(btn => wire(btn, false));
+
+        const next = document.querySelector('a.add-to-cart[href*="commande.php"]');
+        if (next) wire(next, true);
+    });
+
 })();
