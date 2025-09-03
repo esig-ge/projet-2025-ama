@@ -4,7 +4,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Inscription</title>
+    <title>fleurs</title>
     <link rel="stylesheet" href="css/styleFleurUnique.css">
 </head>
 <body>
