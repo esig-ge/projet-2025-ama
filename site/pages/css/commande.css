@@ -1,42 +1,60 @@
 :root{
-    /* Palette claire inspirée de ta page Emballage */
-    --bg:#ffffff;
-    --card:#ffffff;
-    --ink:#1a1a1a;
-    --muted:#6b6b6b;
-    --accent:#8d0e0e;
-    --accent-weak:#5e0808;
-    --stroke:#e7e7ea;
-    --shadow:0 10px 24px rgba(0,0,0,.06);
+    /* Palette de couleurs et styles globaux */
+    --bg:#ffffff;           /* fond principal */
+    --card:#ffffff;         /* fond des cartes */
+    --ink:#1a1a1a;          /* couleur du texte standard */
+    --muted:#6b6b6b;        /* texte secondaire/grisé */
+    --accent:#8d0e0e;       /* couleur principale (rouge foncé) */
+    --accent-weak:#5e0808;  /* variante plus sombre de l’accent */
+    --stroke:#e7e7ea;       /* couleur des bordures */
+    --shadow:0 10px 24px rgba(0,0,0,.06); /* ombre douce */
 
-    /* Hauteur du header fixé (ajuste si besoin) */
+    /* Variable pour gérer l’espace du header fixé */
     --header-h: 72px;
 }
 
+/* Réinitialisation basique */
 *{box-sizing:border-box}
 html,body{height:100%}
 
-/* === Layout général : évite le chevauchement, footer collé en bas === */
 body{
-    margin:0; color:var(--ink); background:var(--bg);
+    margin:0;
+    color:var(--ink);
+    background:var(--bg);
     font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
 
-    display:flex; flex-direction:column; min-height:100vh;
-    padding-top:var(--header-h); /* espace pour le header fixe */
+    /* Technique “flex column” pour coller le footer en bas */
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+
+    /* On évite que le contenu passe sous le header fixé */
+    padding-top:var(--header-h);
 }
-main{flex:1}
+main{flex:1} /* le main prend toute la hauteur restante */
 
-.wrap{max-width:1100px;margin:0 auto;padding:16px}
-.page-title{margin:18px 0 12px;text-align:center}
+.wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:16px
+}
+.page-title{
+    margin:18px 0 12px;
+    text-align:center
+}
 
-/* Grille : liste + résumé */
+/* Mise en page en grille : colonne liste (gauche) + résumé (droite) */
 .grid{
-    display:grid; gap:18px;
+    display:grid;
+    gap:18px;
     grid-template-columns: 1.6fr .9fr;
 }
-@media (max-width:900px){ .grid{grid-template-columns: 1fr} }
+@media (max-width:900px){
+    /* Sur petits écrans : une seule colonne */
+    .grid{grid-template-columns: 1fr}
+}
 
-/* Cart Cards */
+/* Style des “cartes” (boîtes avec fond, bordure, arrondi, ombre) */
 .card{
     background:var(--card);
     border:1px solid var(--stroke);
@@ -44,165 +62,193 @@ main{flex:1}
     box-shadow:var(--shadow);
 }
 
-/* === Lignes produits === */
+/* === Lignes produits détaillées === */
 .cart-item,
 .cart-line{
     display:grid;
-    grid-template-columns: 80px 1fr auto auto 36px;
-    gap:12px; align-items:center;
-    padding:16px; border-bottom:1px solid var(--stroke);
+    grid-template-columns: 80px 1fr auto auto 36px; /* image | titre | PU | total | bouton */
+    gap:12px;
+    align-items:center;
+    padding:16px;
+    border-bottom:1px solid var(--stroke);
 }
 .cart-item:last-child,
 .cart-line:last-child{border-bottom:none}
 
 .item-img,
 .thumb{
-    width:80px;height:80px;border-radius:12px;object-fit:cover;
-    border:1px solid var(--stroke);background:#fafafa;
+    width:80px;height:80px;
+    border-radius:12px;
+    object-fit:cover;
+    border:1px solid var(--stroke);
+    background:#fafafa;
 }
 
 .item-title,
 .meta .name{font-weight:700}
 
 .item-sub,
-.meta .price ~ .sub{color:var(--muted);font-size:13px}
+.meta .price ~ .sub{
+    color:var(--muted);
+    font-size:13px
+}
 
+/* Bloc quantité avec boutons +/- et input */
 .qty{
     display:flex; align-items:center; gap:10px; justify-self:end;
 }
 .qty button,
 .btn-ghost{
-    width:auto; min-width:32px; height:32px; padding:0 10px;
-    border-radius:999px; border:1px solid var(--stroke);
-    background:#f7f7f8; color:var(--ink); font-weight:700; cursor:pointer;
+    min-width:32px; height:32px; padding:0 10px;
+    border-radius:999px;
+    border:1px solid var(--stroke);
+    background:#f7f7f8;
+    color:var(--ink);
+    font-weight:700;
+    cursor:pointer;
 }
 .qty input{
-    width:54px; text-align:center; background:#fff; color:var(--ink);
-    border:1px solid var(--stroke); border-radius:12px; padding:8px 0;
+    width:54px; text-align:center;
+    background:#fff; color:var(--ink);
+    border:1px solid var(--stroke);
+    border-radius:12px;
+    padding:8px 0;
 }
 
-.price, .line-total{justify-self:end;font-weight:700}
+.price, .line-total{
+    justify-self:end;
+    font-weight:700
+}
 
+/* Bouton supprimer */
 .remove,
 .btn-remove{
-    width:32px;height:32px;border-radius:999px;border:1px solid var(--stroke);
-    background:#fff;color:var(--accent);cursor:pointer; font-size:18px;
+    width:32px;height:32px;
+    border-radius:999px;
+    border:1px solid var(--stroke);
+    background:#fff;
+    color:var(--accent);
+    cursor:pointer;
+    font-size:18px;
 }
 
-/* Résumé */
+/* Résumé de la commande (colonne de droite) */
 .summary{padding:18px}
-.sum-row{display:flex;justify-content:space-between;margin:8px 0;color:var(--muted)}
-.sum-total{display:flex;justify-content:space-between;margin:14px 0;font-size:22px;font-weight:800}
+.sum-row{
+    display:flex;
+    justify-content:space-between;
+    margin:8px 0;
+    color:var(--muted)
+}
+.sum-total{
+    display:flex;
+    justify-content:space-between;
+    margin:14px 0;
+    font-size:22px;
+    font-weight:800
+}
 
-/* Bouton principal */
+/* Bouton “Valider ma commande” */
 .btn-primary{
-    display:block;text-align:center;padding:12px 18px;border-radius:999px;
-    background:var(--accent);color:#fff;text-decoration:none;font-weight:800;
-    margin:12px 0 8px;border:1px solid var(--accent); transition:background .15s ease;
+    display:block;
+    text-align:center;
+    padding:12px 18px;
+    border-radius:999px;
+    background:var(--accent);
+    color:#fff;
+    text-decoration:none;
+    font-weight:800;
+    margin:12px 0 8px;
+    border:1px solid var(--accent);
+    transition:background .15s ease;
 }
-.btn-primary:hover{background:var(--accent-weak);border-color:var(--accent-weak)}
+.btn-primary:hover{
+    background:var(--accent-weak);
+    border-color:var(--accent-weak)
+}
 
-/* état désactivé (quand panier vide) */
+/* Style quand désactivé (panier vide) */
 .btn-primary[aria-disabled="true"]{
-    background:#e9e9ec; border-color:#e9e9ec; color:#9b9ba0; pointer-events:none;
+    background:#e9e9ec;
+    border-color:#e9e9ec;
+    color:#9b9ba0;
+    pointer-events:none;
 }
 
-/* Champ code promo */
+/* Champ code promo + bouton */
 .coupon{display:flex;gap:10px;margin:12px 0}
 .coupon input{
-    flex:1;border-radius:12px;border:1px solid var(--stroke);
-    background:#fff;color:var(--ink);padding:12px 14px
+    flex:1;
+    border-radius:12px;
+    border:1px solid var(--stroke);
+    background:#fff;
+    color:var(--ink);
+    padding:12px 14px
 }
 .btn-ghost{padding:10px 14px}
 
-/* Aide */
-.help{border-top:1px solid var(--stroke);margin-top:12px;padding-top:12px}
-.help ul{margin:8px 0 0 18px;color:var(--muted)}
+/* Bloc d’aide (contact, infos livraison…) */
+.help{
+    border-top:1px solid var(--stroke);
+    margin-top:12px;
+    padding-top:12px
+}
+.help ul{
+    margin:8px 0 0 18px;
+    color:var(--muted)
+}
 
 /* Footer */
 .dkb-footer{
     border-top:1px solid var(--stroke);
-    margin-top:30px;color:var(--muted);background:#fff;
+    margin-top:30px;
+    color:var(--muted);
+    background:#fff;
 }
 
-/* État “panier vide” */
+/* Message quand le panier est vide */
 .empty{
-    display:flex; align-items:center; justify-content:center;
-    min-height:280px; text-align:center; color:var(--muted);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:280px;
+    text-align:center;
+    color:var(--muted);
 }
 .empty strong{color:var(--ink)}
-/* Accessibilité utilitaire */
+
+/* Classe utilitaire pour cacher visuellement mais garder accessible aux lecteurs d’écran */
 .sr-only{
-    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;
+    position:absolute;
+    width:1px;height:1px;
+    padding:0;margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    border:0;
 }
 
-a:focus,button:focus,input:focus{outline:2px solid rgba(141,14,14,.35); outline-offset:2px}
+/* Accessibilité : focus visible */
+a:focus,button:focus,input:focus{
+    outline:2px solid rgba(141,14,14,.35);
+    outline-offset:2px
+}
 
+/* Redondance : état désactivé du bouton checkout */
 #btn-checkout[aria-disabled="true"] {
     pointer-events: none;
     opacity: .6;
 }
 
-/* Ligne compacte : Nom | xQte | Prix unitaire | Total */
+/* Variante compacte des lignes produit */
 .cart-brief{
     display:grid;
-    grid-template-columns: 1fr auto auto auto;
-    gap:12px; align-items:center;
-    padding:16px; border-bottom:1px solid var(--stroke);
+    grid-template-columns: 1fr auto auto auto; /* Nom | Qte | PU | Total */
+    gap:12px;
+    align-items:center;
+    padding:16px;
+    border-bottom:1px solid var(--stroke);
 }
 .cart-brief .name{font-weight:700}
 .cart-brief .qty{color:var(--muted)}
 .cart-brief .unit{justify-self:end}
-.cart-brief .total{justify-self:end; font-weight:700}
-
-/* ---------- Titre + conteneur ---------- */
-.wrap{
-    max-width: 1200px;          /* un peu plus large -> le titre tient sur une ligne */
-    margin: 0 auto;
-    padding: 24px 16px;
-}
-
-.page-title{
-    margin: 24px 0 18px;
-    text-align: center;
-    font-size: 40px;            /* plus compact que la très grande taille précédente */
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-}
-
-/* ---------- Grille + cartes ---------- */
-.grid{
-    display: grid;
-    grid-template-columns: 1.6fr .9fr;  /* liste | résumé */
-    gap: 24px;
-    align-items: start;                 /* évite l’étirement vertical de la ligne */
-}
-
-/* chaque carte suit la hauteur de son contenu (ne s'étire pas à la hauteur de l'autre) */
-.grid > .card{
-    align-self: start;
-}
-
-.card{
-    background: var(--card);
-    border: 1px solid var(--stroke);
-    border-radius: 16px;
-    box-shadow: var(--shadow);
-}
-
-/* ---------- Ligne compacte dans la liste ---------- */
-/* (si tu utilises .cart-brief comme plus haut) */
-.cart-brief{
-    display: grid;
-    grid-template-columns: 1fr auto auto auto; /* Nom | xQte | PU | Total */
-    gap: 12px;
-    align-items: center;
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--stroke);
-}
-.cart-brief .name{ font-weight: 700; }
-.cart-brief .qty{ color: var(--muted); }
-.cart-brief .unit{ justify-self: end; }
-.cart-brief .total{ justify-self: end; font-weight: 700; }
-
-
+.cart-brief .total{justify-self:end;font-weight:700}
