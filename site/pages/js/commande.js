@@ -1,6 +1,6 @@
 // js/commande.js
 (function () {
-    // ---------- Core panier (réutilisable sur toutes les pages)
+    // ---------- Core panier
     const KEY = 'dkb_cart_v1';
 
     function money(n) {
@@ -53,13 +53,14 @@
     // Expose global
     window.Cart = { getCart, addItem, updateQty, removeItem, clear, totals, money };
 
-    // ---------- Rendu UI (uniquement si on est sur la page commande)
+    // ---------- Rendu UI (page commande)
     const list = document.getElementById('cart-list');
     const sumSubtotal = document.getElementById('sum-subtotal');
     const sumShipping = document.getElementById('sum-shipping');
     const sumTotal = document.getElementById('sum-total');
+    const btnCheckout = document.getElementById('btn-checkout');
 
-    if (list && sumSubtotal && sumShipping && sumTotal) {
+    if (list && sumSubtotal && sumShipping && sumTotal && btnCheckout) {
         const SHIPPING_THRESHOLD = 80;
         const SHIPPING_FEE = 9.9;
 
@@ -79,20 +80,23 @@
           </div>
           <div class="line-total">${Cart.money(lineTotal)}</div>
           <button class="btn-remove" title="Supprimer" data-action="remove">×</button>
-        </div>
-      `;
+        </div>`;
         }
 
         function render() {
             const cart = Cart.getCart();
             list.innerHTML = cart.lines.length
                 ? cart.lines.map(lineTpl).join('')
-                : `<p>Votre panier est vide.</p>`;
+                : `<div class="empty"><p><strong>Panier vide</strong><br>Ajoutez des produits depuis le catalogue.</p></div>`;
 
             const t = Cart.totals({ shippingThreshold: SHIPPING_THRESHOLD, shippingFee: SHIPPING_FEE });
             sumSubtotal.textContent = t.fmt.subtotal;
             sumShipping.textContent = t.fmt.shipping;
             sumTotal.textContent = t.fmt.total;
+
+            // Bouton checkout activé seulement si total > 0
+            const isEmpty = cart.lines.length === 0;
+            btnCheckout.setAttribute('aria-disabled', isEmpty ? 'true' : 'false');
         }
 
         list.addEventListener('click', (e) => {
@@ -113,8 +117,13 @@
             Cart.updateQty(wrap.dataset.sku, Number(e.target.value) || 1);
         });
 
+        // Sécurité : empêcher le clic si désactivé
+        btnCheckout.addEventListener('click', (e) => {
+            if (btnCheckout.getAttribute('aria-disabled') === 'true') e.preventDefault();
+        });
+
         window.addEventListener('cart:updated', render);
-        window.addEventListener('storage', (ev) => { if (ev.key === 'dkb_cart_v1') render(); });
+        window.addEventListener('storage', (ev) => { if (ev.key === KEY) render(); });
         render();
     }
 })();

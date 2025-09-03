@@ -17,8 +17,8 @@ session_start();
     <div>
         <img src="img/emballage_blanc.PNG" alt="Emballage blanc">
         <button class="add-to-cart"
-                data-id="BQ-20"
-                data-sku="BQ-20"
+                data-id="1"
+                data-nom=""
                 data-name="20 roses"
                 data-price="40"
                 data-img="assets/img/20Roses.png">
@@ -79,11 +79,10 @@ session_start();
 <a href="commande.php"
    class="add-to-cart"
    data-id="<?= htmlspecialchars($produit['id']) ?>"
-   data-sku="<?= htmlspecialchars($produit['sku']) ?>"
-   data-name="<?= htmlspecialchars($produit['nom']) ?>"
-   data-price="<?= htmlspecialchars($produit['prix']) ?>"
+   data-nom="<?= htmlspecialchars($produit['nom']) ?>"
+   data-prix="<?= htmlspecialchars($produit['prix']) ?>"
    data-img="../assets/img/<?= htmlspecialchars($produit['image']) ?>">
-    Ajouter
+    Suivant
 </a>
 
 </body>

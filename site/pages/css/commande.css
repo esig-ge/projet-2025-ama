@@ -4,20 +4,28 @@
     --card:#ffffff;
     --ink:#1a1a1a;
     --muted:#6b6b6b;
-    --accent:#8d0e0e;      /* bordeaux boutons “Ajouter” */
-    --accent-weak:#5e0808; /* hover foncé */
+    --accent:#8d0e0e;
+    --accent-weak:#5e0808;
     --stroke:#e7e7ea;
     --shadow:0 10px 24px rgba(0,0,0,.06);
+
+    /* Hauteur du header fixé (ajuste si besoin) */
+    --header-h: 72px;
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
+
+/* === Layout général : évite le chevauchement, footer collé en bas === */
 body{
     margin:0; color:var(--ink); background:var(--bg);
     font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-}
 
-/* Layout de base */
+    display:flex; flex-direction:column; min-height:100vh;
+    padding-top:var(--header-h); /* espace pour le header fixe */
+}
+main{flex:1}
+
 .wrap{max-width:1100px;margin:0 auto;padding:16px}
 .page-title{margin:18px 0 12px;text-align:center}
 
@@ -28,15 +36,6 @@ body{
 }
 @media (max-width:900px){ .grid{grid-template-columns: 1fr} }
 
-/* Header clair */
-.dkb-header{border-bottom:1px solid var(--stroke); background:#fff}
-.headbar{display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
-.logo{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--stroke)}
-.brand-text{font-weight:700;letter-spacing:.6px}
-.head-actions .link{color:var(--accent);text-decoration:none;font-weight:600}
-.head-actions .link:hover{color:var(--accent-weak)}
-
 /* Cart Cards */
 .card{
     background:var(--card);
@@ -45,8 +44,7 @@ body{
     box-shadow:var(--shadow);
 }
 
-/* === Lignes produits ===
-   Compat .cart-item/.item-* ET .cart-line/.thumb/.meta */
+/* === Lignes produits === */
 .cart-item,
 .cart-line{
     display:grid;
@@ -96,13 +94,18 @@ body{
 .sum-row{display:flex;justify-content:space-between;margin:8px 0;color:var(--muted)}
 .sum-total{display:flex;justify-content:space-between;margin:14px 0;font-size:22px;font-weight:800}
 
-/* Bouton principal style “pastille bordeaux” */
+/* Bouton principal */
 .btn-primary{
     display:block;text-align:center;padding:12px 18px;border-radius:999px;
     background:var(--accent);color:#fff;text-decoration:none;font-weight:800;
     margin:12px 0 8px;border:1px solid var(--accent); transition:background .15s ease;
 }
 .btn-primary:hover{background:var(--accent-weak);border-color:var(--accent-weak)}
+
+/* état désactivé (quand panier vide) */
+.btn-primary[aria-disabled="true"]{
+    background:#e9e9ec; border-color:#e9e9ec; color:#9b9ba0; pointer-events:none;
+}
 
 /* Champ code promo */
 .coupon{display:flex;gap:10px;margin:12px 0}
@@ -117,7 +120,20 @@ body{
 .help ul{margin:8px 0 0 18px;color:var(--muted)}
 
 /* Footer */
-.dkb-footer{border-top:1px solid var(--stroke);margin-top:30px;color:var(--muted);background:#fff}
+.dkb-footer{
+    border-top:1px solid var(--stroke);
+    margin-top:30px;color:var(--muted);background:#fff;
+}
 
-/* Petites retouches accessibilité */
+/* État “panier vide” */
+.empty{
+    display:flex; align-items:center; justify-content:center;
+    min-height:280px; text-align:center; color:var(--muted);
+}
+.empty strong{color:var(--ink)}
+/* Accessibilité utilitaire */
+.sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;
+}
+
 a:focus,button:focus,input:focus{outline:2px solid rgba(141,14,14,.35); outline-offset:2px}

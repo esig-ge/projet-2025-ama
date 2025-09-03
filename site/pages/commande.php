@@ -4,7 +4,6 @@ session_start();
 <!doctype html>
 <html lang="fr">
 <head>
-
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Mon panier</title>
@@ -14,21 +13,25 @@ session_start();
     <!-- CSS du panier -->
     <link rel="stylesheet" href="css/commande.css">
 </head>
-<?php include __DIR__ . '/includes/header.php'; ?>
 
 <body>
+<?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="wrap">
+<main class="wrap" role="main">
     <h1 class="page-title">Récapitulatif de mon panier</h1>
 
     <div class="grid">
+        <!-- Liste du panier -->
         <section class="card" id="cart-list" aria-live="polite"></section>
 
-        <aside class="card summary">
+        <!-- Résumé -->
+        <aside class="card summary" aria-labelledby="sum-title">
+            <h2 id="sum-title" class="sr-only">Résumé de commande</h2>
             <div class="sum-row"><span>Produits</span><span id="sum-subtotal">0.00 CHF</span></div>
             <div class="sum-row"><span>Livraison</span><span id="sum-shipping">—</span></div>
             <div class="sum-total"><span>Total</span><span id="sum-total">0.00 CHF</span></div>
-            <a href="checkout.php" class="btn-primary" id="btn-checkout">Valider ma commande</a>
+
+            <a href="checkout.php" class="btn-primary" id="btn-checkout" aria-disabled="true">Valider ma commande</a>
 
             <div class="coupon">
                 <input type="text" id="coupon-input" placeholder="Mon code de réduction" disabled>
