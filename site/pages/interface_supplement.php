@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +7,10 @@
     <link rel="stylesheet" href="css/styleCatalogue.css">
     <title>supplément</title>
 </head>
+
+
 <body>
+
 <h1>Suppléments</h1>
 <div>
     <div class="catalogue">
