@@ -61,12 +61,27 @@ footer {
     padding: 20px;
     position: relative;
 }
-.footer-nav{
+.footer-nav {
     text-decoration: none;
-    color: white;
+    margin-right: 20px;
+    font-size: 18px;
+    padding-top: 20px;
 }
-.reseau_sociaux{
+.footer-nav a{
+    margin-right: 20px;
+}
+footer a{
+    color: white;
     text-decoration: none;
+    gap: 20px;
+}
+
+.reseau_sociaux{
+    padding-top: 10px;
+    text-decoration: none;
+}
+.reseau_sociaux a{
+   margin-right: 20px;
 }
 main{
     height: 80%;

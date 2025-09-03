@@ -12,9 +12,9 @@
                     <a href="index.php">Accueil</a>
                     <a href="">A propos</a>
                     <a href="interface_selection_produit.php">Catalogue</a>
-                    <li><a href="">Contact</a></li>
-                    <li><a href="inscription.php">S'inscrire</a></li>
-                    <li><a  href="interface_connexion.php">Se connecter</a></li>
+                    <a href="">Contact</a></li>
+                    <a href="inscription.php">S'inscrire</a>
+                    <a  href="interface_connexion.php">Se connecter</a>
                 </ul>
             </nav>
         </div>
