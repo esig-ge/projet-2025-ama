@@ -7,7 +7,7 @@
 </head>
 <body>
 <h1>Nos produits</h1>
-<div>
+<div id="select_produit">
 <a href="fleur.php">Fleurs</a>
 <a href="interface_catalogue_bouquet.php">Bouquets</a>
 <a href="coffret.html">Coffret</a>

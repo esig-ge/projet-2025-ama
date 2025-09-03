@@ -28,7 +28,7 @@ body img{
 }
 
 
-/*---------------------page supplement--------------------- */
+/*---------------------page general--------------------- */
 
 .catalogue{
     display: flex;
@@ -131,4 +131,21 @@ a.add-to-cart {
 a.add-to-cart:hover {
     background: indianred;
     transform: scale(1.05);
+}
+
+
+/*---------------------page selection produit--------------------- */
+
+#select_produit a{
+    display: inline-block;
+    margin:  10px;
+    padding: 8px 13px;
+    background: white;
+    color: darkred;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: background 0.3s, transform 0.2s;
+
 }
