@@ -12,11 +12,8 @@
     justify-items: center;
     align-content: center;
     padding-top: 80px;
-
-}
-
-h1{
     color: darkred;
+
 }
 
 .btn {
@@ -34,4 +31,27 @@ h1{
 .btn:hover {
     background: indianred;
     transform: scale(1.05);
+}
+
+/* On cache les radios */
+.swatch input[type="radio"] {
+    display: none;
+}
+
+/* La pastille colorée */
+.swatch span {
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: var(--swatch);
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 2px solid transparent; /* bordure invisible par défaut */
+}
+
+/* Quand le bouton est sélectionné */
+.swatch input[type="radio"]:checked + span {
+    border: 3px solid black; /* cercle noir autour */
+    transform: scale(1.1);   /* petit effet zoom sympa */
 }

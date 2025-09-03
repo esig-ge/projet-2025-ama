@@ -7,6 +7,10 @@
     <title>fleurs</title>
     <link rel="stylesheet" href="css/styleFleurUnique.css">
 </head>
+<?php
+include 'includes/header.php';
+?>
+
 <body>
 <h1 class="section-title">Nos fleurs</h1>
 <section class="catalogue">
@@ -68,5 +72,8 @@
         </div>
     </div>
 </section>
+<?php
+include 'includes/footer.php';
+?>
 
 </body>
