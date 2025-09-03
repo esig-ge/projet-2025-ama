@@ -138,6 +138,19 @@ try {
     echo json_encode(['ok'=>false,'error'=>'server_error','msg'=>$e->getMessage()]);
 }
 
+// TEEEEEST
+
+// dans cart.php, ajoute une action clear (pour tests)
+if (($action ?? '') === 'clear') {
+    $comId = $_SESSION['com_id'] ?? null;
+    if ($comId) {
+        $stmt = $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID = :com");
+        $stmt->execute(['com' => $comId]);
+    }
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
 
 // Code à ajouter quand connexion est déjà fonctionnelle :
 

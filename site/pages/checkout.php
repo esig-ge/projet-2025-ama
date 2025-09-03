@@ -1,43 +1,56 @@
 <?php
 session_start();
-require_once __DIR__ . '/../database/config/connexionBDD.php';
 require_once __DIR__ . '/../database/config/stripe.php';
-?>
-<!doctype html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DK Bloom — Checkout</title>
-    <link rel="stylesheet" href="css/checkout.css?v=1">
+require_once __DIR__ . '/../database/config/connexionBDD.php';
 
-    <script src="https://js.stripe.com/v3/"></script>
-</head>
-<body>
-<main class="wrap">
-    <h1>Finaliser ma commande</h1>
+// 1) commande courante
+$comId = $_SESSION['com_id'] ?? null;
+if (!$comId) { header('Location: commande.php'); exit; }
 
-    <div class="grid">
-        <section class="card">
-            <form id="checkout-form">
-                <!-- (champs d’adresses ici si besoin) -->
-                <h2>Paiement</h2>
-                <div id="payment-element"></div>
-                <button id="pay-btn" class="btn-primary" type="submit">Payer</button>
-                <p id="form-message" class="hint"></p>
-            </form>
-        </section>
+// 2) total depuis la BDD
+$sql = "SELECT SUM(p.PRO_PRIX * cp.CP_QTE_COMMANDEE)
+        FROM COMMANDE_PRODUIT cp
+        JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
+        WHERE cp.COM_ID = :com";
+$stmt = $pdo->prepare($sql);
+$stmt->execute(['com' => $comId]);
+$total = (float) ($stmt->fetchColumn() ?: 0);
 
-        <aside class="card summary">
-            <h2>Récapitulatif</h2>
-            <div id="cart-lines"></div>
-            <div class="sum-row"><span>Sous-total</span><span id="sum-subtotal">0.00 CHF</span></div>
-            <div class="sum-row"><span>Livraison</span><span id="sum-shipping">—</span></div>
-            <div class="sum-row"><span>TVA</span><span id="sum-tva">—</span></div>
-            <div class="sum-total"><span>Total</span><span id="sum-total">0.00 CHF</span></div>
-        </aside>
-    </div>
-</main>
+if ($total <= 0) { header('Location: commande.php'); exit; }
 
-<script>window.__STRIPE_PK__ = "<?= STRIPE_PUBLISHABLE_KEY ?>";</script>
-<script src="js/checkout.js?v=1" defer></script>
+$amountCents = (int) round($total * 100);
+
+// 3) URLs succès/annulation
+$base = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http')
+    . '://' . $_SERVER['HTTP_HOST']
+    . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+
+$successUrl = $base . '/success.php?session_id={CHECKOUT_SESSION_ID}';
+$cancelUrl  = $base . '/commande.php';
+
+// 4) créer la session Checkout
+try {
+    $session = \Stripe\Checkout\Session::create([
+        'mode' => 'payment',
+        'payment_method_types' => ['card'],
+        'line_items' => [[
+            'price_data' => [
+                'currency' => 'chf',
+                'product_data' => ['name' => 'Commande DK Bloom #'.$comId],
+                'unit_amount' => $amountCents,
+            ],
+            'quantity' => 1,
+        ]],
+        'success_url' => $successUrl,
+        'cancel_url'  => $cancelUrl,
+        'metadata' => ['com_id' => (string)$comId],
+    ]);
+
+    header('Location: ' . $session->url);
+    exit;
+
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo "<h1>Erreur Stripe</h1><pre>" . htmlspecialchars($e->getMessage()) . "</pre>";
+    exit;
+}

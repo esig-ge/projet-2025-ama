@@ -14,6 +14,7 @@ require_once __DIR__ . '/../../config/connexionBDD.php';
 <main class="wrap">
     <h1>Merci pour votre commande 🌹</h1>
     <p>Vous allez recevoir un e-mail de confirmation. La livraison est estimée sous ~7 jours ouvrables.</p>
+    <p>Votre paiement a été accepté. Référence Stripe: <?= htmlspecialchars($_GET['session_id'] ?? '') ?></p>
     <a href="catalogue.php" class="link">← Retour au catalogue</a>
 </main>
 </body>
