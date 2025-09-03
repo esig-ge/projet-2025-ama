@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="css/styleCatalogue.css">
-    <title>Title</title>
+    <title>produit</title>
 </head>
 <body>
 <h1>Nos produits</h1>

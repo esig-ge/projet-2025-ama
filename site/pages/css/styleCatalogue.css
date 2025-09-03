@@ -30,6 +30,10 @@ body img{
 
 /*---------------------page general--------------------- */
 
+h1{
+    color: darkred;
+}
+
 .catalogue{
     display: flex;
     flex-direction: row;
