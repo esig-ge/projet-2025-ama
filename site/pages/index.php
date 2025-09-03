@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <title>index</title>
-    <link rel="stylesheet" href="../../public/assets/css/style.css">
+    <link rel="stylesheet" href="css/squeletteIndex.css">
 </head>
 
 
@@ -17,20 +17,26 @@
 
 <main>
     <section class="entete_accueil">
-        <div class="boutons">
-            <div class="cta-row">
-                <h1>Bienvenu <span class="accent">élégance</span>.</h1>
-                <p>L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
-                <br>
+        <div class="image_texte">
+               <div class="texte">
+                   <h1>Bienvenu <span class="accent">élégance</span></h1>
+                   <p class="paragraphe">L’art floral intemporel, au service d’une expérience unique et raffinée. La beauté qui ne fane jamais.</p>
+                   <br>
+                   <div class="btn_accueil">
+                       <a class="btn_index" href="catalogue.php">Découvrir nos créations</a>
+                       <a class="btn_index" href="personnalisation.php">Créer la vôtre</a>
+                   </div>
+               </div>
                 <div class="bouquet">
-                    <img class="" src="img/boxe_rouge_DK.png" alt="" width="200px" height="auto">
-                </div>
-                <a class="btn_catalogue" href="catalogue.php">Découvrir nos créations</a>
-                <a class="btn_creer" href="personnalisation.php">Créer la vôtre</a>
+                    <img class="boxerouge" src="img/boxe_rouge_DK.png" alt="" width="200px" height="auto">
 
-            </div>
+                </div>
+                <br>
+
+        </div>
 
     </section>
+
 </main>
 
 </body>

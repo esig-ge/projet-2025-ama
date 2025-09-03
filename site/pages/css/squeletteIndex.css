@@ -1,0 +1,72 @@
+body{
+    width: 100%;
+    height: 100%;
+}
+
+main{
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    margin: auto;
+}
+.texte{
+    width: 70%;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+
+}
+h1{
+    padding-top: 30px;
+    font-size: xxx-large;
+    color: #5e0808;
+
+}
+.paragraphe{
+    display: flex;
+    padding-left:20px;
+    font-size: 1.3em;
+    color: #5e0808;
+
+}
+.image_texte{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+.bouquet{
+    width: 100%;
+    height: 800px;
+}
+
+.boxerouge{
+    width: 100%;
+    height: 120%;
+}
+
+.btn_index{
+    background: darkred;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 19px;
+    cursor: pointer;
+    font-size: 25px;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+    text-decoration: none;
+
+}
+
+.btn_index:hover {
+    background: indianred;
+    transform: scale(1.05);
+}
+
+.btn_accueil{
+    margin: 10%;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
