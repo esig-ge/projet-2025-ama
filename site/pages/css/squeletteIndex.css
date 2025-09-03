@@ -3,11 +3,76 @@ body{
     height: 100%;
 }
 
+header {
+    height: 20%;
+    background-color: darkred;
+    padding: 10px 20px;
+}
+@font-face {
+    font-family:"mapolice" ;
+    src: url("police/Milton_One.otf");
+    font-weight: normal;
+    font-style: italic;
+}
+.h{
+     display: flex;
+     flex-direction: row;
+     justify-content: space-between;
+     margin: 10px;
+ }
+.titre{
+    color: white;
+    font-size: 50px;
+    font-family: mapolice;
+}
+
+.menu {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 30px;
+}
+
+.menu a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.menu a:hover {
+    color: black;
+}
+.inscription{
+    text-decoration: none;
+    list-style: none;
+    color: white;
+}
+.connexion{
+    gap: 20px;
+}
+footer {
+    height: 20%;
+    background-color: darkred;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+}
+.footer-nav{
+    text-decoration: none;
+    color: white;
+}
+.reseau_sociaux{
+    text-decoration: none;
+}
 main{
+    height: 80%;
     display: flex;
     justify-content: center;
     align-content: center;
     margin: auto;
+    padding-bottom: 10%;
 }
 .texte{
     width: 70%;
@@ -36,8 +101,8 @@ h1{
     justify-content: space-evenly;
 }
 .bouquet{
-    width: 100%;
-    height: 800px;
+    width: 80%;
+    height: 600px;
 }
 
 .boxerouge{
