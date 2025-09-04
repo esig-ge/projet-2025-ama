@@ -16,6 +16,7 @@ DROP TABLE IF EXISTS COMMANDE_PAIEMENT;
 DROP TABLE IF EXISTS PAIEMENT;
 DROP TABLE IF EXISTS COMMANDE_SUPP;
 DROP TABLE IF EXISTS COMMANDE_PRODUIT;
+DROP TABLE IF EXISTS COMMANDE_EMBALLAGE;   -- << association (enfant de COMMANDE & EMBALLAGE)
 DROP TABLE IF EXISTS COMMANDE;
 DROP TABLE IF EXISTS LIVRAISON;
 DROP TABLE IF EXISTS RABAIS;
@@ -32,6 +33,7 @@ DROP TABLE IF EXISTS ADRESSE;
 DROP TABLE IF EXISTS CLIENT;
 DROP TABLE IF EXISTS ADMINISTRATEUR;
 DROP TABLE IF EXISTS PERSONNE;
+DROP TABLE IF EXISTS EMBALLAGE;            -- parent de COMMANDE_EMBALLAGE
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -56,14 +58,16 @@ CREATE TABLE PERSONNE (
 
 CREATE TABLE ADMINISTRATEUR (
                                 PER_ID BIGINT PRIMARY KEY,
-                                CONSTRAINT FK_ADMIN_PERSONNE FOREIGN KEY (PER_ID) REFERENCES PERSONNE(PER_ID) ON UPDATE RESTRICT ON DELETE RESTRICT
+                                CONSTRAINT FK_ADMIN_PERSONNE FOREIGN KEY (PER_ID)
+                                    REFERENCES PERSONNE(PER_ID) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE CLIENT (
                         PER_ID BIGINT PRIMARY KEY,
                         CLI_DATENAISSANCE DATE NULL,
                         CLI_NB_POINTS_FIDELITE INT NOT NULL DEFAULT 0,
-                        CONSTRAINT FK_CLIENT_PERSONNE FOREIGN KEY (PER_ID) REFERENCES PERSONNE(PER_ID) ON UPDATE RESTRICT ON DELETE RESTRICT,
+                        CONSTRAINT FK_CLIENT_PERSONNE FOREIGN KEY (PER_ID)
+                            REFERENCES PERSONNE(PER_ID) ON UPDATE RESTRICT ON DELETE RESTRICT,
                         CONSTRAINT CK_CLIENT_DNA CHECK (CLI_DATENAISSANCE IS NULL OR CLI_DATENAISSANCE <= (CURRENT_DATE - INTERVAL 16 YEAR)),
                         CONSTRAINT CK_CLIENT_POINTS_NON_NEGATIFS CHECK (CLI_NB_POINTS_FIDELITE >= 0)
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
@@ -84,8 +88,10 @@ CREATE TABLE CLIENT_ADRESSE (
                                 PER_ID BIGINT NOT NULL,
                                 ADR_ID BIGINT NOT NULL,
                                 PRIMARY KEY (PER_ID, ADR_ID),
-                                CONSTRAINT FK_CA_CLIENT FOREIGN KEY (PER_ID) REFERENCES CLIENT(PER_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                                CONSTRAINT FK_CA_ADRESSE FOREIGN KEY (ADR_ID) REFERENCES ADRESSE(ADR_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                                CONSTRAINT FK_CA_CLIENT FOREIGN KEY (PER_ID)
+                                    REFERENCES CLIENT(PER_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                                CONSTRAINT FK_CA_ADRESSE FOREIGN KEY (ADR_ID)
+                                    REFERENCES ADRESSE(ADR_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 -- PRODUITS & SUPPLÉMENTS ------------------------------
@@ -111,24 +117,32 @@ CREATE TABLE SUPP_PRODUIT (
                               SUP_ID BIGINT NOT NULL,
                               PRO_ID BIGINT NOT NULL,
                               PRIMARY KEY (SUP_ID, PRO_ID),
-                              CONSTRAINT FK_SP_SUP FOREIGN KEY (SUP_ID) REFERENCES SUPPLEMENT(SUP_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                              CONSTRAINT FK_SP_PRO FOREIGN KEY (PRO_ID) REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                              CONSTRAINT FK_SP_SUP FOREIGN KEY (SUP_ID)
+                                  REFERENCES SUPPLEMENT(SUP_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                              CONSTRAINT FK_SP_PRO FOREIGN KEY (PRO_ID)
+                                  REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 -- SOUS-TYPES DE PRODUIT -------------------------------
 CREATE TABLE FLEUR (
                        PRO_ID BIGINT PRIMARY KEY,
                        FLE_TYPE VARCHAR(50) NOT NULL,
-                       FLE_COULEUR ENUM('rouge', 'rose', 'rose clair', 'bleu', 'blanc', 'noir', 'violet') NOT NULL,
-                       CONSTRAINT FK_FLEUR_PRODUIT FOREIGN KEY (PRO_ID) REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                       FLE_COULEUR ENUM('rouge','rose','rose clair','bleu','blanc','noir','violet') NOT NULL,
+                       FLE_QTE_STOCK INT NOT NULL DEFAULT 0,
+                       CONSTRAINT CK_FLE_STOCK_NON_NEG CHECK (FLE_QTE_STOCK >= 0),
+                       CONSTRAINT FK_FLEUR_PRODUIT FOREIGN KEY (PRO_ID)
+                           REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE BOUQUET (
                          PRO_ID BIGINT PRIMARY KEY,
                          BOU_DESCRIPTION VARCHAR(600) NOT NULL,
-                         BOU_TYPE ENUM('standard', 'personnalise', 'mariage', 'anniversaire', 'naissance', 'deuil', 'romantique', 'saisonnier', 'luxe') NOT NULL,
+                         BOU_TYPE ENUM('standard','personnalise','mariage','anniversaire','naissance','deuil','romantique','saisonnier','luxe') NOT NULL,
+                         BOU_QTE_STOCK INT NOT NULL DEFAULT 0,
                          CONSTRAINT CK_BOUQUET_DESC_MIN10 CHECK (CHAR_LENGTH(BOU_DESCRIPTION) >= 10),
-                         CONSTRAINT FK_BOUQUET_PRODUIT FOREIGN KEY (PRO_ID) REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                         CONSTRAINT CK_BOU_STOCK_NON_NEG CHECK (BOU_QTE_STOCK >= 0),
+                         CONSTRAINT FK_BOUQUET_PRODUIT FOREIGN KEY (PRO_ID)
+                             REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE BOUQUET_FLEUR (
@@ -137,25 +151,41 @@ CREATE TABLE BOUQUET_FLEUR (
                                BF_QTE INT NOT NULL,
                                CONSTRAINT CK_BF_QTE_POS CHECK (BF_QTE >= 1),
                                PRIMARY KEY (BOUQUET_ID, FLEUR_ID),
-                               CONSTRAINT FK_BF_BOUQUET FOREIGN KEY (BOUQUET_ID) REFERENCES BOUQUET(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                               CONSTRAINT FK_BF_FLEUR FOREIGN KEY (FLEUR_ID) REFERENCES FLEUR(PRO_ID) ON UPDATE CASCADE ON DELETE RESTRICT
+                               CONSTRAINT FK_BF_BOUQUET FOREIGN KEY (BOUQUET_ID)
+                                   REFERENCES BOUQUET(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                               CONSTRAINT FK_BF_FLEUR FOREIGN KEY (FLEUR_ID)
+                                   REFERENCES FLEUR(PRO_ID) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE COFFRET (
                          PRO_ID BIGINT PRIMARY KEY,
-                         CO_EVENEMENT ENUM('saint-valentin', 'fetes des meres', 'happy birthday', 'paques', 'noel', 'nouvel an') NOT NULL,
-                         CONSTRAINT FK_COFFRET_PRODUIT FOREIGN KEY (PRO_ID) REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                         CO_EVENEMENT ENUM('saint-valentin','fetes des meres','happy birthday','paques','noel','nouvel an') NOT NULL,
+                         COF_QTE_STOCK INT NOT NULL DEFAULT 0,
+                         CONSTRAINT CK_COF_STOCK_NON_NEG CHECK (COF_QTE_STOCK >= 0),
+                         CONSTRAINT FK_COFFRET_PRODUIT FOREIGN KEY (PRO_ID)
+                             REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE COFFRET_BOUQUET (
                                  COFFRET_ID BIGINT NOT NULL,
                                  BOUQUET_ID BIGINT NOT NULL,
                                  PRIMARY KEY (COFFRET_ID, BOUQUET_ID),
-                                 CONSTRAINT FK_CB_COFFRET FOREIGN KEY (COFFRET_ID) REFERENCES COFFRET(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                                 CONSTRAINT FK_CB_BOUQUET FOREIGN KEY (BOUQUET_ID) REFERENCES BOUQUET(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                                 CONSTRAINT FK_CB_COFFRET FOREIGN KEY (COFFRET_ID)
+                                     REFERENCES COFFRET(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                                 CONSTRAINT FK_CB_BOUQUET FOREIGN KEY (BOUQUET_ID)
+                                     REFERENCES BOUQUET(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
--- RABAIS & LIVRAISON -------------------------------
+-- EMBALLAGE -------------------------------------------
+CREATE TABLE EMBALLAGE (
+                           EMB_ID BIGINT PRIMARY KEY AUTO_INCREMENT,
+                           EMB_NOM VARCHAR(120) NOT NULL,
+                           EMB_COULEUR VARCHAR(40) NOT NULL,
+                           EMB_QTE_STOCK INT NOT NULL DEFAULT 0,
+                           CONSTRAINT CK_EMB_STOCK_NON_NEG CHECK (EMB_QTE_STOCK >= 0)
+) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
+
+-- RABAIS & LIVRAISON ---------------------------------
 CREATE TABLE RABAIS (
                         RAB_ID BIGINT PRIMARY KEY AUTO_INCREMENT,
                         RAB_POURCENTAGE DECIMAL(5, 2) NOT NULL,
@@ -165,8 +195,8 @@ CREATE TABLE RABAIS (
 
 CREATE TABLE LIVRAISON (
                            LIV_ID BIGINT PRIMARY KEY AUTO_INCREMENT,
-                           LIV_STATUT ENUM('prévue', 'en cours', 'livrée', 'annulée') NOT NULL DEFAULT 'prévue',
-                           LIV_MODE ENUM('retrait', 'courrier', 'coursier') NOT NULL,
+                           LIV_STATUT ENUM('prévue','en cours','livrée','annulée') NOT NULL DEFAULT 'prévue',
+                           LIV_MODE ENUM('retrait','courrier','coursier') NOT NULL,
                            LIV_MONTANT_FRAIS DECIMAL(12, 2) NOT NULL DEFAULT 0,
                            LIV_NOM_TRANSPORTEUR VARCHAR(120) NULL,
                            LIV_NUM_SUIVI_COMMANDE VARCHAR(120) NULL,
@@ -174,48 +204,68 @@ CREATE TABLE LIVRAISON (
                            CONSTRAINT CK_LIV_FRAIS_NON_NEG CHECK (LIV_MONTANT_FRAIS >= 0)
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
--- COMMANDE & LIGNES --------------------------------
+-- COMMANDE & LIGNES -----------------------------------
 CREATE TABLE COMMANDE (
                           COM_ID BIGINT PRIMARY KEY AUTO_INCREMENT,
                           PER_ID BIGINT NOT NULL,
                           LIV_ID BIGINT NULL,
                           RAB_ID BIGINT NULL,
-                          COM_STATUT ENUM('en préparation', 'expédiée', 'livrée', 'en attente d''expédition', 'annulée') NOT NULL DEFAULT 'en préparation',
+                          COM_STATUT ENUM('en préparation','expédiée','livrée','en attente d''expédition','annulée') NOT NULL DEFAULT 'en préparation',
                           COM_DATE DATE NOT NULL,
                           COM_DESCRIPTION TEXT NULL,
                           COM_PTS_CUMULE INT NOT NULL DEFAULT 0,
                           CONSTRAINT CK_COM_PTS_NON_NEG CHECK (COM_PTS_CUMULE >= 0),
-                          CONSTRAINT FK_COM_CLIENT FOREIGN KEY (PER_ID) REFERENCES CLIENT(PER_ID) ON UPDATE RESTRICT ON DELETE RESTRICT,
-                          CONSTRAINT FK_COM_LIVRAISON FOREIGN KEY (LIV_ID) REFERENCES LIVRAISON(LIV_ID) ON UPDATE CASCADE ON DELETE SET NULL,
-                          CONSTRAINT FK_COM_RABAIS FOREIGN KEY (RAB_ID) REFERENCES RABAIS(RAB_ID) ON UPDATE CASCADE ON DELETE SET NULL
+                          CONSTRAINT FK_COM_CLIENT FOREIGN KEY (PER_ID)
+                              REFERENCES CLIENT(PER_ID) ON UPDATE RESTRICT ON DELETE RESTRICT,
+                          CONSTRAINT FK_COM_LIVRAISON FOREIGN KEY (LIV_ID)
+                              REFERENCES LIVRAISON(LIV_ID) ON UPDATE CASCADE ON DELETE SET NULL,
+                          CONSTRAINT FK_COM_RABAIS FOREIGN KEY (RAB_ID)
+                              REFERENCES RABAIS(RAB_ID) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
+
+-- association commande <-> emballage avec quantité
+CREATE TABLE COMMANDE_EMBALLAGE (
+                                    COM_ID BIGINT NOT NULL,
+                                    EMB_ID BIGINT NOT NULL,
+                                    CE_QTE INT NOT NULL DEFAULT 1,
+                                    PRIMARY KEY (COM_ID, EMB_ID),
+                                    CONSTRAINT CK_CE_QTE_POS CHECK (CE_QTE >= 1),
+                                    CONSTRAINT FK_CE_COM FOREIGN KEY (COM_ID)
+                                        REFERENCES COMMANDE(COM_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                                    CONSTRAINT FK_CE_EMB FOREIGN KEY (EMB_ID)
+                                        REFERENCES EMBALLAGE(EMB_ID) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE COMMANDE_PRODUIT (
                                   COM_ID BIGINT NOT NULL,
                                   PRO_ID BIGINT NOT NULL,
                                   CP_QTE_COMMANDEE INT NOT NULL,
-                                  CP_TYPE_PRODUIT ENUM('bouquet', 'fleur', 'coffret') NOT NULL,
+                                  CP_TYPE_PRODUIT ENUM('bouquet','fleur','coffret') NOT NULL,
                                   CONSTRAINT CK_CP_QTE_POS CHECK (CP_QTE_COMMANDEE >= 1),
                                   PRIMARY KEY (COM_ID, PRO_ID),
-                                  CONSTRAINT FK_CP_COMMANDE FOREIGN KEY (COM_ID) REFERENCES COMMANDE(COM_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                                  CONSTRAINT FK_CP_PRODUIT FOREIGN KEY (PRO_ID) REFERENCES PRODUIT(PRO_ID) ON UPDATE RESTRICT ON DELETE RESTRICT
+                                  CONSTRAINT FK_CP_COMMANDE FOREIGN KEY (COM_ID)
+                                      REFERENCES COMMANDE(COM_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                                  CONSTRAINT FK_CP_PRODUIT FOREIGN KEY (PRO_ID)
+                                      REFERENCES PRODUIT(PRO_ID) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
--- SUPPLÉMENTS PAR COMMANDE -------------------------
+-- SUPPLÉMENTS PAR COMMANDE ---------------------------
 CREATE TABLE COMMANDE_SUPP (
                                SUP_ID BIGINT NOT NULL,
                                COM_ID BIGINT NOT NULL,
                                CS_QTE_COMMANDEE INT NOT NULL,
                                PRIMARY KEY (SUP_ID, COM_ID),
                                CONSTRAINT CK_CS_QTE_POS CHECK (CS_QTE_COMMANDEE > 0),
-                               CONSTRAINT FK_CS_SUP FOREIGN KEY (SUP_ID) REFERENCES SUPPLEMENT(SUP_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                               CONSTRAINT FK_CS_COM FOREIGN KEY (COM_ID) REFERENCES COMMANDE(COM_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                               CONSTRAINT FK_CS_SUP FOREIGN KEY (SUP_ID)
+                                   REFERENCES SUPPLEMENT(SUP_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                               CONSTRAINT FK_CS_COM FOREIGN KEY (COM_ID)
+                                   REFERENCES COMMANDE(COM_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
--- PAIEMENT & LIAISON -------------------------------
+-- PAIEMENT & LIAISON ---------------------------------
 CREATE TABLE PAIEMENT (
                           PAI_ID BIGINT PRIMARY KEY AUTO_INCREMENT,
-                          PAI_MODE ENUM('Twint', 'Carte', 'Revolut') NOT NULL,
+                          PAI_MODE ENUM('Twint','Carte','Revolut') NOT NULL,
                           PAI_MONTANT DECIMAL(12, 2) NOT NULL,
                           PAI_DATE DATE NOT NULL,
                           CONSTRAINT CK_PAI_MONTANT_POS CHECK (PAI_MONTANT > 0)
@@ -225,11 +275,13 @@ CREATE TABLE COMMANDE_PAIEMENT (
                                    COM_ID BIGINT NOT NULL,
                                    PAI_ID BIGINT NOT NULL,
                                    PRIMARY KEY (COM_ID, PAI_ID),
-                                   CONSTRAINT FK_CPAI_COM FOREIGN KEY (COM_ID) REFERENCES COMMANDE(COM_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                                   CONSTRAINT FK_CPAI_PAI FOREIGN KEY (PAI_ID) REFERENCES PAIEMENT(PAI_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                                   CONSTRAINT FK_CPAI_COM FOREIGN KEY (COM_ID)
+                                       REFERENCES COMMANDE(COM_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                                   CONSTRAINT FK_CPAI_PAI FOREIGN KEY (PAI_ID)
+                                       REFERENCES PAIEMENT(PAI_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
--- AVIS PRODUITS -----------------------------------
+-- AVIS PRODUITS --------------------------------------
 CREATE TABLE AVIS (
                       AVI_ID BIGINT PRIMARY KEY AUTO_INCREMENT,
                       PRO_ID BIGINT NOT NULL,
@@ -238,16 +290,24 @@ CREATE TABLE AVIS (
                       AVI_DESCRIPTION VARCHAR(500) NULL,
                       AVI_DATE DATE NOT NULL,
                       CONSTRAINT CK_AVI_NOTE_RANGE CHECK (AVI_NOTE BETWEEN 0 AND 9),
-                      CONSTRAINT FK_AVIS_PRO FOREIGN KEY (PRO_ID) REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                      CONSTRAINT FK_AVIS_PER FOREIGN KEY (PER_ID) REFERENCES CLIENT(PER_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                      CONSTRAINT FK_AVIS_PRO FOREIGN KEY (PRO_ID)
+                          REFERENCES PRODUIT(PRO_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                      CONSTRAINT FK_AVIS_PER FOREIGN KEY (PER_ID)
+                          REFERENCES CLIENT(PER_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
--- RABAIS <-> CLIENT -------------------------------
+-- RABAIS <-> CLIENT ----------------------------------
 CREATE TABLE CLIENT_RABAIS (
                                RAB_ID BIGINT NOT NULL,
                                PER_ID BIGINT NOT NULL,
                                PRIMARY KEY (RAB_ID, PER_ID),
-                               CONSTRAINT FK_CR_RAB FOREIGN KEY (RAB_ID) REFERENCES RABAIS(RAB_ID) ON UPDATE CASCADE ON DELETE CASCADE,
-                               CONSTRAINT FK_CR_PER FOREIGN KEY (PER_ID) REFERENCES CLIENT(PER_ID) ON UPDATE CASCADE ON DELETE CASCADE
+                               CONSTRAINT FK_CR_RAB FOREIGN KEY (RAB_ID)
+                                   REFERENCES RABAIS(RAB_ID) ON UPDATE CASCADE ON DELETE CASCADE,
+                               CONSTRAINT FK_CR_PER FOREIGN KEY (PER_ID)
+                                   REFERENCES CLIENT(PER_ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=UTF8MB4;
 
+-- (Optionnel) Index utiles
+CREATE INDEX IX_CE_EMB_ID ON COMMANDE_EMBALLAGE (EMB_ID);
+CREATE INDEX IX_CP_PRO_ID  ON COMMANDE_PRODUIT   (PRO_ID);
+CREATE INDEX IX_CS_SUP_ID  ON COMMANDE_SUPP      (SUP_ID);

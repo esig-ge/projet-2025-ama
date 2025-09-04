@@ -1,5 +1,5 @@
 -- =========================
--- DONNÉES DE TEST (sans IDs explicites car AUTO-INCREMENT)
+-- DONNÉES DE TEST (corrigées)
 -- =========================
 
 -- PERSONNE
@@ -38,14 +38,14 @@ SELECT c.PER_ID, a.ADR_ID
 FROM CLIENT c JOIN ADRESSE a ON a.ADR_RUE='Chemin des Fleurs' AND a.ADR_NUMERO='45'
 WHERE c.PER_ID = (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='sophie.durand@example.com');
 
--- PRODUIT (fleurs, bouquets, coffrets)
+-- PRODUIT
 INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX) VALUES
-                                            ('Rose Rou', 5.00),
-                                            ('Rose RoC', 5.00),
-                                            ('Rose Ro',  5.00),
-                                            ('Rose Bla', 5.00),
-                                            ('Rose Ble', 5.00),
-                                            ('Rose N',   5.00),
+                                            ('Rose Rouge', 5.00),
+                                            ('Rose Rose Clair', 5.00),
+                                            ('Rose Rose',  5.00),
+                                            ('Rose Blanche', 5.00),
+                                            ('Rose Bleue', 5.00),
+                                            ('Rose Noire', 5.00),
                                             ('Bouquet 12', 30.00),
                                             ('Bouquet 20', 40.00),
                                             ('Bouquet 24', 45.00),
@@ -73,7 +73,7 @@ INSERT INTO SUPPLEMENT (SUP_NOM, SUP_DESCRIPTION, SUP_PRIX_UNITAIRE, SUP_QTE_STO
                                                                                         ('Initiale','Initiales du prénom dans le bouquet',10.00,10),
                                                                                         ('Carte','Carte avec bords dorés pour un petit mot',3.00,30);
 
--- SUPP_PRODUIT (liés par noms)
+-- SUPP_PRODUIT
 INSERT INTO SUPP_PRODUIT (SUP_ID, PRO_ID)
 SELECT s.SUP_ID, p.PRO_ID FROM SUPPLEMENT s, PRODUIT p
 WHERE s.SUP_NOM IN ('Mini ourson','Décoration anniversaire','Papillons') AND p.PRO_NOM='Bouquet 12';
@@ -81,54 +81,54 @@ INSERT INTO SUPP_PRODUIT (SUP_ID, PRO_ID)
 SELECT s.SUP_ID, p.PRO_ID FROM SUPPLEMENT s, PRODUIT p
 WHERE s.SUP_NOM='Carte' AND p.PRO_NOM='Coffret ANV';
 
--- FLEUR (couleurs = enum en minuscules)
+-- FLEUR
 INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
-SELECT PRO_ID, 'Rose éternelle', 'rouge'      FROM PRODUIT WHERE PRO_NOM='Rose Rou';
+SELECT PRO_ID, 'Rose éternelle', 'rouge'      FROM PRODUIT WHERE PRO_NOM='Rose Rouge';
 INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
-SELECT PRO_ID, 'Rose éternelle', 'rose clair' FROM PRODUIT WHERE PRO_NOM='Rose RoC';
+SELECT PRO_ID, 'Rose éternelle', 'rose clair' FROM PRODUIT WHERE PRO_NOM='Rose Rose Clair';
 INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
-SELECT PRO_ID, 'Rose éternelle', 'rose'       FROM PRODUIT WHERE PRO_NOM='Rose Ro';
+SELECT PRO_ID, 'Rose éternelle', 'rose'       FROM PRODUIT WHERE PRO_NOM='Rose Rose';
 INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
-SELECT PRO_ID, 'Rose éternelle', 'blanc'      FROM PRODUIT WHERE PRO_NOM='Rose Bla';
+SELECT PRO_ID, 'Rose éternelle', 'blanc'      FROM PRODUIT WHERE PRO_NOM='Rose Blanche';
 INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
-SELECT PRO_ID, 'Rose éternelle', 'bleu'       FROM PRODUIT WHERE PRO_NOM='Rose Ble';
+SELECT PRO_ID, 'Rose éternelle', 'bleu'       FROM PRODUIT WHERE PRO_NOM='Rose Bleue';
 INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
-SELECT PRO_ID, 'Rose éternelle', 'noir'       FROM PRODUIT WHERE PRO_NOM='Rose N';
+SELECT PRO_ID, 'Rose éternelle', 'noir'       FROM PRODUIT WHERE PRO_NOM='Rose Noire';
 
--- BOUQUET (types autorisés: standard, personnalise, mariage, anniversaire, naissance, deuil, romantique, saisonnier, luxe)
+-- BOUQUET
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 12 roses', 'standard' FROM PRODUIT WHERE PRO_NOM='Bouquet 12';
+SELECT PRO_ID, 'Bouquet de 12 roses', 'standard'    FROM PRODUIT WHERE PRO_NOM='Bouquet 12';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
 SELECT PRO_ID, 'Bouquet de 20 roses', 'anniversaire' FROM PRODUIT WHERE PRO_NOM='Bouquet 20';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 24 roses', 'mariage' FROM PRODUIT WHERE PRO_NOM='Bouquet 24';
+SELECT PRO_ID, 'Bouquet de 24 roses', 'mariage'      FROM PRODUIT WHERE PRO_NOM='Bouquet 24';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 36 roses', 'deuil' FROM PRODUIT WHERE PRO_NOM='Bouquet 36';
+SELECT PRO_ID, 'Bouquet de 36 roses', 'deuil'        FROM PRODUIT WHERE PRO_NOM='Bouquet 36';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 50 roses', 'luxe' FROM PRODUIT WHERE PRO_NOM='Bouquet 50';
+SELECT PRO_ID, 'Bouquet de 50 roses', 'luxe'         FROM PRODUIT WHERE PRO_NOM='Bouquet 50';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 66 roses', 'saisonnier' FROM PRODUIT WHERE PRO_NOM='Bouquet 66';
+SELECT PRO_ID, 'Bouquet de 66 roses', 'saisonnier'   FROM PRODUIT WHERE PRO_NOM='Bouquet 66';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 99 roses', 'naissance' FROM PRODUIT WHERE PRO_NOM='Bouquet 99';
+SELECT PRO_ID, 'Bouquet de 99 roses', 'naissance'    FROM PRODUIT WHERE PRO_NOM='Bouquet 99';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 100 roses', 'romantique' FROM PRODUIT WHERE PRO_NOM='Bouquet 100';
+SELECT PRO_ID, 'Bouquet de 100 roses', 'romantique'  FROM PRODUIT WHERE PRO_NOM='Bouquet 100';
 INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
 SELECT PRO_ID, 'Bouquet de 101 roses', 'personnalise' FROM PRODUIT WHERE PRO_NOM='Bouquet 101';
 
--- BOUQUET_FLEUR (exemples)
+-- BOUQUET_FLEUR (corrigé : noms des roses)
 INSERT INTO BOUQUET_FLEUR (BOUQUET_ID, FLEUR_ID, BF_QTE)
 SELECT b.PRO_ID, f.PRO_ID, 12
 FROM BOUQUET b
          JOIN PRODUIT pb ON pb.PRO_ID=b.PRO_ID AND pb.PRO_NOM='Bouquet 12'
-         JOIN FLEUR f ON f.PRO_ID = (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Rou');
+         JOIN FLEUR f ON f.PRO_ID = (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Rouge');
 
 INSERT INTO BOUQUET_FLEUR (BOUQUET_ID, FLEUR_ID, BF_QTE)
 SELECT b.PRO_ID, f.PRO_ID, 24
 FROM BOUQUET b
          JOIN PRODUIT pb ON pb.PRO_ID=b.PRO_ID AND pb.PRO_NOM='Bouquet 24'
-         JOIN FLEUR f ON f.PRO_ID = (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Bla');
+         JOIN FLEUR f ON f.PRO_ID = (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Blanche');
 
--- COFFRET (événements autorisés: 'saint-valentin','fetes des meres','happy birthday','paques','noel','nouvel an')
+-- COFFRET
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
 SELECT PRO_ID, 'happy birthday' FROM PRODUIT WHERE PRO_NOM='Coffret ANV';
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
@@ -140,7 +140,7 @@ SELECT PRO_ID, 'paques' FROM PRODUIT WHERE PRO_NOM='Coffret BPT';
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
 SELECT PRO_ID, 'noel' FROM PRODUIT WHERE PRO_NOM='Coffret MRG';
 
--- COFFRET_BOUQUET (exemples)
+-- COFFRET_BOUQUET
 INSERT INTO COFFRET_BOUQUET (COFFRET_ID, BOUQUET_ID)
 SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Coffret SV'),
        (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Bouquet 100');
@@ -153,6 +153,13 @@ INSERT INTO COFFRET_BOUQUET (COFFRET_ID, BOUQUET_ID)
 SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Coffret FdM'),
        (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Bouquet 24');
 
+INSERT INTO EMBALLAGE (EMB_NOM, EMB_COULEUR, EMB_QTE_STOCK) VALUES
+                                                                ('Papier blanc', 'blanc avec bords dorés', 10),
+                                                                ('Papier noir',  'noir avec bords blancs', 5),
+                                                                ('Papier rose pâle',   'rose avec bords dorés/roses ',  3),
+                                                                ('Papier gris',   'gris avec bords dorés',  7),
+                                                                ('Papier violet', 'violet avec bords couleur bronze', 4);
+
 -- RABAIS
 INSERT INTO RABAIS (RAB_POURCENTAGE, RAB_ACTIF) VALUES
                                                     (10.00,1),(15.00,1),(25.00,0);
@@ -163,7 +170,7 @@ INSERT INTO LIVRAISON (LIV_STATUT, LIV_MODE, LIV_MONTANT_FRAIS, LIV_NOM_TRANSPOR
                                                                                                                             ('en cours','coursier',10.00,'DHL','CH54321','2025-09-12'),
                                                                                                                             ('livrée','retrait',0.00,NULL,NULL,'2025-08-30');
 
--- COMMANDE (référence clients par email + livraisons par (date,mode,statut))
+-- COMMANDE
 INSERT INTO COMMANDE (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
 SELECT
     (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='alice.dupont@example.com'),
@@ -185,7 +192,7 @@ SELECT
     NULL,
     'livrée','2025-08-20','Commande roses rouges',30;
 
--- COMMANDE_PRODUIT
+-- COMMANDE_PRODUIT (corrigé : nom de la rose)
 INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
 SELECT c.COM_ID, p.PRO_ID, 1, 'bouquet'
 FROM COMMANDE c, PRODUIT p
@@ -199,13 +206,19 @@ WHERE c.COM_DESCRIPTION='Commande coffret SV' AND p.PRO_NOM='Coffret SV';
 INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
 SELECT c.COM_ID, p.PRO_ID, 12, 'fleur'
 FROM COMMANDE c, PRODUIT p
-WHERE c.COM_DESCRIPTION='Commande roses rouges' AND p.PRO_NOM='Rose Rou';
+WHERE c.COM_DESCRIPTION='Commande roses rouges' AND p.PRO_NOM='Rose Rouge';
 
--- COMMANDE_SUPP (exemples)
+-- COMMANDE_SUPP
 INSERT INTO COMMANDE_SUPP (SUP_ID, COM_ID, CS_QTE_COMMANDEE)
 SELECT s.SUP_ID, c.COM_ID, 1
 FROM SUPPLEMENT s, COMMANDE c
 WHERE s.SUP_NOM='Mini ourson' AND c.COM_DESCRIPTION='Commande bouquet 12';
+
+-- COMMANDE_EMBALLAGE
+INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE) VALUES (1, 1, 1); -- Papier blanc
+INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE) VALUES (1, 2, 1); -- Papier noir
+INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE) VALUES (3, 3, 2); -- Papier rose pâle
+INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE) VALUES (3, 5, 1); -- Papier violet
 
 -- PAIEMENT
 INSERT INTO PAIEMENT (PAI_MODE, PAI_MONTANT, PAI_DATE) VALUES
@@ -229,9 +242,9 @@ SELECT c.COM_ID, p.PAI_ID
 FROM COMMANDE c, PAIEMENT p
 WHERE c.COM_DESCRIPTION='Commande roses rouges' AND p.PAI_MODE='Revolut' AND p.PAI_DATE='2025-08-20';
 
--- AVIS (réservé aux clients)
+-- AVIS (corrigé : nom de la rose)
 INSERT INTO AVIS (PRO_ID, PER_ID, AVI_NOTE, AVI_DESCRIPTION, AVI_DATE)
-SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Rou'),
+SELECT (SELECT PRO_ID FROM PRODUIT WHERE PRO_NOM='Rose Rouge'),
        (SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL='alice.dupont@example.com'),
        9,'Très belles roses, fraîcheur impeccable.','2025-09-01';
 
