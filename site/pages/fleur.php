@@ -73,7 +73,7 @@ include 'includes/header.php';
     </div>
     <div class="btn_accueil">
         <!--<a class="btn_index" href="">Découvrir nos créations</a>-->
-        <a class="btn_index" href="interface_selection_produit.php">suivant</a>
+        <a href="interface_supplement.php" class="button">suivant</a>
     </div>
 </section>
 <?php

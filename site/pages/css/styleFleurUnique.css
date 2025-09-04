@@ -52,6 +52,40 @@
 
 /* Quand le bouton est sélectionné */
 .swatch input[type="radio"]:checked + span {
-    border: 3px solid black; /* cercle noir autour */
+    border: 2px solid black; /* cercle noir autour */
     transform: scale(1.1);   /* petit effet zoom sympa */
+}
+
+a.button {
+    display: inline-block;
+    margin:  10px;
+    padding: 8px 13px;
+    background: white;
+    color: darkred;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: background 0.3s, transform 0.2s;
+}
+a.button:hover {
+    background: indianred;
+    transform: scale(1.05);
+}
+
+a.add-to-cart {
+    display: inline-block;
+    margin:  10px;
+    padding: 8px 13px;
+    background: white;
+    color: darkred;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: background 0.3s, transform 0.2s;
+}
+a.add-to-cart:hover {
+    background: indianred;
+    transform: scale(1.05);
 }
