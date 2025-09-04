@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="css/styleCatalogue.css">
 </head>
 <body>
+<?php include 'includes/header.php'; ?>
+
 <h1>Nos coffrets</h1>
 <div class="catalogue">
 
@@ -48,4 +50,6 @@
 </div>
 <div></div>
 </body>
+<?php include 'includes/footer.php'; ?>
+
 </html>
