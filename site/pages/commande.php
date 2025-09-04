@@ -82,4 +82,5 @@ include __DIR__ . '/includes/header.php';
 </html>
 
 <script src="js/script.js?v=2" defer></script>
-<script src="js/commande.js?v=5" defer></script>
+<script src="/Projet_sur_Mandat/site/js/commande.js?v=1" defer></script>
+
