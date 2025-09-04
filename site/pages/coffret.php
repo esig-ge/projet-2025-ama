@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="css/styleCatalogue.css">
 </head>
 <body>
+<?php include 'includes/header.php'; ?>
+
 <h1>Nos coffrets</h1>
 <div class="catalogue">
 
@@ -44,8 +46,33 @@
         <p>100 CHF</p>
         <button>ajouter</button>
     </div>
+    <div>
+        <img src="img/coffret.png">
+        <p>Description</p>
+        <p>Paques</p>
+        <p>100 CHF</p>
+        <button>ajouter</button>
+    </div>
+    <div>
+        <img src="img/coffret.png">
+        <p>Description</p>
+        <p>Noel</p>
+        <p>100 CHF</p>
+        <button>ajouter</button>
+    </div>
+    <div>
+        <img src="img/coffret.png">
+        <p>Description</p>
+        <p>Nouvel an</p>
+        <p>150 CHF</p>
+        <button>ajouter</button>
+    </div>
 
 </div>
-<div></div>
+<div>
+    <a href="commande.php" class="button">suivant</a>
+</div>
 </body>
+
+
 </html>

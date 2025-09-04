@@ -18,10 +18,10 @@ include 'includes/header.php';
     <div>
     <a href="fleur.php">Fleurs</a>
     <a href="interface_catalogue_bouquet.php">Bouquets</a>
-    <a href="coffret.html">Coffret</a>
+    <a href="coffret.php">Coffret</a>
     </div>
 
-    <div id="bouquet">
+    <div class="bouquet">
         <img src="img/boxe_rouge_DK.png" alt="">
     </div>
 

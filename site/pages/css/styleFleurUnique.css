@@ -3,7 +3,12 @@
     justify-content: space-evenly;
     padding: 40px;
 }
-
+p{
+    font-size: 30px;
+}
+h3{
+    font-size: 35px;
+}
 .produit-info{
     background-color: white;
     display: flex;
@@ -11,9 +16,15 @@
     align-items:center;
     justify-items: center;
     align-content: center;
-    padding-top: 80px;
+    padding-top: 50px;
     color: darkred;
 
+}
+h1{
+    color: darkred;
+    margin-top: 0;
+    padding-top: 0;
+    text-align: center;
 }
 
 .btn {
@@ -89,3 +100,36 @@ a.add-to-cart:hover {
     background: indianred;
     transform: scale(1.05);
 }
+.img-rose {
+    display: none;
+    width: 500px; /* adapte selon ton design */
+}
+
+/* Radios cachés mais présents (accessibles) */
+.color-radio {
+    position: absolute;
+    left: -9999px;
+}
+
+/* Pastilles de couleur */
+.swatches { display:flex; gap:12px; margin:12px 0; border:0; }
+.swatch span {
+    --size:28px;
+    display:inline-block;
+    width:var(--size); height:var(--size);
+    border-radius:50%;
+    background:var(--swatch);
+    border:2px solid #ccc;
+    cursor:pointer;
+}
+
+/* Toutes les images sont cachées au départ */
+.img-rose { display:none; max-width:100%; height:auto; }
+
+/* Affichage conditionnel selon le radio coché */
+#c-rouge:checked  ~ .rose .rouge  { display:block; }
+#c-rose:checked   ~ .rose .rose   { display:block; }
+#c-roseC:checked  ~ .rose .roseC  { display:block; }
+#c-blanc:checked  ~ .rose .blanche{ display:block; }
+#c-noir:checked   ~ .rose .noire  { display:block; }
+#c-bleu:checked   ~ .rose .bleue  { display:block; }
