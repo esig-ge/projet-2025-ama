@@ -79,5 +79,7 @@
 </div>
 
 <a href="interface_supplement.php" class="button">Suivant</a>
+<?php include 'includes/footer.php'; ?>
 </body>
+
 </html>

@@ -19,7 +19,7 @@ $IS_DEV = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false)
 // En DEV: on repart de zéro à chaque requête (pas de persistance du panier)
 if ($IS_DEV) { unset($_SESSION['com_id']); }
 
-/* ====== login forcé DEV (inchangé) ====== */
+/* ====== login forcé DEV ====== */
 if (DEV_FORCE_LOGIN && empty($_SESSION['per_id'])) {
     $_SESSION['per_id'] = (function(PDO $pdo): int {
         $q = $pdo->prepare("SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL = :mail LIMIT 1");
@@ -73,8 +73,8 @@ function getOrCreateOpenOrder(PDO $pdo, int $perId, bool $isDev): int {
 
     // 3) DEV (ou rien trouvé en PROD) : on crée une nouvelle commande
     $q = $pdo->prepare("INSERT INTO COMMANDE
-  (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
-  VALUES (:per, NULL, NULL, 'en préparation', CURRENT_DATE, 'Panier en cours', 0)");
+        (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
+        VALUES (:per, NULL, NULL, 'en préparation', CURRENT_DATE, 'Panier en cours', 0)");
     $q->execute(['per' => $perId]);
     $newId = (int)$pdo->lastInsertId();
     $_SESSION['com_id'] = $newId;
@@ -158,12 +158,13 @@ function listOrder(PDO $pdo, int $comId): array {
    ========================= */
 try {
     if ($action === 'add') {
-        $qty   = max(1, (int)($_POST['qty'] ?? 1));
+        // ➜ accepte POST **ou** GET
+        $qty   = max(1, (int)($_POST['qty'] ?? $_GET['qty'] ?? 1));
         $comId = getOrCreateOpenOrder($pdo, $perId, $IS_DEV);
 
-        $proId = (int)($_POST['pro_id'] ?? 0);
-        $embId = (int)($_POST['emb_id'] ?? 0);
-        $supId = (int)($_POST['sup_id'] ?? 0);
+        $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
+        $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
+        $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
 
         if ($proId > 0) {
             // Produit (bouquet/fleur/coffret)
