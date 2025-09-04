@@ -53,6 +53,7 @@
     </div>
 
     <div class="btn_accueil">
+        <a href="catalogue.php" class="button">Retour</a>
         <a href="interface_supplement.php" class="button">suivant</a>
     </div>
 </section>
