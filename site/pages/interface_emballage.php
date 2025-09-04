@@ -20,8 +20,8 @@ include 'includes/header.php';
         <img src="img/emballage_blanc.PNG" alt="Emballage blanc">
         <button class="add-to-cart"
                 data-id="8"
-        data-name="20 roses"
-        data-price="40"
+        data-nom="20 roses"
+        data-prix="40"
         data-img="assets/img/20Roses.png">
         Ajouter
         </button>
