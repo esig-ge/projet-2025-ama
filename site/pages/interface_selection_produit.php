@@ -21,7 +21,7 @@ include 'includes/header.php';
     <a href="coffret.html">Coffret</a>
     </div>
 
-    <div class="bouquet">
+    <div id="bouquet">
         <img src="img/boxe_rouge_DK.png" alt="">
     </div>
 
