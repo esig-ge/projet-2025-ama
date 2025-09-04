@@ -1,159 +1,84 @@
-
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="css/styleCatalogue.css">
-    <title>supplément</title>
+    <title>Suppléments</title>
+    <script src="js/commande.js" defer></script>
 </head>
-
-
-
-<header>
-    <?php
-    include 'includes/header.php';
-    ?>
-</header>
-
 <body>
-
+<?php include 'includes/header.php'; ?>
 
 <h1>Suppléments</h1>
-<div>
-    <div class="catalogue">
-        <div>
-            <img src="img/ours_blanc.PNG"/>
-            <h3>Mini ourson</h3>
-            <p>2 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
 
-        </div>
-        <div>
-            <img src="img/happybirthday.PNG"/>
-            <h3>Décoration anniversaire</h3>
-            <p>2 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
-        <div>
-            <img src="img/papillon_doree.PNG"/>
-            <h3>Papillons</h3>
-            <p>2 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
-        <div>
-            <img src="img/baton_coeur.PNG"/>
-            <h3>Baton coeur</h3>
-            <p>2 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
-        <div>
-            <img src="img/diamant.PNG"/>
-            <h3>Diamant</h3>
-            <p>5 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
-
-        <div>
-            <img src="img/couronne.PNG"/>
-            <h3>Couronne</h3>
-            <p>5 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
-        <div>
-            <img src="img/paillette_argent.PNG"/>
-            <h3>Paillettes</h3>
-            <p>9 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
-        <div>
-            <img src="img/lettre.JPG"/>
-            <h3>Lettre</h3>
-            <p>10 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
-        <div>
-            <img src="img/carte.PNG"/>
-            <h3>Carte pour mot</h3>
-            <p>3 CHF</p>
-            <button class="add-to-cart"
-                    data-id="BQ-20"
-                    data-sku="BQ-20"
-                    data-name="20 roses"
-                    data-price="40"
-                    data-img="assets/img/20Roses.png">
-                Ajouter
-            </button>
-
-        </div>
+<div class="catalogue">
+    <div>
+        <img src="img/ours_blanc.PNG" alt="Mini ourson">
+        <h3>Mini ourson</h3>
+        <p>2 CHF</p>
+        <button class="add-to-cart" data-id="1">Ajouter</button>
     </div>
 
-    <a href="interface_catalogue_bouquet.php" class="button">retour</a>
-    <a href="interface_emballage.php" class="button">suivant</a>
+    <div>
+        <img src="img/happybirthday.PNG" alt="Décoration anniversaire">
+        <h3>Décoration anniversaire</h3>
+        <p>2 CHF</p>
+        <button class="add-to-cart" data-id="2">Ajouter</button>
+    </div>
 
+    <div>
+        <img src="img/papillon_doree.PNG" alt="Papillons">
+        <h3>Papillons</h3>
+        <p>2 CHF</p>
+        <button class="add-to-cart" data-id="3">Ajouter</button>
+    </div>
+
+    <div>
+        <img src="img/baton_coeur.PNG" alt="Bâton cœur">
+        <h3>Bâton cœur</h3>
+        <p>2 CHF</p>
+        <button class="add-to-cart" data-id="4">Ajouter</button>
+    </div>
+
+    <div>
+        <img src="img/diamant.PNG" alt="Diamant">
+        <h3>Diamant</h3>
+        <p>5 CHF</p>
+        <button class="add-to-cart" data-id="5">Ajouter</button>
+    </div>
+
+    <div>
+        <img src="img/couronne.PNG" alt="Couronne">
+        <h3>Couronne</h3>
+        <p>5 CHF</p>
+        <button class="add-to-cart" data-id="6">Ajouter</button>
+    </div>
+
+    <div>
+        <img src="img/paillette_argent.PNG" alt="Paillettes">
+        <h3>Paillettes</h3>
+        <p>9 CHF</p>
+        <button class="add-to-cart" data-id="7">Ajouter</button>
+    </div>
+
+    <div>
+        <img src="img/lettre.JPG" alt="Lettre">
+        <h3>Lettre</h3>
+        <p>10 CHF</p>
+        <button class="add-to-cart" data-id="8">Ajouter</button>
+    </div>
+
+    <div>
+        <img src="img/carte.PNG" alt="Carte pour mot">
+        <h3>Carte pour mot</h3>
+        <p>3 CHF</p>
+        <button class="add-to-cart" data-id="9">Ajouter</button>
+    </div>
+</div>
+
+<div class="nav-actions">
+    <a href="interface_catalogue_bouquet.php" class="button">Retour</a>
+    <a href="interface_emballage.php" class="button">Suivant</a>
 </div>
 
 </body>
