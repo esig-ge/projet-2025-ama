@@ -46,10 +46,33 @@
         <p>100 CHF</p>
         <button>ajouter</button>
     </div>
+    <div>
+        <img src="img/coffret.png">
+        <p>Description</p>
+        <p>Paques</p>
+        <p>100 CHF</p>
+        <button>ajouter</button>
+    </div>
+    <div>
+        <img src="img/coffret.png">
+        <p>Description</p>
+        <p>Noel</p>
+        <p>100 CHF</p>
+        <button>ajouter</button>
+    </div>
+    <div>
+        <img src="img/coffret.png">
+        <p>Description</p>
+        <p>Nouvel an</p>
+        <p>150 CHF</p>
+        <button>ajouter</button>
+    </div>
 
 </div>
-<div></div>
+<div>
+    <a href="commande.php" class="button">suivant</a>
+</div>
 </body>
-<?php include 'includes/footer.php'; ?>
+
 
 </html>

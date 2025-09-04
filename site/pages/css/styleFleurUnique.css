@@ -3,7 +3,12 @@
     justify-content: space-evenly;
     padding: 40px;
 }
-
+p{
+    font-size: 30px;
+}
+h3{
+    font-size: 35px;
+}
 .produit-info{
     background-color: white;
     display: flex;
@@ -11,9 +16,15 @@
     align-items:center;
     justify-items: center;
     align-content: center;
-    padding-top: 80px;
+    padding-top: 50px;
     color: darkred;
 
+}
+h1{
+    color: darkred;
+    margin-top: 0;
+    padding-top: 0;
+    text-align: center;
 }
 
 .btn {

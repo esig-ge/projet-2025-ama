@@ -18,10 +18,11 @@ session_start();
 
 <body>
 <?php
-// Inclut le header commun à toutes les pages.
+/*// Inclut le header commun à toutes les pages.
 // __DIR__ pointe vers le dossier courant du fichier (chemin absolu ⇒ moins d'erreurs de chemin relatifs).
 include __DIR__ . '/includes/header.php';
-?>
+*/?>
+<?php include 'includes/header.php'; ?>
 
 <script>
     // Petite astuce : on calcule dynamiquement la hauteur du header

@@ -15,7 +15,7 @@
 <section class="catalogue">
     <div class="produit">
         <div class="produit-info">
-            <h3 class="product-title">Fleurs</h3>
+            <h3 class="product-title">La rose</h3>
             <p class="product-desc">
                 Une rose incarne l’unicité. Elle est le symbole d’un amour né au premier regard.
             </p>
