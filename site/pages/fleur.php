@@ -27,7 +27,14 @@ include 'includes/header.php';
                    Une rose incarne l’unicité. Elle est le symbole d’un amour né au premier regard.
                </p>
 
-
+            <div class="rose">
+                <img src="img/rouge.png"   class="img-rose rouge"   alt=" ">
+                <img src="img/rose.png"    class="img-rose claire"  alt="">
+                <img src="img/rose_claire.png" class="img-rose foncee" alt="">
+                <img src="img/rosesBlanche.png" class="img-rose blanche" alt="">
+                <img src="img/noir.png"   class="img-rose noire"   alt="">
+                <img src="img/bleu.png"   class="img-rose bleue"   alt="">
+            </div>
             <!-- Variantes couleur -->
             <fieldset class="swatches" aria-label="Couleur de la rose">
                 <!-- Chaque pastille transporte l'image correspondante en data-img -->
@@ -37,13 +44,13 @@ include 'includes/header.php';
                     <span style="--swatch:#d1121b"></span>
                 </label>
 
-                <label class="swatch" title="Bordeaux">
+                <label class="swatch" title="Rose">
                     <input type="radio" name="rose-color-1"
                            data-img="assets/img/rose-bordeaux.png" />
                     <span style="--swatch:#8b0005"></span>
                 </label>
 
-                <label class="swatch" title="Rose">
+                <label class="swatch" title="Rose_claire">
                     <input type="radio" name="rose-color-1"
                            data-img="assets/img/rose-rose.png" />
                     <span style="--swatch:#ffa0c4"></span>
