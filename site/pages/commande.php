@@ -37,7 +37,7 @@ include __DIR__ . '/includes/header.php';
  .wrap : conteneur centré avec largeur max (géré par CSS).
 -->
 <main class="wrap" role="main">
-    <h1 class="page-title">Récapitulatif de mon panier</h1>
+    <h1 class="page-title">Récapitulatif de ma commande</h1>
 
     <!--
       .grid : layout en colonnes (liste à gauche, résumé à droite).
@@ -129,21 +129,20 @@ include __DIR__ . '/includes/header.php';
             } else {
                 // Sinon on map chaque item en bref récapitulatif.
                 wrap.innerHTML = data.items.map(it => {
-                    // Sécurise les calculs : Number(...) renvoie NaN si invalide, on retombe sur 0 via || 0
-                    const pu = Number(it.PRO_PRIX) || 0;         // prix unitaire
-                    const q  = Number(it.CP_QTE_COMMANDEE) || 0; // quantité
-                    const lt = (pu * q).toFixed(2);              // ligne totale formatée
-
-                    // On rend une ligne "cart-brief" (nom, quantité, PU, total)
+                    const prix = Number(it.PRO_PRIX) || 0;
+                    const q    = Number(it.CP_QTE_COMMANDEE) || 0;
+                    // le total est prix × quantité
+                    const total = (prix * q).toFixed(2);
                     return `
-          <div class="cart-brief">
-            <div class="name">${it.PRO_NOM}</div>
-            <div class="qty">x&nbsp;${q}</div>
-            <div class="unit">${pu.toFixed(2)}&nbsp;CHF</div>
-            <div class="total">${lt}&nbsp;CHF</div>
-          </div>
-        `;
+      <div class="cart-brief">
+        <div class="name">${it.PRO_NOM}</div>
+        <div class="qty">x&nbsp;${q}</div>
+        <div class="unit">${prix.toFixed(2)}&nbsp;CHF</div>
+        <div class="total">${total}&nbsp;CHF</div>
+      </div>
+    `;
                 }).join('');
+
             }
 
             // Met à jour le bloc résumé (sous-total / total / bouton checkout)

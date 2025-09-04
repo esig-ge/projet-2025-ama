@@ -131,4 +131,9 @@
         // const next = document.querySelector('a.add-to-cart[href*="commande.php"]');
         // if (next) wire(next, true);
     });
+
+    if (location.hostname.includes('localhost') || location.search.includes('dev')) {
+        localStorage.removeItem('cart'); // ou localStorage.clear();
+    }
+
 })();
