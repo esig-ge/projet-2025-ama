@@ -1,139 +1,109 @@
-// site/pages/js/commande.js
-(function () {
-    // ================================
-    // 1) RENDU DU RÉSUMÉ (GLOBAL)
-    // ================================
-    // On expose la fonction sur window pour qu'elle soit réutilisable
-    // par les scripts inline de la page (ex: après un fetch qui rafraîchit le panier).
-    window.updateSummaryUI = function(items) {
-        // Récupère les éléments du résumé (sous-total, livraison, total, bouton checkout)
-        const elSub = document.getElementById('sum-subtotal');
-        const elShip = document.getElementById('sum-shipping');
-        const elTot = document.getElementById('sum-total');
-        const btn = document.getElementById('btn-checkout');
+// js/commande.js
 
-        // Si le sous-total ou le total manquent, on sort (rien à mettre à jour)
-        if (!elSub || !elTot) return;
+const API_URL = '/Projet_sur_Mandat/site/api/cart.php';
 
-        // Calcule le sous-total à partir des items renvoyés par l'API
-        // items = [{ PRO_PRIX: "12.50", CP_QTE_COMMANDEE: "2", ... }, ...]
-        const subtotal = (items || []).reduce((acc, it) => {
-            const prix = Number(it.PRO_PRIX ?? 0);           // prix unitaire
-            const qte  = Number(it.CP_QTE_COMMANDEE ?? 0);   // quantité
-            return acc + prix * qte;
-        }, 0);
+// helper API commun
+async function callApi(action, params = {}) {
+    const form = new URLSearchParams({ action, ...params });
+    const url  = `${API_URL}?action=${encodeURIComponent(action)}`;
 
-        // Formatage simple en CHF (2 décimales)
-        const fmt = (n) => `${n.toFixed(2)} CHF`;
-
-        // Injection du rendu dans le DOM
-        elSub.textContent = fmt(subtotal);
-        if (elShip) elShip.textContent = '—'; // (Placeholder) pas de frais de port pour l’instant
-        elTot.textContent = fmt(subtotal);
-
-        // Active/désactive le bouton "Valider ma commande"
-        if (btn) {
-            if (subtotal > 0) {
-                // panier non vide → bouton actif
-                btn.removeAttribute('aria-disabled');
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '';
-            } else {
-                // panier vide → bouton inactif (UX + accessibilité)
-                btn.setAttribute('aria-disabled', 'true');
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.6';
-            }
-        }
-    };
-
-    // ========================================
-    // 2) APPEL API : AJOUTER UN PRODUIT (POST)
-    // ========================================
-    // Envoie une requête POST à l'API panier pour ajouter un produit.
-    // Retourne la réponse JSON { ok: bool, items: [...], error?: string }
-    async function callAdd(proId, qty = 1) {
-        const form = new FormData();
-        form.append('action', 'add');
-        form.append('pro_id', String(proId));
-        form.append('qty', String(qty));
-
-        const res = await fetch('../api/cart.php?action=add', {
-            method: 'POST',
-            body: form,
-            credentials: 'same-origin', // important pour les cookies de session (PHP)
-        });
-        return res.json();
-    }
-
-    // =========================================
-    // 3) BINDER LES BOUTONS "AJOUTER AU PANIER"
-    // =========================================
-    // wire(el, redirectAfter) : attache le comportement au clic d’un bouton
-    // - Lit les dataset data-id / data-pro-id / data-qty
-    // - Appelle l'API et gère la réponse (update UI, redirection, feedback)
-    function wire(el, redirectAfter = false) {
-        el.addEventListener('click', async (e) => {
-            e.preventDefault();
-
-            // On récupère l'id produit et la quantité à partir des attributs data-*
-            const proId = Number(el.dataset.id || el.dataset.proId);
-            const qty   = Number(el.dataset.qty || 1);
-
-            if (!proId) {
-                alert('Produit invalide: data-id manquant ou non numérique');
-                return;
-            }
-
-            try {
-                const data = await callAdd(proId, qty);
-
-                // Gestion d’erreur côté API
-                if (!data.ok) {
-                    // Cas typique : l'API exige une authentification
-                    if (data.error === 'auth_required') {
-                        window.location.href = 'interface_connexion.php';
-                        return;
-                    }
-                    throw new Error(data.error || 'Erreur panier');
-                }
-
-                // Met à jour immédiatement le résumé si la fonction globale existe
-                if (window.updateSummaryUI) window.updateSummaryUI(data.items);
-
-                // Comportement après ajout :
-                // - soit on redirige vers la page commande
-                // - soit on affiche un feedback "Ajouté ✓" temporaire
-                if (redirectAfter) {
-                    window.location.href = 'commande.php';
-                } else {
-                    el.textContent = 'Ajouté ✓';
-                    setTimeout(() => (el.textContent = 'Ajouter'), 1200);
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Impossible d'ajouter au panier.");
-            }
-        });
-    }
-
-    // =================================================
-    // 4) AU CHARGEMENT DE LA PAGE : BIND AUTOMATIQUE
-    // =================================================
-    // Sélectionne tous les boutons "Ajouter au panier"
-    // et leur attache le comportement défini dans wire(...)
-    document.addEventListener('DOMContentLoaded', () => {
-        document
-            .querySelectorAll('button.add-to-cart')
-            .forEach(btn => wire(btn, false));
-
-        // Exemple si tu veux binder un lien qui doit rediriger vers le panier :
-        // const next = document.querySelector('a.add-to-cart[href*="commande.php"]');
-        // if (next) wire(next, true);
+    const res  = await fetch(url, {
+        method: 'POST',
+        body: form,
+        credentials: 'same-origin',
     });
 
-    if (location.hostname.includes('localhost') || location.search.includes('dev')) {
-        localStorage.removeItem('cart'); // ou localStorage.clear();
-    }
+    const text = await res.text();
+    console.log(`[API ${action}] ${res.status} ${url}\n↳`, text); // <-- LOG
 
-})();
+    let data;
+    try { data = JSON.parse(text); }
+    catch { throw new Error(`Réponse non JSON (HTTP ${res.status})`); }
+
+    if (!res.ok || data.ok === false) {
+        // remonte le message côté PHP (product_not_found, auth_required, server_error, etc.)
+        throw new Error(data.error || data.msg || `HTTP ${res.status}`);
+    }
+    return data;
+}
+
+// binder (seulement le catch changé)
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.add-to-cart');
+    if (!btn) return;
+
+    const proId = btn.dataset.proId;
+    btn.disabled = true;
+    try {
+        await callApi('add', { pro_id: proId, qty: 1 });
+        btn.textContent = 'Ajouté ✓';
+        setTimeout(() => { btn.textContent = 'Ajouter'; btn.disabled = false; }, 900);
+    } catch (err) {
+        alert("Impossible d'ajouter au panier.\n" + (err?.message || ''));
+        console.error(err);
+        btn.disabled = false;
+    }
+});
+
+// ——— Rendu du panier sur la page commande ———
+function chf(n){ return `${Number(n).toFixed(2)} CHF`; }
+
+async function renderCart() {
+    const wrap = document.getElementById('cart-list');
+    if (!wrap) return;
+    wrap.innerHTML = 'Chargement…';
+
+    try {
+        const data  = await callApi('list');
+        console.log('LIST items →', data.items);
+        const items = Array.isArray(data.items) ? data.items : [];
+
+        if (items.length === 0) {
+            wrap.innerHTML = `<p>Votre panier est vide.</p>`;
+            updateSummary(0);
+            return;
+        }
+
+        wrap.innerHTML = items.map(it => {
+            console.log('row →', it);
+            const nom   = it.nom ?? it.PRO_NOM ?? it.name ?? `#${it.id ?? it.PRO_ID ?? ''}`;
+            const qte   = Math.max(1, Number(it.qte ?? it.CP_QTE_COMMANDEE ?? it.qty ?? 1));
+            const prix  = Number(it.prix_unitaire ?? it.PRO_PRIX ?? it.price ?? 0);
+            const total = prix * qte;
+            const img   = it.image || it.PRO_IMG || 'img/placeholder.png';
+
+            return `
+        <div class="cart-row">
+          <img src="${img}" alt="${nom}" class="cart-img">
+          <div class="cart-name">${nom}</div>
+          <div class="cart-qty">x&nbsp;${qte}</div>
+          <div class="cart-unit">${chf(prix)}</div>
+          <div class="cart-total">${chf(total)}</div>
+        </div>
+      `;
+        }).join('');
+
+        const subtotal = items.reduce((s, it) => {
+            const p = Number(it.prix_unitaire ?? it.PRO_PRIX ?? it.price ?? 0);
+            const q = Math.max(1, Number(it.qte ?? it.CP_QTE_COMMANDEE ?? it.qty ?? 1));
+            return s + p*q;
+        }, 0);
+        updateSummary(subtotal);
+
+    } catch (err) {
+        console.error(err);
+        wrap.innerHTML = `<p>Erreur lors du chargement du panier.</p>`;
+    }
+}
+
+
+
+function updateSummary(subtotal) {
+    const el = document.getElementById('sum-subtotal');
+    if (el) el.textContent = `${subtotal.toFixed(2)} CHF`;
+}
+
+// Auto-rendu si on est sur la page commande
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('cart-list')) renderCart();
+});

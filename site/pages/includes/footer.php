@@ -8,7 +8,7 @@
         </nav>
         <div class="reseau_sociaux">
             <a href="https://www.instagram.com/accounts/login/?next=%2F_dkbloom%2F&source=omni_redirect" target="_blank">
-                <img src="../img/insta.jfif" alt="Instagram" width="150">
+                <img src="../img/instagram_icon.png" alt="Instagram" width="150">
             </a>
             <a href="https://www.tiktok.com/@_dkbloom" target="_blank">
                 <img src="../img/tiktok.png" alt="tiktok" width="150">

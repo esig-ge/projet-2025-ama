@@ -99,9 +99,9 @@ include __DIR__ . '/includes/header.php';
 </main>
 
 <!-- Footer simple -->
-<footer class="dkb-footer">
-    <div class="wrap">© DK Bloom</div>
-</footer>
+<?php
+include __DIR__ . '/includes/footer.php';
+?>
 
 <!--
   JS de la page (fonctions utilitaires : formatage, update du résumé, etc.)
@@ -115,7 +115,9 @@ include __DIR__ . '/includes/header.php';
         try {
             // Appel à l'API interne pour récupérer la liste du panier.
             // credentials:'same-origin' : envoie les cookies de session (nécessaire si l’API s’appuie sur la session PHP).
-            const res = await fetch('../api/cart.php?action=list', {credentials:'same-origin'});
+            const res = await fetch('/Projet_sur_Mandat/site/api/cart.php?action=list', {
+                credentials:'same-origin'
+            });
 
             // On suppose que l’API répond du JSON { ok: true/false, items: [...] }
             const data = await res.json();
@@ -129,18 +131,19 @@ include __DIR__ . '/includes/header.php';
             } else {
                 // Sinon on map chaque item en bref récapitulatif.
                 wrap.innerHTML = data.items.map(it => {
-                    const prix = Number(it.PRO_PRIX) || 0;
-                    const q    = Number(it.CP_QTE_COMMANDEE) || 0;
-                    // le total est prix × quantité
+                    const nom   = it.nom   ?? it.PRO_NOM   ?? `#${it.id ?? it.PRO_ID}`;
+                    const prix  = Number(it.prix_unitaire ?? it.PRO_PRIX ?? 0);
+                    const q     = Number(it.qte ?? it.CP_QTE_COMMANDEE ?? 0);
                     const total = (prix * q).toFixed(2);
+
                     return `
-      <div class="cart-brief">
-        <div class="name">${it.PRO_NOM}</div>
-        <div class="qty">x&nbsp;${q}</div>
-        <div class="unit">${prix.toFixed(2)}&nbsp;CHF</div>
-        <div class="total">${total}&nbsp;CHF</div>
-      </div>
-    `;
+    <div class="cart-brief">
+      <div class="name">${nom}</div>
+      <div class="qty">x&nbsp;${q}</div>
+      <div class="unit">${prix.toFixed(2)}&nbsp;CHF</div>
+      <div class="total">${total}&nbsp;CHF</div>
+    </div>
+  `;
                 }).join('');
 
             }

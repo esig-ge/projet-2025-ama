@@ -1,3 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/styleCatalogue.css">
+    <title>Catalogue bouquet</title>
+
+    <!-- charge le JS panier (API) -->
+    <script src="js/commande.js" defer></script>
+</head>
+
+<body>
+<?php include 'includes/header.php'; ?>
+</body>
+</html>
+
 <?php
 session_start();
 // ---- Sécurité & en-tête
