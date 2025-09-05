@@ -1,3 +1,5 @@
+// js/checkout.js — version sans addEventListener
+
 const LS_KEY = 'dkb_cart_v1';
 const API_CREATE_PI = '/api/create_payment_intent.php';
 const RETURN_URL_SUCCESS = '/success.php';
@@ -11,6 +13,7 @@ function loadCart(){
 
 function renderSummary(lines, b){
     const box = document.getElementById('cart-lines');
+    if (!box) return;
     box.innerHTML = lines.map(l => `
     <div class="cart-line">
       <div class="name">${l.name} <span class="qty">x ${l.qty}</span></div>
@@ -18,11 +21,11 @@ function renderSummary(lines, b){
     </div>`).join('');
     document.getElementById('sum-subtotal').textContent = b.subtotal.toFixed(2)+' CHF';
     document.getElementById('sum-shipping').textContent = b.shipping ? b.shipping.toFixed(2)+' CHF' : 'Offert';
-    document.getElementById('sum-tva').textContent = b.tva.toFixed(2)+' CHF';
-    document.getElementById('sum-total').textContent = b.total.toFixed(2)+' CHF';
+    document.getElementById('sum-tva').textContent      = b.tva.toFixed(2)+' CHF';
+    document.getElementById('sum-total').textContent    = b.total.toFixed(2)+' CHF';
 }
 
-async function init(){
+async function initCheckout(){
     const cart = loadCart();
     if (!cart.length){
         document.getElementById('form-message').textContent = "Votre panier est vide.";
@@ -36,20 +39,21 @@ async function init(){
         body: JSON.stringify({ items: cart.map(p => ({id:p.id, qty:p.qty})) })
     });
     const data = await res.json();
-    if (data.error){ document.getElementById('form-message').textContent = data.error; return; }
+    if (data.error){
+        document.getElementById('form-message').textContent = data.error;
+        return;
+    }
 
     clientSecret = data.clientSecret;
     renderSummary(cart, data.breakdown);
 
-    stripe = Stripe(data.publishableKey || window.__STRIPE_PK__);
+    stripe   = Stripe(data.publishableKey || window.__STRIPE_PK__);
     elements = stripe.elements({ clientSecret });
     elements.create("payment").mount("#payment-element");
-
-    document.getElementById('checkout-form').addEventListener('submit', onPay);
 }
 
-async function onPay(e){
-    e.preventDefault();
+async function onPay(form){
+    // cette fonction est appelée depuis onsubmit="return onPay(this)"
     document.getElementById('pay-btn').disabled = true;
 
     const { error } = await stripe.confirmPayment({
@@ -60,7 +64,8 @@ async function onPay(e){
     if (error){
         document.getElementById('form-message').textContent = error.message || "Paiement refusé.";
         document.getElementById('pay-btn').disabled = false;
+        return false; // empêche le submit natif
     }
-}
 
-document.addEventListener('DOMContentLoaded', init);
+    return true; // laisse Stripe rediriger
+}

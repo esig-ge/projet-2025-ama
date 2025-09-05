@@ -6,7 +6,6 @@
     <title>Catalogue bouquet</title>
 
     <!-- charge le JS panier (API) -->
-    <script src="/site/pages/js/helpers.js?v=1" defer></script>
     <script src="/site/pages/js/commande.js" defer></script>
 </head>
 

@@ -13,13 +13,12 @@ session_start();
     <link rel="stylesheet" href="css/style_header_footer.css">
     <link rel="stylesheet" href="css/commande.css">
 
-    <!-- JS panier (contient callApi, binder Ajouter, renderCart, updateSummary) -->
-    <!-- IMPORTANT: defer pour que le DOM soit prêt, et pas d'autre script inline qui ré-écrit #cart-list -->
-    <script src="/site/pages/js/helpers.js?v=1" defer></script>
+    <!-- JS panier (version sans addEventListener) -->
     <script src="/site/pages/js/commande.js" defer></script>
 </head>
 
-<body>
+<!-- 👉 onload lance directement renderCart() -->
+<body onload="renderCart()">
 <?php
 // Header commun
 include __DIR__ . '/includes/header.php';
@@ -36,7 +35,7 @@ include __DIR__ . '/includes/header.php';
 
     <div class="grid">
         <!-- Liste des articles -->
-        <section class="card" id="cart-list" aria-live="polite">
+        <section class="card" id="cart-list" aria-live="polite" data-state="loading">
             <!-- Le contenu est injecté par js/commande.js → renderCart() -->
         </section>
 
@@ -57,7 +56,10 @@ include __DIR__ . '/includes/header.php';
                 <span id="sum-total">0.00 CHF</span>
             </div>
 
-            <a href="checkout.php" class="btn-primary" id="btn-checkout" aria-disabled="true">
+            <!-- 👉 ici, onclick direct pour contrôler si désactivé -->
+            <a href="checkout.php" class="btn-primary" id="btn-checkout"
+               aria-disabled="true"
+               onclick="if(this.getAttribute('aria-disabled')==='true'){return false;}">
                 Valider ma commande
             </a>
 
@@ -81,7 +83,3 @@ include __DIR__ . '/includes/header.php';
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
 </html>
-
-<script src="js/script.js?v=2" defer></script>
-<script src="/Projet_sur_Mandat/site/js/commande.js?v=1" defer></script>
-

@@ -9,15 +9,16 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 /* =========================
    DEV / PROD SWITCH
    ========================= */
-const DEV_FORCE_LOGIN = true;                         // laisse true en DEV, passe à false en PROD
+const DEV_FORCE_LOGIN = true;
 const DEV_EMAIL       = 'dev.panier@dkbloom.local';
 
-// Dev si on est en localhost OU si l’URL contient ?dev
 $IS_DEV = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false)
     || (isset($_GET['dev']));
 
-// En DEV: on repart de zéro à chaque requête (pas de persistance du panier)
-if ($IS_DEV) { unset($_SESSION['com_id']); }
+// ⚠️ ne plus reset à chaque requête : reset volontaire seulement
+if ($IS_DEV && isset($_GET['reset'])) {
+    unset($_SESSION['com_id']);
+}
 
 /* ====== login forcé DEV ====== */
 if (DEV_FORCE_LOGIN && empty($_SESSION['per_id'])) {
@@ -58,11 +59,9 @@ $action = $_GET['action'] ?? $_POST['action'] ?? 'list';
 
 /* ====== utilitaires ====== */
 function getOrCreateOpenOrder(PDO $pdo, int $perId, bool $isDev): int {
-    // 1) si on a déjà une commande en session, on la réutilise (même en DEV)
     if (!empty($_SESSION['com_id'])) return (int) $_SESSION['com_id'];
 
     if (!$isDev) {
-        // 2) PROD : on tente de retrouver une commande 'en préparation' en BDD
         $q = $pdo->prepare("SELECT COM_ID FROM COMMANDE
                             WHERE PER_ID=:per AND COM_STATUT='en préparation'
                             ORDER BY COM_ID DESC LIMIT 1");
@@ -71,7 +70,6 @@ function getOrCreateOpenOrder(PDO $pdo, int $perId, bool $isDev): int {
         if ($id) { $_SESSION['com_id'] = (int)$id; return (int)$id; }
     }
 
-    // 3) DEV (ou rien trouvé en PROD) : on crée une nouvelle commande
     $q = $pdo->prepare("INSERT INTO COMMANDE
         (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
         VALUES (:per, NULL, NULL, 'en préparation', CURRENT_DATE, 'Panier en cours', 0)");
@@ -90,7 +88,6 @@ function guessProductType(PDO $pdo, int $proId): string {
     return 'bouquet';
 }
 
-/* ====== ajouts pour emballages & suppléments ====== */
 function addEmballage(PDO $pdo, int $comId, int $embId, int $qty): void {
     $chk = $pdo->prepare("SELECT 1 FROM EMBALLAGE WHERE EMB_ID=:id");
     $chk->execute(['id'=>$embId]);
@@ -99,7 +96,6 @@ function addEmballage(PDO $pdo, int $comId, int $embId, int $qty): void {
         echo json_encode(['ok'=>false,'error'=>'emballage_not_found']);
         exit;
     }
-
     $sql = "INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE)
             VALUES (:com,:emb,:q)
             ON DUPLICATE KEY UPDATE CE_QTE = CE_QTE + VALUES(CE_QTE)";
@@ -114,7 +110,6 @@ function addSupplement(PDO $pdo, int $comId, int $supId, int $qty): void {
         echo json_encode(['ok'=>false,'error'=>'supplement_not_found']);
         exit;
     }
-
     $sql = "INSERT INTO COMMANDE_SUPP (SUP_ID, COM_ID, CS_QTE_COMMANDEE)
             VALUES (:sup,:com,:q)
             ON DUPLICATE KEY UPDATE CS_QTE_COMMANDEE = CS_QTE_COMMANDEE + VALUES(CS_QTE_COMMANDEE)";
@@ -122,7 +117,6 @@ function addSupplement(PDO $pdo, int $comId, int $supId, int $qty): void {
 }
 
 function listOrder(PDO $pdo, int $comId): array {
-    // Produits
     $p = $pdo->prepare("SELECT 'produit' AS item_type, cp.PRO_ID AS id, p.PRO_NOM AS nom,
                                p.PRO_PRIX AS prix_unitaire, cp.CP_QTE_COMMANDEE AS qte
                         FROM COMMANDE_PRODUIT cp
@@ -132,7 +126,6 @@ function listOrder(PDO $pdo, int $comId): array {
     $p->execute(['com'=>$comId]);
     $items = $p->fetchAll(PDO::FETCH_ASSOC);
 
-    // Emballages (prix 0.00 si non tarifiés en BDD)
     $e = $pdo->prepare("SELECT 'emballage' AS item_type, ce.EMB_ID AS id, e.EMB_NOM AS nom,
                                0.00 AS prix_unitaire, ce.CE_QTE AS qte
                         FROM COMMANDE_EMBALLAGE ce
@@ -142,7 +135,6 @@ function listOrder(PDO $pdo, int $comId): array {
     $e->execute(['com'=>$comId]);
     $items = array_merge($items, $e->fetchAll(PDO::FETCH_ASSOC));
 
-    // Suppléments
     $s = $pdo->prepare("SELECT 'supplement' AS item_type, cs.SUP_ID AS id, s.SUP_NOM AS nom,
                                s.SUP_PRIX_UNITAIRE AS prix_unitaire, cs.CS_QTE_COMMANDEE AS qte
                         FROM COMMANDE_SUPP cs
@@ -158,7 +150,6 @@ function listOrder(PDO $pdo, int $comId): array {
    ========================= */
 try {
     if ($action === 'add') {
-        // ➜ accepte POST **ou** GET
         $qty   = max(1, (int)($_POST['qty'] ?? $_GET['qty'] ?? 1));
         $comId = getOrCreateOpenOrder($pdo, $perId, $IS_DEV);
 
@@ -167,7 +158,6 @@ try {
         $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
 
         if ($proId > 0) {
-            // Produit (bouquet/fleur/coffret)
             $chk = $pdo->prepare("SELECT 1 FROM PRODUIT WHERE PRO_ID=:id");
             $chk->execute(['id' => $proId]);
             if (!$chk->fetchColumn()) {
@@ -175,7 +165,6 @@ try {
                 echo json_encode(['ok'=>false,'error'=>'product_not_found']);
                 exit;
             }
-
             $type = guessProductType($pdo, $proId);
             $sql  = "INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
                      VALUES (:com,:pro,:q,:t)
@@ -183,11 +172,9 @@ try {
             $pdo->prepare($sql)->execute(['com'=>$comId,'pro'=>$proId,'q'=>$qty,'t'=>$type]);
 
         } elseif ($embId > 0) {
-            // Emballage
             addEmballage($pdo, $comId, $embId, $qty);
 
         } elseif ($supId > 0) {
-            // Supplément
             addSupplement($pdo, $comId, $supId, $qty);
 
         } else {
