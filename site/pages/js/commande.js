@@ -71,9 +71,9 @@ async function renderCart() {
         }
 
         wrap.innerHTML = items.map(it => {
-            const nom   = it.PRO_NOM ?? it.nom ?? it.name ?? `#${it.PRO_ID ?? it.id ?? ''}`;
-            const qte   = Math.max(1, Number(it.CP_QTE_COMMANDEE ?? it.qte ?? it.qty ?? 1));
-            const prix  = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
+            const nom  = it.PRO_NOM ?? it.nom ?? it.name ?? `#${it.PRO_ID ?? it.id ?? ''}`;
+            const qte  = Number(it.CP_QTE_COMMANDEE ?? it.qte ?? it.qty ?? 1);
+            const prix = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
             const total = prix * qte;
             const img   = it.PRO_IMG || it.image || 'img/placeholder.png';
             return `
