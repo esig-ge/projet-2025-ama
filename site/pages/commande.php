@@ -15,7 +15,8 @@ session_start();
 
     <!-- JS panier (contient callApi, binder Ajouter, renderCart, updateSummary) -->
     <!-- IMPORTANT: defer pour que le DOM soit prêt, et pas d'autre script inline qui ré-écrit #cart-list -->
-    <script src="js/commande.js" defer></script>
+    <script src="/site/pages/js/helpers.js?v=1" defer></script>
+    <script src="/site/pages/js/commande.js" defer></script>
 </head>
 
 <body>

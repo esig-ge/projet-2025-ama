@@ -1,6 +1,6 @@
 // js/commande.js
 (() => {
-    const API_URL = '/Projet_sur_Mandat/site/api/cart.php';
+    const API_URL = '/site/api/cart.php';
 
     function on(selector, event, handler, root = document) {
         const el = root.querySelector(selector);
