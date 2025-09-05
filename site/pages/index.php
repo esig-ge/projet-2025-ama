@@ -8,8 +8,6 @@
     <title>index</title>
     <link rel="stylesheet" href="css/squeletteIndex.css">
 </head>
-
-
 </script>
 
 <body class="corps">
