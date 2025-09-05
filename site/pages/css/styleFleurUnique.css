@@ -1,13 +1,14 @@
 .produit{
     display: flex;
     justify-content: space-evenly;
-    padding: 40px;
+
 }
 p{
     font-size: 30px;
 }
 h3{
     font-size: 35px;
+    padding-bottom: 0;
 }
 .produit-info{
     background-color: white;
@@ -16,7 +17,6 @@ h3{
     align-items:center;
     justify-items: center;
     align-content: center;
-    padding-top: 50px;
     color: darkred;
 
 }

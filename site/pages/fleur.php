@@ -17,7 +17,7 @@
         <div class="produit-info">
             <h3 class="product-title">La rose</h3>
             <p class="product-desc">
-                Une rose incarne l’unicité. Elle est le symbole d’un amour né au premier regard.
+                Elle est le symbole d’un amour né au premier regard. Et incarne l’unicité.
             </p>
         <!-- 1) Radios cachés AVANT .rose et au même niveau -->
         <input type="radio" id="c-rouge"  name="rose-color" class="color-radio" checked>
