@@ -1,7 +1,12 @@
 <?php
 session_start();
-require_once __DIR__ . '/site/database/config/stripe.php';
-require_once __DIR__ . '/site/database/config/connexionBDD.php';
+
+require_once __DIR__ . '//database/config/env.php';
+loadEnv(__DIR__ . '/../database/config/.env');
+
+require_once __DIR__ . '/../database/config/stripe.php';
+require_once __DIR__ . '/../database/config/connexionBDD.php';
+
 
 // 1) commande courante
 $comId = $_SESSION['com_id'] ?? null;

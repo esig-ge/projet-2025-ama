@@ -1,21 +1,16 @@
 <?php
 // site/database/config/stripe.php
+require_once __DIR__ . '/../../app/libs/stripe/init.php'; // adapte si besoin
 
-// Chemins (site/… -> app/libs/stripe/…)
-$siteRoot   = dirname(__DIR__, 2);                 // …/site
-$stripeRoot = $siteRoot . '/../app/libs/stripe';   // …/app/libs/stripe
+$secret = getenv('STRIPE_SECRET_KEY') ?: '';
+$secret = trim($secret);
 
-// 1) Charger l’autoloader Stripe via init.php
-$init = $stripeRoot . '/init.php';
-if (!file_exists($init)) {
-    http_response_code(500);
-    die('Stripe init.php introuvable: ' . htmlspecialchars($init));
+// Log temporaire pour vérifier ce qui est lu
+error_log('Stripe sk prefix='.substr($secret,0,8).' len='.strlen($secret));
+
+if (!preg_match('/^sk_(test|live)_[A-Za-z0-9]+$/', $secret)) {
+    throw new RuntimeException('Stripe secret key invalid or missing.');
 }
-require_once $init;
 
-// 2) Clé secrète (mets ta vraie clé test)
-$STRIPE_SECRET = getenv('STRIPE_SECRET') ?: 'sk_test_xxx_REMPLACE';
-\Stripe\Stripe::setApiKey($STRIPE_SECRET);
-
-// (optionnel) figer la version API
-// \Stripe\Stripe::setApiVersion('2023-10-16');
+\Stripe\Stripe::setApiKey($secret);
+// \Stripe\Stripe::setApiVersion('2024-06-20'); // optionnel
