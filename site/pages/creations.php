@@ -11,25 +11,28 @@
 <?php include 'includes/header.php'; ?>
 <h1>Mes prestations déjà réalisées</h1>
 <main>
-    <div class="slider">
-        <div class="slides">
-            <!-- Slide 1 -->
-            <video controls>
-                <source src="img/videofleur2.mov" type="video/mp4" >
-                Votre navigateur ne supporte pas la vidéo.
-            </video>
+    <div class="main_slide">
+        <div class="slider">
+            <div class="slides">
+                <!-- Slide 1 -->
+                <video controls>
+                    <source src="img/videofleur2.mov" type="video/mp4" >
+                </video>
 
-            <!-- Slide 2 -->
-            <video controls>
-                <source src="img/videofleur3.mov" type="video/mp4" >
-                <source src="img/videofleur2.mov" type="video/mp4" >
-            </video>
+                <!-- Slide 2 -->
+                <video controls>
+                    <source src="img/videofleur3.mov" type="video/mp4" >
+                </video>
+                <video controls>
+                    <source src="img/videofleur2.mov" type="video/mp4" >
+                </video>
+                <button class="btn prev">&#10094;</button>
+                <button class="btn next">&#10095;</button>
+            </div>
         </div>
-        <button class="btn prev">&#10094;</button>
-        <button class="btn next">&#10095;</button>
     </div>
 
 </main>
 
-<?php include 'includes/footer.php.php'; ?>
+<?php include 'includes/footer.php'; ?>
 </body>
