@@ -13,7 +13,7 @@
             <a href="<?= $BASE ?>interface_catalogue_bouquet.php">Catalogue</a>
             <a href="<?= $BASE ?>contact.php">Contact</a>
             <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
-            <a href="<?= $BASE ?>connexion.php">Se connecter</a>
+            <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
         </nav>
     </div>
 </header>

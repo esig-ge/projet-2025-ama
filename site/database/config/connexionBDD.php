@@ -2,7 +2,7 @@
 $DB_HOST = getenv('DB_HOST') ?: 'hhva.myd.infomaniak.com';
 $DB_NAME = getenv('DB_NAME') ?: 'hhva_t25_6';
 $DB_USER = getenv('DB_USER') ?: 'hhva_t25_6';
-$DB_PASS = getenv('DB_PASS') ?: '';
+$DB_PASS = getenv('DB_PASS') ?: '8oP#CGNRXJ';
 
 $dsn = "mysql:host={$DB_HOST};dbname={$DB_NAME};charset=utf8mb4";
 

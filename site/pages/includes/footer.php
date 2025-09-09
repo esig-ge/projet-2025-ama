@@ -6,24 +6,23 @@ if (!isset($BASE)) {
 }
 ?>
 <footer class="site-footer" role="contentinfo">
-    <div class="container footer-grid">
-        <p class="footer-left">© <?= date('Y') ?> DK Bloom. Tous droits réservés.</p>
+    <div class="footer-inner">
+        <p class="legal">© <?= date('Y') ?> DK Bloom. Tous droits réservés.</p>
 
-        <nav class="footer-nav" aria-label="Pied de page">
+        <nav class="footer-links" aria-label="Pied de page">
             <a href="<?= $BASE ?>mentions.php">Mentions légales</a>
             <a href="<?= $BASE ?>contact.php">Contact</a>
             <a href="<?= $BASE ?>login.php">Espace client</a>
         </nav>
 
-        <div class="reseau_sociaux">
+        <div class="footer-social">
             <a href="https://www.instagram.com/accounts/login/?next=%2F_dkbloom%2F&source=omni_redirect"
                target="_blank" rel="noopener" aria-label="Instagram">
-                <!-- width/height fixent la taille pour ne pas “gonfler” le footer -->
-                <img src="<?= $BASE ?>img/instagram_icon.png" alt="" width="24" height="24" loading="lazy">
+                <img src="<?= $BASE ?>img/instagram_icon.png" alt="Instagram" width="24" height="24" loading="lazy">
             </a>
-
-            <a href="https://www.tiktok.com/@_dkbloom" target="_blank" rel="noopener" aria-label="TikTok">
-                <img src="<?= $BASE ?>img/tiktok.png" alt="" width="24" height="24" loading="lazy">
+            <a href="https://www.tiktok.com/@_dkbloom"
+               target="_blank" rel="noopener" aria-label="TikTok">
+                <img src="<?= $BASE ?>img/tiktok.png" alt="TikTok" width="24" height="24" loading="lazy">
             </a>
         </div>
     </div>

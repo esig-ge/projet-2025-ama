@@ -14,17 +14,17 @@
     color:darkred;
 }
 
-/* Titres/paragraphes – scoping pour ne pas toucher le footer */
-.catalogue h1{
+/* Titres/paragraphes – scoped pour ne pas impacter le reste du site */
+.catalogue .section-title{           /* ton <h1> principal */
     color:darkred;
     margin:0 0 8px 0;
     text-align:center;
 }
-.catalogue .produit-info h3{
+.catalogue .produit-info h3{         /* sous-titre produit */
     font-size:2rem;       /* ≈ 32px */
     margin:8px 0;
 }
-.catalogue .produit-info p{
+.catalogue .produit-info p{          /* texte descriptif */
     font-size:1.125rem;   /* ≈ 18px */
     line-height:1.5;
     text-align:center;
@@ -92,9 +92,14 @@ a.button:hover, a.add-to-cart:hover{
 /* Navigation bas de page */
 .btn_accueil{ display:flex; justify-content:center; gap:8px; margin:12px 0 24px; }
 
-/* ====== Protections pour le footer (ne pas toucher sa typo) ====== */
-.site-footer p{ font-size:0.9rem; font-weight:normal; margin:0; color:#fff; }
-.site-footer small{ font-size:0.85rem; }
+/* ====== Protections pour le footer ====== */
+.site-footer p{
+    font-size:0.9rem !important;
+    font-weight:normal !important;
+    margin:0 !important;
+    color:#fff !important;
+}
+.site-footer small{ font-size:0.85rem !important; }
 
 /* ====== Responsive ====== */
 @media (max-width:900px){
