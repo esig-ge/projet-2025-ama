@@ -27,10 +27,10 @@ try {
 }
 
 
-function dbConnect()
+/*function dbConnect()
 {
     try {
-        $pdo = new PDO('mysql:host=hhva.myd.infomaniak.com;dbname=hhva_ardita', 'hhva_ardita', 'Ekq@@oE-6A130', [
+        $pdo = new PDO('mysql:host=hhva.myd.infomaniak.com;dbname=hhva_t25_6', 'hhva_t25_6', '8oP#CGNRXJ', [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
         $pdo->exec("SET NAMES 'UTF8'");
@@ -38,4 +38,4 @@ function dbConnect()
     } catch (PDOException $e) {
         die('Erreur de connexion : ' . $e->getMessage());
     }
-}
+}*/

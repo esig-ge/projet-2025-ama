@@ -1,6 +1,8 @@
 <?php
-// Démarre/ouvre la session PHP (pour accéder au panier, à l'utilisateur connecté, etc.)
 session_start();
+
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -9,20 +11,21 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Mon panier</title>
 
-    <!-- Styles globaux + page -->
-    <link rel="stylesheet" href="css/style_header_footer.css">
-    <link rel="stylesheet" href="css/commande.css">
+    <link rel="stylesheet" href="../css/style_header_footer.css">
+    <link rel="stylesheet" href="../css/commande.css">
 
-    <!-- JS panier (version sans addEventListener) -->
-    <script src="/site/pages/js/commande.js" defer></script>
+    <script>
+        // ex: "/site/pages/"
+        window.DKBASE  = <?= json_encode($BASE) ?>;
+        // on pointe sur le PROXY sous /site/pages/api/
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
+    </script>
+    <script src="../js/commande.js" defer></script>
 </head>
 
-<!-- 👉 onload lance directement renderCart() -->
-<body onload="renderCart()">
-<?php
-// Header commun
-include __DIR__ . '/includes/header.php';
-?>
+
+<body onload="renderCart()"><!-- onload OK si renderCart est global -->
+<?php include __DIR__ . '/includes/header.php'; ?>
 
 <script>
     // Ajuste une variable CSS selon la hauteur du header (utile si sticky)
@@ -34,30 +37,17 @@ include __DIR__ . '/includes/header.php';
     <h1 class="page-title">Récapitulatif de ma commande</h1>
 
     <div class="grid">
-        <!-- Liste des articles -->
-        <section class="card" id="cart-list" aria-live="polite" data-state="loading">
-            <!-- Le contenu est injecté par js/commande.js → renderCart() -->
-        </section>
+        <section class="card" id="cart-list" aria-live="polite" data-state="loading"></section>
 
-        <!-- Résumé -->
         <aside class="card summary" aria-labelledby="sum-title">
             <h2 id="sum-title" class="sr-only">Résumé de commande</h2>
 
-            <div class="sum-row">
-                <span>Produits</span>
-                <span id="sum-subtotal">0.00 CHF</span>
-            </div>
-            <div class="sum-row">
-                <span>Livraison</span>
-                <span id="sum-shipping">—</span>
-            </div>
-            <div class="sum-total">
-                <span>Total</span>
-                <span id="sum-total">0.00 CHF</span>
-            </div>
+            <div class="sum-row"><span>Produits</span><span id="sum-subtotal">0.00 CHF</span></div>
+            <div class="sum-row"><span>Livraison</span><span id="sum-shipping">—</span></div>
+            <div class="sum-total"><span>Total</span><span id="sum-total">0.00 CHF</span></div>
 
-            <!-- 👉 ici, onclick direct pour contrôler si désactivé -->
-            <a href="checkout.php" class="btn-primary" id="btn-checkout"
+            <!-- checkout est à /site/checkout.php, donc on remonte -->
+            <a href="../checkout.php" class="btn-primary" id="btn-checkout"
                aria-disabled="true"
                onclick="if(this.getAttribute('aria-disabled')==='true'){return false;}">
                 Valider ma commande

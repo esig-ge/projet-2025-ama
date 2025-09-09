@@ -6,16 +6,27 @@ require_once __DIR__ . '/../database/config/connexionBDD.php';
 /** @var PDO $pdo */
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+/* ===== Helpers JSON ===== */
+function json_ok(array $payload = [], int $code = 200): void {
+    http_response_code($code);
+    echo json_encode(['ok' => true] + $payload);
+    exit;
+}
+function json_err(string $error, int $code = 400, array $extra = []): void {
+    http_response_code($code);
+    echo json_encode(['ok' => false, 'error' => $error] + $extra);
+    exit;
+}
+
 /* =========================
    DEV / PROD SWITCH
    ========================= */
-const DEV_FORCE_LOGIN = true;
+const DEV_FORCE_LOGIN = true; // ⚠️ passe à false en prod
 const DEV_EMAIL       = 'dev.panier@dkbloom.local';
 
 $IS_DEV = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false)
-    || (isset($_GET['dev']));
+    || isset($_GET['dev']);
 
-// ⚠️ ne plus reset à chaque requête : reset volontaire seulement
 if ($IS_DEV && isset($_GET['reset'])) {
     unset($_SESSION['com_id']);
 }
@@ -28,6 +39,7 @@ if (DEV_FORCE_LOGIN && empty($_SESSION['per_id'])) {
         $perId = $q->fetchColumn();
 
         if (!$perId) {
+            // ⚠️ mot de passe en clair pour DEV uniquement
             $insertP = $pdo->prepare("
                 INSERT INTO PERSONNE (PER_NOM, PER_PRENOM, PER_EMAIL, PER_MDP, PER_NUM_TEL)
                 VALUES ('Dev','Panier', :mail, 'DevTest@1234!', '0791111111')
@@ -49,9 +61,7 @@ if (DEV_FORCE_LOGIN && empty($_SESSION['per_id'])) {
 }
 
 if (empty($_SESSION['per_id'])) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'auth_required']);
-    exit;
+    json_err('auth_required', 401);
 }
 
 $perId  = (int) $_SESSION['per_id'];
@@ -72,7 +82,7 @@ function getOrCreateOpenOrder(PDO $pdo, int $perId, bool $isDev): int {
 
     $q = $pdo->prepare("INSERT INTO COMMANDE
         (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
-        VALUES (:per, NULL, NULL, 'en préparation', CURRENT_DATE, 'Panier en cours', 0)");
+        VALUES (:per, NULL, NULL, 'en préparation', CURRENT_TIMESTAMP, 'Panier en cours', 0)");
     $q->execute(['per' => $perId]);
     $newId = (int)$pdo->lastInsertId();
     $_SESSION['com_id'] = $newId;
@@ -91,11 +101,8 @@ function guessProductType(PDO $pdo, int $proId): string {
 function addEmballage(PDO $pdo, int $comId, int $embId, int $qty): void {
     $chk = $pdo->prepare("SELECT 1 FROM EMBALLAGE WHERE EMB_ID=:id");
     $chk->execute(['id'=>$embId]);
-    if (!$chk->fetchColumn()) {
-        http_response_code(404);
-        echo json_encode(['ok'=>false,'error'=>'emballage_not_found']);
-        exit;
-    }
+    if (!$chk->fetchColumn()) json_err('emballage_not_found', 404);
+
     $sql = "INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE)
             VALUES (:com,:emb,:q)
             ON DUPLICATE KEY UPDATE CE_QTE = CE_QTE + VALUES(CE_QTE)";
@@ -105,11 +112,8 @@ function addEmballage(PDO $pdo, int $comId, int $embId, int $qty): void {
 function addSupplement(PDO $pdo, int $comId, int $supId, int $qty): void {
     $chk = $pdo->prepare("SELECT 1 FROM SUPPLEMENT WHERE SUP_ID=:id");
     $chk->execute(['id'=>$supId]);
-    if (!$chk->fetchColumn()) {
-        http_response_code(404);
-        echo json_encode(['ok'=>false,'error'=>'supplement_not_found']);
-        exit;
-    }
+    if (!$chk->fetchColumn()) json_err('supplement_not_found', 404);
+
     $sql = "INSERT INTO COMMANDE_SUPP (SUP_ID, COM_ID, CS_QTE_COMMANDEE)
             VALUES (:sup,:com,:q)
             ON DUPLICATE KEY UPDATE CS_QTE_COMMANDEE = CS_QTE_COMMANDEE + VALUES(CS_QTE_COMMANDEE)";
@@ -150,21 +154,22 @@ function listOrder(PDO $pdo, int $comId): array {
    ========================= */
 try {
     if ($action === 'add') {
-        $qty   = max(1, (int)($_POST['qty'] ?? $_GET['qty'] ?? 1));
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            json_err('method_not_allowed', 405);
+        }
+
+        $qty   = max(1, (int)($_POST['qty'] ?? 1));
         $comId = getOrCreateOpenOrder($pdo, $perId, $IS_DEV);
 
-        $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
-        $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
-        $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
+        $proId = (int)($_POST['pro_id'] ?? 0);
+        $embId = (int)($_POST['emb_id'] ?? 0);
+        $supId = (int)($_POST['sup_id'] ?? 0);
 
         if ($proId > 0) {
             $chk = $pdo->prepare("SELECT 1 FROM PRODUIT WHERE PRO_ID=:id");
             $chk->execute(['id' => $proId]);
-            if (!$chk->fetchColumn()) {
-                http_response_code(404);
-                echo json_encode(['ok'=>false,'error'=>'product_not_found']);
-                exit;
-            }
+            if (!$chk->fetchColumn()) json_err('product_not_found', 404);
+
             $type = guessProductType($pdo, $proId);
             $sql  = "INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
                      VALUES (:com,:pro,:q,:t)
@@ -178,26 +183,20 @@ try {
             addSupplement($pdo, $comId, $supId, $qty);
 
         } else {
-            http_response_code(400);
-            echo json_encode(['ok'=>false,'error'=>'missing_pro_or_emb_or_sup_id']);
-            exit;
+            json_err('missing_pro_or_emb_or_sup_id', 400);
         }
 
-        echo json_encode(['ok'=>true,'com_id'=>$comId,'items'=>listOrder($pdo,$comId)]);
-        exit;
+        json_ok(['com_id'=>$comId,'items'=>listOrder($pdo,$comId)]);
     }
 
     if ($action === 'list') {
         $comId = $_SESSION['com_id'] ?? null;
-        if (!$comId) { echo json_encode(['ok'=>true,'items'=>[]]); exit; }
-        echo json_encode(['ok'=>true,'com_id'=>(int)$comId,'items'=>listOrder($pdo,(int)$comId)]);
-        exit;
+        if (!$comId) json_ok(['items'=>[]]);
+        json_ok(['com_id'=>(int)$comId,'items'=>listOrder($pdo,(int)$comId)]);
     }
 
-    http_response_code(400);
-    echo json_encode(['ok'=>false,'error'=>'bad_action']);
+    json_err('bad_action', 400);
 
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['ok'=>false,'error'=>'server_error','msg'=>$e->getMessage()]);
+    json_err('server_error', 500, ['msg'=>$e->getMessage()]);
 }
