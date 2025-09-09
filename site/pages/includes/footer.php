@@ -16,16 +16,19 @@ if (!isset($BASE)) {
         </nav>
 
         <div class="footer-social">
-            <a href="https://www.instagram.com/accounts/login/?next=%2F_dkbloom%2F&source=omni_redirect"
+            <a href="https://www.instagram.com/_dkbloom/"
                target="_blank" rel="noopener" aria-label="Instagram">
-                <img src="<?= $BASE ?>img/Instagram_icon.png" alt="Instagram" width="24" height="24" loading="lazy">
+                <img src="<?= $BASE ?>img/instagram_icon.png"
+                     alt="Instagram" width="24" height="24" loading="lazy">
             </a>
             <a href="https://www.tiktok.com/@_dkbloom"
                target="_blank" rel="noopener" aria-label="TikTok">
-                <img src="<?= $BASE ?>img/tiktok.png" alt="TikTok" width="24" height="24" loading="lazy">
+                <img src="<?= $BASE ?>img/tiktok.png"
+                     alt="TikTok" width="24" height="24" loading="lazy">
             </a>
         </div>
     </div>
 </footer>
 
+<!-- JS principal -->
 <script src="<?= $BASE ?>js/script.js" defer></script>

@@ -1,28 +1,21 @@
 // js/commande.js
 
+// js/commande.js
+
 /* =============== 1) Bases de chemins =============== */
-// Base dossier de la page
 const PAGE_BASE = (typeof window.DKBASE === 'string' && window.DKBASE.length)
-    ? window.DKBASE
+    ? window.DKBASE                                   // ex: "/.../site/pages/"
     : location.pathname.replace(/[^/]+$/, '');
 
-// Parent de /pages/
-const SITE_BASE = (() => {
-    const m = PAGE_BASE.match(/^(.*\/)pages\/$/);
-    return m ? m[1] : PAGE_BASE;
-})();
-
-// URL de l'API (injectée par PHP ou fallback local)
+// 👉 API sous /site/pages/api/cart.php (ou injectée par PHP)
 const API_URL = (typeof window.API_URL === 'string' && window.API_URL.length)
-    ? window.API_URL
+    ? window.API_URL                                  // ex: "/.../site/pages/api/cart.php"
     : PAGE_BASE + 'api/cart.php';
 
 console.debug('[DKBloom] API_URL =', API_URL);
 
-// Base visuelle des assets de page
+// Base pour les assets de la page (images, etc.)
 const ASSET_BASE = PAGE_BASE;
-
-// … le reste (callApi/renderCart/addToCart) inchangé …
 
 
 /* =============== 2) Helpers =============== */

@@ -1,13 +1,22 @@
-<?php if (!isset($BASE)) { $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; } ?>
-<header class="site-header">
+<?php
+// Base URL relative au script courant (toujours avec un slash final)
+if (!isset($BASE)) {
+    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+}
+?>
+<header class="site-header" role="banner">
     <div class="header">
-        <a href="<?= $BASE ?>index.php" class="logo">
-            <img src="<?= $BASE ?>img/logo.jpg" alt="DK Bloom">
+        <!-- Logo -->
+        <a href="<?= $BASE ?>index.php" class="logo" aria-label="DK Bloom — retour à l'accueil">
+            <img src="<?= $BASE ?>img/logo.png" alt="DK Bloom" width="120" height="auto" loading="lazy">
         </a>
 
-        <button class="menu-toggle" aria-expanded="false" aria-label="Menu">☰</button>
+        <!-- Bouton menu mobile -->
+        <button class="menu-toggle" aria-expanded="false" aria-label="Menu principal">☰</button>
 
-        <nav data-nav class="menu">
+        <!-- Navigation principale -->
+        <nav class="menu" data-nav role="navigation" aria-label="Navigation principale">
             <a href="<?= $BASE ?>index.php">Accueil</a>
             <a href="<?= $BASE ?>apropos.php">À propos</a>
             <a href="<?= $BASE ?>interface_catalogue_bouquet.php">Catalogue</a>

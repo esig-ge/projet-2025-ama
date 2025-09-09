@@ -2,7 +2,6 @@
 session_start();
 header('Content-Type: application/json');
 
-// ⬇️ chemin mis à jour (deux niveaux au-dessus de /site/pages/api/)
 require_once __DIR__ . '/../../database/config/connexionBDD.php';
 /** @var PDO $pdo */
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

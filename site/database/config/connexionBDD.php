@@ -1,5 +1,5 @@
 <?php
-$DB_HOST = getenv('DB_HOST') ?: 'hhva.myd.infomaniak.com';
+/*$DB_HOST = getenv('DB_HOST') ?: 'hhva.myd.infomaniak.com';
 $DB_NAME = getenv('DB_NAME') ?: 'hhva_t25_6';
 $DB_USER = getenv('DB_USER') ?: 'hhva_t25_6';
 $DB_PASS = getenv('DB_PASS') ?: '8oP#CGNRXJ';
@@ -24,10 +24,10 @@ try {
         echo 'Erreur connexion BDD';
     }
     exit;
-}
+}*/
 
 
-/*function dbConnect()
+function dbConnect()
 {
     try {
         $pdo = new PDO('mysql:host=hhva.myd.infomaniak.com;dbname=hhva_t25_6', 'hhva_t25_6', '8oP#CGNRXJ', [
@@ -38,4 +38,4 @@ try {
     } catch (PDOException $e) {
         die('Erreur de connexion : ' . $e->getMessage());
     }
-}*/
+}
