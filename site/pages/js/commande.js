@@ -1,29 +1,36 @@
 // js/commande.js
 
-// js/commande.js
-
 /* =============== 1) Bases de chemins =============== */
 const PAGE_BASE = (typeof window.DKBASE === 'string' && window.DKBASE.length)
     ? window.DKBASE                                   // ex: "/.../site/pages/"
-    : location.pathname.replace(/[^/]+$/, '');
+    : location.pathname.replace(/[^/]+$/, '');        // dossier de la page
 
-// 👉 API sous /site/pages/api/cart.php (ou injectée par PHP)
+// Parent de /pages/ → ex: "/.../site/"
+const SITE_BASE = (() => {
+    const m = PAGE_BASE.match(/^(.*\/)pages\/$/);
+    return m ? m[1] : PAGE_BASE;                      // fallback safe
+})();
+
+// URL de l'API (injectée par PHP, sinon fallback local)
 const API_URL = (typeof window.API_URL === 'string' && window.API_URL.length)
     ? window.API_URL                                  // ex: "/.../site/pages/api/cart.php"
     : PAGE_BASE + 'api/cart.php';
 
-console.debug('[DKBloom] API_URL =', API_URL);
+console.debug('[DKBloom] PAGE_BASE =', PAGE_BASE);
+console.debug('[DKBloom] SITE_BASE =', SITE_BASE);
+console.debug('[DKBloom] API_URL   =', API_URL);
 
-// Base pour les assets de la page (images, etc.)
+// Base pour les assets de la page
 const ASSET_BASE = PAGE_BASE;
-
 
 /* =============== 2) Helpers =============== */
 const chf = n => `${Number(n).toFixed(2)} CHF`;
 
+// Normalise un chemin d’image renvoyé par l’API
 function normImgPath(p) {
     if (!p) return ASSET_BASE + 'img/placeholder.png';
     if (/^(https?:)?\/\//.test(p) || p.startsWith('/') || p.startsWith('data:')) return p;
+    // si l'API renvoie "img/xxx.png" relatif à /site/, on sert depuis SITE_BASE
     return `${SITE_BASE}${p}`;
 }
 
