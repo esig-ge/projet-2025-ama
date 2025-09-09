@@ -16,15 +16,12 @@
             <div class="slides">
                 <!-- Slide 1 -->
                 <video controls>
-                    <source src="img/videofleur2.mov" type="video/mp4" >
+                    <source src="img/videofleur2.mp4" type="video/mp4" >
                 </video>
 
                 <!-- Slide 2 -->
                 <video controls>
-                    <source src="img/videofleur3.mov" type="video/mp4" >
-                </video>
-                <video controls>
-                    <source src="img/videofleur2.mov" type="video/mp4" >
+                    <source src="img/videofleur3.mp4" type="video/mp4" >
                 </video>
                 <button class="btn prev">&#10094;</button>
                 <button class="btn next">&#10095;</button>

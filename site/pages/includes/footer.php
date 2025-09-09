@@ -11,7 +11,7 @@
                 <img src="../img/instagram_icon.png" alt="Instagram" width="150">
             </a>
             <a href="https://www.tiktok.com/@_dkbloom" target="_blank">
-                <img src="../img/tiktok.png" alt="tiktok" width="150">
+                <img src="../img/tiktok-removebg-preview.png" alt="tiktok" width="150">
             </a>
 
         </div>
