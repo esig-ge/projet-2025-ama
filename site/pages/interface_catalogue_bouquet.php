@@ -2,6 +2,17 @@
 // Base URL avec slash final (ex: "/…/site/pages/")
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+
+// Parent de /pages/ → "/…/site/"
+$SITE_BASE = preg_replace('#/pages/$#', '/', $BASE);
+
+// Détection de l'API (on vérifie sur le système de fichiers)
+$api_in_pages = is_file(__DIR__ . '/api/cart.php');           // /site/pages/api/cart.php
+$api_in_site  = is_file(dirname(__DIR__) . '/api/cart.php');  // /site/api/cart.php
+
+$API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
+    : ($api_in_site  ? ($SITE_BASE . 'api/cart.php')
+        : ($BASE . 'api/cart.php')); // fallback
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -10,20 +21,15 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>DK Bloom — Catalogue bouquet</title>
 
-    <!-- CSS global + page -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
 
-    <!-- Expose BASE + API_URL au JS -->
     <script>
-        window.DKBASE  = <?= json_encode($BASE) ?>;                  // "/…/site/pages/"
-        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>; // "/…/site/pages/api/cart.php"
+        window.DKBASE  = <?= json_encode($BASE) ?>;               // "/…/site/pages/"
+        window.API_URL = <?= json_encode($API_URL) ?>;             // auto: "/…/site/pages/api/cart.php" ou "/…/site/api/cart.php"
     </script>
-
-    <!-- JS panier -->
     <script src="<?= $BASE ?>js/commande.js" defer></script>
 </head>
-
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
@@ -32,9 +38,8 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
     <div id="produit_bouquet" class="catalogue" aria-label="Liste de bouquets">
         <div class="card product">
-            <img src="<?= $BASE ?>img/12Roses.png" alt="Bouquet de 12 roses" loading="lazy">
-            <h3>12 roses</h3>
-            <p class="price">30 CHF</p>
+            <img src="<?= $BASE ?>img/12Roses.png" alt="Bouquet 12 roses" loading="lazy">
+            <h3>12 roses</h3><p class="price">30 CHF</p>
             <button class="add-to-cart"
                     data-pro-id="7"
                     data-pro-name="Bouquet 12 roses"
