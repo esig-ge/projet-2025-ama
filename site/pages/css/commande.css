@@ -252,3 +252,74 @@ a:focus,button:focus,input:focus{
 .cart-brief .qty{color:var(--muted)}
 .cart-brief .unit{justify-self:end}
 .cart-brief .total{justify-self:end;font-weight:700}
+
+/* --- Toast ajouté au panier --- */
+.dk-toast {
+    position: fixed;
+    left: 50%;
+    top: 24px;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    border: 1px solid rgba(0,0,0,.06);
+}
+.dk-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.dk-toast .thumb {
+    width: 44px; height: 44px; border-radius: 10px; object-fit: cover;
+    box-shadow: 0 4px 14px rgba(0,0,0,.12);
+}
+.dk-toast .msg {
+    font-size: 14px; line-height: 1.35; color: #222;
+}
+.dk-toast .msg strong { font-weight: 700; }
+
+/* --- Canvas de confetti pétales --- */
+#dk-petals {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+}
+/* === Lignes produits utilisées par le JS (cart-row) === */
+.cart-row{
+    display:grid;
+    grid-template-columns: 80px 1fr auto auto; /* image | nom | PU | total */
+    gap:12px;
+    align-items:center;
+    padding:16px;
+    border-bottom:1px solid var(--stroke);
+}
+.cart-row:last-child{ border-bottom:none; }
+.cart-img{
+    width:80px;height:80px;
+    border-radius:12px;
+    object-fit:cover;
+    border:1px solid var(--stroke);
+    background:#fafafa;
+}
+.cart-name{ font-weight:700; }
+.cart-unit,.cart-total{ justify-self:end; }
+@media (max-width:600px){
+    .cart-row{ grid-template-columns:64px 1fr auto; }
+    .cart-img{ width:64px;height:64px; }
+    .cart-unit{ display:none; } /* on cache le PU sur petit écran, on garde le total */
+}
+
+/* Préférence utilisateur: réduire les animations */
+@media (prefers-reduced-motion: reduce){
+    .dk-toast{ transition:none; }
+}
+

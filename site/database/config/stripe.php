@@ -1,16 +1,13 @@
 <?php
-// site/database/config/stripe.php
-require_once __DIR__ . '/../../app/libs/stripe/init.php'; // adapte si besoin
+require_once __DIR__ . '/env.php';
+loadProjectEnv();
 
-$secret = getenv('STRIPE_SECRET_KEY') ?: '';
-$secret = trim($secret);
+// Si tu n’as pas Composer :
+require_once dirname(__DIR__, 3) . '/app/libs/stripe/init.php';
 
-// Log temporaire pour vérifier ce qui est lu
-error_log('Stripe sk prefix='.substr($secret,0,8).' len='.strlen($secret));
-
+$secret = trim(getenv('STRIPE_SECRET_KEY') ?: '');
 if (!preg_match('/^sk_(test|live)_[A-Za-z0-9]+$/', $secret)) {
     throw new RuntimeException('Stripe secret key invalid or missing.');
 }
-
 \Stripe\Stripe::setApiKey($secret);
-// \Stripe\Stripe::setApiVersion('2024-06-20'); // optionnel
+// Optionnel : \Stripe\Stripe::setApiVersion('2024-06-20');

@@ -1,6 +1,9 @@
 <?php
-// Démarre/ouvre la session PHP (pour accéder au panier, à l'utilisateur connecté, etc.)
 session_start();
+
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pages/"
+
 ?>
 <!doctype html>
 <html lang="fr">
@@ -9,23 +12,23 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Mon panier</title>
 
-    <!-- Styles globaux + page -->
-    <link rel="stylesheet" href="css/style_header_footer.css">
-    <link rel="stylesheet" href="css/commande.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
 
-    <!-- JS panier (version sans addEventListener) -->
-    <script src="/site/pages/js/commande.js" defer></script>
+    <script>
+        window.DKBASE  = <?= json_encode($BASE) ?>;               // "/…/site/pages/"
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>; // "/…/site/pages/api/cart.php"
+    </script>
+    <script src="<?= $BASE ?>js/commande.js" defer></script>
+
 </head>
 
-<!-- 👉 onload lance directement renderCart() -->
 <body onload="renderCart()">
-<?php
-// Header commun
-include __DIR__ . '/includes/header.php';
-?>
+<?php include __DIR__ . '/includes/header.php'; ?>
 
 <script>
-    // Ajuste une variable CSS selon la hauteur du header (utile si sticky)
+    // Ajuster la variable CSS --header-h selon la hauteur du header
     const h = document.querySelector('.site-header');
     if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
 </script>
@@ -36,7 +39,7 @@ include __DIR__ . '/includes/header.php';
     <div class="grid">
         <!-- Liste des articles -->
         <section class="card" id="cart-list" aria-live="polite" data-state="loading">
-            <!-- Le contenu est injecté par js/commande.js → renderCart() -->
+            <!-- Contenu injecté par commande.js -->
         </section>
 
         <!-- Résumé -->
@@ -56,8 +59,10 @@ include __DIR__ . '/includes/header.php';
                 <span id="sum-total">0.00 CHF</span>
             </div>
 
-            <!-- 👉 ici, onclick direct pour contrôler si désactivé -->
-            <a href="checkout.php" class="btn-primary" id="btn-checkout"
+            <!-- checkout est à /site/checkout.php -->
+            <a href="../checkout.php"
+               class="btn-primary"
+               id="btn-checkout"
                aria-disabled="true"
                onclick="if(this.getAttribute('aria-disabled')==='true'){return false;}">
                 Valider ma commande
@@ -72,7 +77,7 @@ include __DIR__ . '/includes/header.php';
                 <p>Une question ? Contactez-nous au <a href="tel:+41765698541">+41 76 569 85 41</a></p>
                 <ul>
                     <li>Expédition sous 7 jours (si disponible)</li>
-                    <li>Frais livraison?</li>
+                    <li>Frais livraison ?</li>
                     <li>Paiement sécurisé</li>
                 </ul>
             </div>

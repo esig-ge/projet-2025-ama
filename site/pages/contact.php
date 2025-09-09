@@ -1,27 +1,38 @@
+<?php
+session_start();
 
-<?php session_start();?>
+// Base URL avec slash final (robuste depuis n'importe quel sous-dossier)
+if (!isset($BASE)) {
+    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+}
+?>
 <!doctype html>
 <html lang="fr">
 <head>
     <meta charset="utf-8" />
     <title>Contact — DK Bloom</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="css/style_connexion_inscription.css">
+
+    <!-- CSS global (header/footer + layout) -->
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
+    <!-- CSS spécifique (tu l’utilises pour tes formulaires/cartes) -->
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_connexion_inscription.css">
+</head>
 
 <body>
-<?php
-include 'includes/header.php';
-?>
-<header>
-<main>
-    <div class="grid">
+<?php include __DIR__ . '/includes/header.php'; ?>
 
+<main class="container">
+    <h1 class="section-title" style="text-align:center; margin:0 0 16px; color:darkred;">Nous contacter</h1>
+
+    <div class="grid">
         <!-- Formulaire -->
-        <section class="card" aria-labelledby="titre-contact">
-            <h2 id="titre-contact">Nous contacter</h2>
+        <section class="card" aria-labelledby="titre-contact" style="max-width:760px; margin:auto;">
+            <h2 id="titre-contact">Écris-nous</h2>
             <p class="muted">Une question, un événement ? Remplis le formulaire et nous te répondons rapidement.</p>
 
-            <form id="contactForm" method="post" action="infos_contact.php" novalidate>
+            <form id="contactForm" method="post" action="<?= $BASE ?>infos_contact.php" novalidate>
                 <div>
                     <label for="nom">Nom <span class="req">*</span></label>
                     <input id="nom" name="nom" required autocomplete="family-name" />
@@ -56,12 +67,13 @@ include 'includes/header.php';
 
                 <div class="full">
                     <label for="message">Message <span class="req">*</span></label>
-                    <textarea id="message" name="message" required maxlength="2000" placeholder="Décris ton besoin, la date souhaitée, le budget, etc."></textarea>
+                    <textarea id="message" name="message" required maxlength="2000"
+                              placeholder="Décris ton besoin, la date souhaitée, le budget, etc."></textarea>
                 </div>
 
                 <div class="full row-inline">
                     <input type="checkbox" id="consent" name="consent" required>
-                    <label for="consent">J’accepte que mes données soient utilisées pour traiter ma demande. (RGPD)</label>
+                    <label for="consent">J’accepte que mes données soient utilisées pour traiter ma demande (RGPD).</label>
                 </div>
 
                 <div class="full actions">
@@ -85,18 +97,18 @@ include 'includes/header.php';
             </ul>
 
             <div style="height:12px"></div>
-            <!-- Remplace l'embed par ta vraie adresse si besoin -->
             <iframe
-                class="map"
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"
-                src="https://www.google.com/maps?q=Gen%C3%A8ve&output=embed"
-                title="Carte — DK Bloom">
+                    class="map"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src="https://www.google.com/maps?q=Gen%C3%A8ve&output=embed"
+                    title="Carte — DK Bloom"
+                    style="width:100%; height:320px; border:0; border-radius:8px;">
             </iframe>
         </aside>
     </div>
 </main>
-<?php
-include 'includes/footer.php';
-?>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
+</html>

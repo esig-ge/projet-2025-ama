@@ -1,44 +1,76 @@
-// js/commande.js (sans addEventListener)
+// js/commande.js
 
-const API_URL = '/site/api/cart.php';
+/* =============== 1) Bases de chemins =============== */
+const PAGE_BASE = (typeof window.DKBASE === 'string' && window.DKBASE.length)
+    ? window.DKBASE                                   // ex: "/.../site/pages/"
+    : location.pathname.replace(/[^/]+$/, '');        // dossier de la page
 
+// Parent de /pages/ → ex: "/.../site/"
+const SITE_BASE = (() => {
+    const m = PAGE_BASE.match(/^(.*\/)pages\/$/);
+    return m ? m[1] : PAGE_BASE;                      // fallback safe
+})();
+
+// URL de l'API (injectée par PHP, sinon fallback local)
+const API_URL = (typeof window.API_URL === 'string' && window.API_URL.length)
+    ? window.API_URL                                  // ex: "/.../site/pages/api/cart.php"
+    : PAGE_BASE + 'api/cart.php';
+
+console.debug('[DKBloom] PAGE_BASE =', PAGE_BASE);
+console.debug('[DKBloom] SITE_BASE =', SITE_BASE);
+console.debug('[DKBloom] API_URL   =', API_URL);
+
+// Base pour les assets de la page
+const ASSET_BASE = PAGE_BASE;
+
+/* =============== 2) Helpers =============== */
+const chf = n => `${Number(n).toFixed(2)} CHF`;
+
+// Normalise un chemin d’image renvoyé par l’API
+function normImgPath(p) {
+    if (!p) return PAGE_BASE + 'img/placeholder.png';  // assure-toi d'avoir ce fichier
+
+    // absolu déjà ok
+    if (/^(https?:)?\/\//.test(p) || p.startsWith('/') || p.startsWith('data:')) return p;
+
+    // Si l'API renvoie "img/xxx.png" → les assets de page sont sous /site/pages/img/
+    if (p.startsWith('img/')) return PAGE_BASE + p;
+
+    // (optionnel) si un jour elle renvoie "pages/img/xxx.png"
+    if (p.startsWith('pages/')) return SITE_BASE + p;
+
+    // sinon on considère que c'est relatif à /site/
+    return SITE_BASE + p;
+}
+
+
+/* =============== 3) Appels API =============== */
 async function callApi(action, params = {}) {
     const url  = `${API_URL}?action=${encodeURIComponent(action)}`;
     const body = new URLSearchParams({ action, ...params });
-    const res  = await fetch(url, { method: 'POST', body, credentials: 'same-origin' });
+
+    const res  = await fetch(url, {
+        method: 'POST',
+        body,
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+    });
+
     const text = await res.text();
     let data;
-    try { data = JSON.parse(text); } catch { throw new Error(`Réponse non JSON (${res.status})`); }
-    if (!res.ok || data.ok === false) throw new Error(data.error || data.msg || `HTTP ${res.status}`);
+    try { data = JSON.parse(text); }
+    catch {
+        console.error('Réponse brute:', text);
+        throw new Error(`Réponse non JSON (HTTP ${res.status}) depuis ${url}`);
+    }
+    if (!res.ok || data.ok === false) {
+        const msg = data?.error || data?.msg || `HTTP ${res.status}`;
+        throw new Error(`API "${action}" a échoué: ${msg}`);
+    }
     return data;
 }
 
-// bouton "Ajouter"
-async function addToCart(proId, btn) {
-    if (!proId) return;
-    if (btn) btn.disabled = true;
-    try {
-        await callApi('add', { pro_id: proId, qty: 1 });
-
-        // refresh si panier présent
-        if (document.getElementById('cart-list')) {
-            await renderCart();
-        }
-
-        if (btn) {
-            const old = btn.textContent;
-            btn.textContent = 'Ajouté ✓';
-            setTimeout(() => { btn.textContent = old || 'Ajouter'; btn.disabled = false; }, 900);
-        }
-    } catch (err) {
-        alert("Impossible d'ajouter au panier.\n" + (err?.message || ''));
-        console.error(err);
-        if (btn) btn.disabled = false;
-    }
-}
-
-const chf = n => `${Number(n).toFixed(2)} CHF`;
-
+/* =============== 4) UI: résumé =============== */
 function updateSummary(subtotal) {
     const el  = document.getElementById('sum-subtotal');
     const tot = document.getElementById('sum-total');
@@ -54,6 +86,7 @@ function updateSummary(subtotal) {
     }
 }
 
+/* =============== 5) Rendu panier =============== */
 async function renderCart() {
     const wrap = document.getElementById('cart-list');
     if (!wrap) return;
@@ -61,8 +94,6 @@ async function renderCart() {
     wrap.innerHTML = 'Chargement…';
     try {
         const { items = [] } = await callApi('list');
-        // debug rapide pour voir les clés de l’API
-        if (items[0]) console.log('Item[0] keys →', Object.keys(items[0]), items[0]);
 
         if (!items.length) {
             wrap.innerHTML = '<p>Votre panier est vide.</p>';
@@ -71,11 +102,12 @@ async function renderCart() {
         }
 
         wrap.innerHTML = items.map(it => {
-            const nom  = it.PRO_NOM ?? it.nom ?? it.name ?? `#${it.PRO_ID ?? it.id ?? ''}`;
-            const qte  = Number(it.CP_QTE_COMMANDEE ?? it.qte ?? it.qty ?? 1);
-            const prix = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
+            const nom   = it.PRO_NOM ?? it.nom ?? it.name ?? `#${it.PRO_ID ?? it.id ?? ''}`;
+            const qte   = Math.max(1, Number(it.CP_QTE_COMMANDEE ?? it.qte ?? it.qty ?? 1));
+            const prix  = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
             const total = prix * qte;
-            const img   = it.PRO_IMG || it.image || 'img/placeholder.png';
+            const img   = normImgPath(it.PRO_IMG || it.image || 'img/placeholder.png');
+
             return `
         <div class="cart-row">
           <img src="${img}" alt="${nom}" class="cart-img">
@@ -95,11 +127,39 @@ async function renderCart() {
         updateSummary(subtotal);
     } catch (e) {
         console.error(e);
-        wrap.innerHTML = '<p>Erreur lors du chargement du panier.</p>';
+        const msg = (e && e.message) ? e.message : 'Erreur inconnue';
+        wrap.innerHTML = `<p>Erreur lors du chargement du panier.<br><small>${msg}</small></p>`;
         updateSummary(0);
     }
 }
 
-/* --- IMPORTANT : expose au global pour <body onload="renderCart()">, onclick="addToCart(...)" --- */
+/* =============== 6) Ajouter au panier =============== */
+async function addToCart(proId, btn) {
+    if (!proId) return;
+    const pid = Number(proId);
+    if (!pid) return;
+
+    if (btn) btn.disabled = true;
+    try {
+        await callApi('add', { pro_id: pid, qty: 1 });
+
+        if (document.getElementById('cart-list')) {
+            await renderCart();
+        }
+
+        if (btn) {
+            const old = btn.textContent;
+            btn.textContent = 'Ajouté ✓';
+            setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
+        }
+    } catch (err) {
+        alert("Impossible d'ajouter au panier.\n" + (err?.message || ''));
+        console.error(err);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+/* Expose au global pour onload/onclick inline */
 window.renderCart = renderCart;
 window.addToCart  = addToCart;

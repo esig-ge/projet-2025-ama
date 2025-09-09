@@ -1,10 +1,22 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+ini_set('display_errors','0');
 
-require_once __DIR__ . '/../database/config/connexionBDD.php';
-/** @var PDO $pdo */
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+try {
+    // On est dans /site/pages/api/
+    $pdo = require __DIR__ . '/../../database/config/connexionBDD.php';
+    if (!$pdo instanceof PDO) {
+        throw new RuntimeException('DB connection not returned');
+    }
+    // (facultatif) $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['ok'=>false,'error'=>'server_error','msg'=>$e->getMessage()]);
+    exit;
+}
+
+/* … le reste de ton cart.php (helpers json_ok/json_err, routes add/list) … */
 
 /* =========================
    DEV / PROD SWITCH
