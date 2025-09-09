@@ -1,5 +1,5 @@
 <?php
-// Base URL relative (toujours slash final) pour que header/footer et images marchent
+// Base URL (slash final)
 if (!isset($BASE)) {
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
     $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
@@ -8,14 +8,20 @@ if (!isset($BASE)) {
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Fleurs</title>
 
-    <!-- CSS global (header/footer + layout) -->
+    <!-- CSS -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <!-- CSS spécifique à cette page -->
     <link rel="stylesheet" href="<?= $BASE ?>css/styleFleurUnique.css">
+
+    <!-- Expose BASE + API_URL au JS -->
+    <script>
+        window.DKBASE  = <?= json_encode($BASE) ?>;
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
+    </script>
+    <script src="<?= $BASE ?>js/commande.js" defer></script>
 </head>
 
 <body>
@@ -32,15 +38,21 @@ if (!isset($BASE)) {
                     Elle est le symbole d’un amour né au premier regard. Et incarne l’unicité.
                 </p>
 
-                <!-- 1) Radios cachés AVANT .rose et au même niveau -->
-                <input type="radio" id="c-rouge"  name="rose-color" class="color-radio" checked>
-                <input type="radio" id="c-rose"   name="rose-color" class="color-radio">
-                <input type="radio" id="c-roseC"  name="rose-color" class="color-radio">
-                <input type="radio" id="c-blanc"  name="rose-color" class="color-radio">
-                <input type="radio" id="c-noir"   name="rose-color" class="color-radio">
-                <input type="radio" id="c-bleu"   name="rose-color" class="color-radio">
+                <!-- Radios (portent l'ID produit + nom + image) -->
+                <input type="radio" id="c-rouge"  name="rose-color" class="color-radio"
+                       data-pro-id="1" data-name="Rose rouge"  data-img="<?= $BASE ?>img/rouge.png" checked>
+                <input type="radio" id="c-rose"   name="rose-color" class="color-radio"
+                       data-pro-id="2" data-name="Rose rose"   data-img="<?= $BASE ?>img/rose.png">
+                <input type="radio" id="c-roseC"  name="rose-color" class="color-radio"
+                       data-pro-id="3" data-name="Rose claire" data-img="<?= $BASE ?>img/rose_claire.png">
+                <input type="radio" id="c-blanc"  name="rose-color" class="color-radio"
+                       data-pro-id="4" data-name="Rose blanche" data-img="<?= $BASE ?>img/rosesBlanche.png">
+                <input type="radio" id="c-noir"   name="rose-color" class="color-radio"
+                       data-pro-id="5" data-name="Rose noire"   data-img="<?= $BASE ?>img/noir.png">
+                <input type="radio" id="c-bleu"   name="rose-color" class="color-radio"
+                       data-pro-id="6" data-name="Rose bleue"   data-img="<?= $BASE ?>img/bleu.png">
 
-                <!-- 3) Toutes les images sont présentes mais cachées par défaut -->
+                <!-- Zone image (tes 6 images superposées comme avant) -->
                 <div class="rose">
                     <img src="<?= $BASE ?>img/rouge.png"        class="img-rose rouge"   alt="Rose rouge"   width="500">
                     <img src="<?= $BASE ?>img/rose.png"         class="img-rose rose"    alt="Rose"         width="500">
@@ -50,7 +62,7 @@ if (!isset($BASE)) {
                     <img src="<?= $BASE ?>img/bleu.png"         class="img-rose bleue"   alt="Rose bleue"   width="500">
                 </div>
 
-                <!-- 2) Pastilles (labels) qui déclenchent les radios -->
+                <!-- Pastilles (labels) -->
                 <fieldset class="swatches" aria-label="Couleur de la rose">
                     <label class="swatch" for="c-rouge"  title="Rouge"><span style="--swatch:red"></span></label>
                     <label class="swatch" for="c-rose"   title="Rose"><span style="--swatch:#ffa0c4"></span></label>
@@ -60,7 +72,8 @@ if (!isset($BASE)) {
                     <label class="swatch" for="c-bleu"   title="Bleu"><span style="--swatch:#0418a5"></span></label>
                 </fieldset>
 
-                <button class="btn">Sélectionner</button>
+                <!-- Sélectionner = ajoute au panier la radio cochée -->
+                <button class="btn" onclick="selectRose(this)">Sélectionner</button>
             </div>
         </div>
 
@@ -72,8 +85,5 @@ if (!isset($BASE)) {
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
-
-<!-- Ton JS global (si besoin) -->
-<script src="<?= $BASE ?>js/script.js" defer></script>
 </body>
 </html>

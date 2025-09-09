@@ -1,10 +1,6 @@
 <?php
-session_start();
-// Base URL avec slash final (pour chemins robustes)
-if (!isset($BASE)) {
-    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
-}
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -13,12 +9,13 @@ if (!isset($BASE)) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>DK Bloom — Emballages</title>
 
-    <!-- CSS global (header/footer) -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <!-- CSS spécifique catalogue -->
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
 
-    <!-- JS panier / actions -->
+    <script>
+        window.DKBASE  = <?= json_encode($BASE) ?>;
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
+    </script>
     <script src="<?= $BASE ?>js/commande.js" defer></script>
 </head>
 <body>
@@ -30,27 +27,57 @@ if (!isset($BASE)) {
     <div id="emballage" class="catalogue">
         <div>
             <img src="<?= $BASE ?>img/emballage_blanc.PNG" alt="Emballage blanc">
-            <button class="add-to-cart" data-emb-id="1">Ajouter</button>
+            <button class="add-to-cart"
+                    data-emb-id="1"
+                    data-emb-name="Emballage blanc"
+                    data-emb-img="<?= $BASE ?>img/emballage_blanc.PNG"
+                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                Ajouter
+            </button>
         </div>
 
         <div>
             <img src="<?= $BASE ?>img/emballage_noir.PNG" alt="Emballage noir">
-            <button class="add-to-cart" data-emb-id="2">Ajouter</button>
+            <button class="add-to-cart"
+                    data-emb-id="2"
+                    data-emb-name="Emballage noir"
+                    data-emb-img="<?= $BASE ?>img/emballage_noir.PNG"
+                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                Ajouter
+            </button>
         </div>
 
         <div>
             <img src="<?= $BASE ?>img/emballage_rose.PNG" alt="Emballage rose">
-            <button class="add-to-cart" data-emb-id="3">Ajouter</button>
+            <button class="add-to-cart"
+                    data-emb-id="3"
+                    data-emb-name="Emballage rose"
+                    data-emb-img="<?= $BASE ?>img/emballage_rose.PNG"
+                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                Ajouter
+            </button>
         </div>
 
         <div>
             <img src="<?= $BASE ?>img/emballage_gris.PNG" alt="Emballage gris">
-            <button class="add-to-cart" data-emb-id="4">Ajouter</button>
+            <button class="add-to-cart"
+                    data-emb-id="4"
+                    data-emb-name="Emballage gris"
+                    data-emb-img="<?= $BASE ?>img/emballage_gris.PNG"
+                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                Ajouter
+            </button>
         </div>
 
         <div>
             <img src="<?= $BASE ?>img/emballage_violet.PNG" alt="Emballage violet">
-            <button class="add-to-cart" data-emb-id="5">Ajouter</button>
+            <button class="add-to-cart"
+                    data-emb-id="5"
+                    data-emb-name="Emballage violet"
+                    data-emb-img="<?= $BASE ?>img/emballage_violet.PNG"
+                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                Ajouter
+            </button>
         </div>
     </div>
 

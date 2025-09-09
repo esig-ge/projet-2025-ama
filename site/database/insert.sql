@@ -59,7 +59,10 @@ INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX) VALUES
                                             ('Coffret SV',  90.00),
                                             ('Coffret FdM', 100.00),
                                             ('Coffret BPT', 100.00),
-                                            ('Coffret MRG', 100.00);
+                                            ('Coffret MRG', 100.00),
+                                            ('Coffret PAQ', 100.00),
+                                            ('Coffret NOE', 100.00),
+                                            ('Coffret NVA', 150.00),
 
 -- SUPPLEMENT
 INSERT INTO SUPPLEMENT (SUP_NOM, SUP_DESCRIPTION, SUP_PRIX_UNITAIRE, SUP_QTE_STOCK) VALUES
@@ -130,15 +133,21 @@ FROM BOUQUET b
 
 -- COFFRET
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
-SELECT PRO_ID, 'happy birthday' FROM PRODUIT WHERE PRO_NOM='Coffret ANV';
+SELECT PRO_ID, 'Anniversaire' FROM PRODUIT WHERE PRO_NOM='Coffret ANV';
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
-SELECT PRO_ID, 'saint-valentin' FROM PRODUIT WHERE PRO_NOM='Coffret SV';
+SELECT PRO_ID, 'Saint-Valentin' FROM PRODUIT WHERE PRO_NOM='Coffret SV';
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
-SELECT PRO_ID, 'fetes des meres' FROM PRODUIT WHERE PRO_NOM='Coffret FdM';
+SELECT PRO_ID, 'Fetes des Mères' FROM PRODUIT WHERE PRO_NOM='Coffret FdM';
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
-SELECT PRO_ID, 'paques' FROM PRODUIT WHERE PRO_NOM='Coffret BPT';
+SELECT PRO_ID, 'Baptême' FROM PRODUIT WHERE PRO_NOM='Coffret BPT';
 INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
-SELECT PRO_ID, 'noel' FROM PRODUIT WHERE PRO_NOM='Coffret MRG';
+SELECT PRO_ID, 'Mariage' FROM PRODUIT WHERE PRO_NOM='Coffret MRG';
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'Paques' FROM PRODUIT WHERE PRO_NOM='Coffret PAQ';
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'Noel' FROM PRODUIT WHERE PRO_NOM='Coffret NOE';
+INSERT INTO COFFRET (PRO_ID, CO_EVENEMENT)
+SELECT PRO_ID, 'Nouvel An' FROM PRODUIT WHERE PRO_NOM='Coffret NVA';
 
 -- COFFRET_BOUQUET
 INSERT INTO COFFRET_BOUQUET (COFFRET_ID, BOUQUET_ID)

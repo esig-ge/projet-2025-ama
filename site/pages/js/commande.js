@@ -160,6 +160,78 @@ async function addToCart(proId, btn) {
     }
 }
 
+function selectedRoseRadio(){
+    return document.querySelector('input[name="rose-color"]:checked');
+}
+
+async function selectRose(btn){
+    const r = selectedRoseRadio();
+    if (!r) { alert('Choisis une couleur de rose.'); return; }
+
+    const proId = r.dataset.proId;
+    const name  = r.dataset.name || 'Rose';
+    const img   = r.dataset.img  || '';
+
+    // réutilise ta fonction globale existante
+    await addToCart(proId, btn, name, img);
+}
+
+// === DÉLÉGATION CLIC: AJOUT EMBALLAGE ===
+async function addEmballage(embId, btn){
+    const id = Number(embId);
+    if (!id) return;
+
+    if (btn) btn.disabled = true;
+    try {
+        await callApi('add_emballage', { emb_id: id, qty: 1 });
+
+        // si on est sur commande.php, on rafraîchit le récap
+        if (document.getElementById('cart-list')) {
+            await renderCart();
+        }
+
+        if (btn){
+            const old = btn.textContent;
+            btn.textContent = 'Ajouté ✓';
+            setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
+        }
+    } catch (e){
+        alert('Impossible d’ajouter cet emballage.\n' + (e?.message || ''));
+        console.error(e);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+async function addSupplement(supId, btn, name, img){
+    const id = Number(supId);
+    if (!id) return;
+
+    if (btn) btn.disabled = true;
+    try {
+        await callApi('add', { sup_id: id, qty: 1 });
+
+        // Si on est sur commande.php, rafraîchir le récap
+        if (document.getElementById('cart-list')) {
+            await renderCart();
+        }
+
+        if (btn){
+            const old = btn.textContent;
+            btn.textContent = 'Ajouté ✓';
+            setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
+        }
+    } catch (e){
+        alert('Impossible d’ajouter ce supplément.\n' + (e?.message || ''));
+        console.error(e);
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 /* Expose au global pour onload/onclick inline */
 window.renderCart = renderCart;
 window.addToCart  = addToCart;
+window.selectRose = selectRose;
+window.addSupplement = addSupplement;
+window.addEmballage = addEmballage;
