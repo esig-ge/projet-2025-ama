@@ -18,7 +18,7 @@ if (!isset($BASE)) {
         <div class="footer-social">
             <a href="https://www.instagram.com/_dkbloom/"
                target="_blank" rel="noopener" aria-label="Instagram">
-                <img src="<?= $BASE ?>img/instagram_icon.png"
+                <img src="<?= $BASE ?>img/Instagram_icon.png"
                      alt="Instagram" width="24" height="24" loading="lazy">
             </a>
             <a href="https://www.tiktok.com/@_dkbloom"

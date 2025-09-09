@@ -9,7 +9,7 @@ if (!isset($BASE)) {
     <div class="header">
         <!-- Logo -->
         <a href="<?= $BASE ?>index.php" class="logo" aria-label="DK Bloom — retour à l'accueil">
-            <img src="<?= $BASE ?>img/logo.png" alt="DK Bloom" width="120" height="auto" loading="lazy">
+            <img src="<?= $BASE ?>img/logo.jpg" alt="DK Bloom" width="120" height="auto" loading="lazy">
         </a>
 
         <!-- Bouton menu mobile -->
