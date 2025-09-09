@@ -28,11 +28,21 @@ const chf = n => `${Number(n).toFixed(2)} CHF`;
 
 // Normalise un chemin d’image renvoyé par l’API
 function normImgPath(p) {
-    if (!p) return ASSET_BASE + 'img/placeholder.png';
+    if (!p) return PAGE_BASE + 'img/placeholder.png';  // assure-toi d'avoir ce fichier
+
+    // absolu déjà ok
     if (/^(https?:)?\/\//.test(p) || p.startsWith('/') || p.startsWith('data:')) return p;
-    // si l'API renvoie "img/xxx.png" relatif à /site/, on sert depuis SITE_BASE
-    return `${SITE_BASE}${p}`;
+
+    // Si l'API renvoie "img/xxx.png" → les assets de page sont sous /site/pages/img/
+    if (p.startsWith('img/')) return PAGE_BASE + p;
+
+    // (optionnel) si un jour elle renvoie "pages/img/xxx.png"
+    if (p.startsWith('pages/')) return SITE_BASE + p;
+
+    // sinon on considère que c'est relatif à /site/
+    return SITE_BASE + p;
 }
+
 
 /* =============== 3) Appels API =============== */
 async function callApi(action, params = {}) {
