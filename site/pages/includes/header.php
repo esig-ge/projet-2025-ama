@@ -2,7 +2,7 @@
 <header class="site-header">
     <div class="header">
         <a href="<?= $BASE ?>index.php" class="logo">
-            <img src="<?= $BASE ?>img/logo.png" alt="DK Bloom">
+            <img src="<?= $BASE ?>img/logo.jpg" alt="DK Bloom">
         </a>
 
         <button class="menu-toggle" aria-expanded="false" aria-label="Menu">☰</button>
