@@ -36,22 +36,15 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
 -->
                 <video controls playsinline>
                     <!-- .mov = QuickTime. Si tu convertis en .mp4, change type en video/mp4 -->
-                    <source src="<?= $BASE ?>img/videofleur2.mov" type="video/quicktime">
-                    <source src="img/videofleur2.mov" type="video/quicktime">
+                    <source src="<?= $BASE ?>img/videofleur2.mp4" type="video/mp4">
+                    <source src="img/videofleur2.mp4" type="video/mp4">
                     Votre navigateur ne supporte pas la vidéo.
                 </video>
 
                 <!-- Slide 2 -->
                 <video controls playsinline>
-                    <source src="<?= $BASE ?>img/videofleur3.mov" type="video/quicktime">
+                    <source src="<?= $BASE ?>img/videofleur3.mov" type="video/mp4">
                     Votre navigateur ne supporte pas la vidéo.
-                </video>
-
-                <!-- Slide 3 -->
-                <video controls playsinline>
-                    <source src="<?= $BASE ?>img/videofleur2.mov" type="video/quicktime">
-                    Votre navigateur ne supporte pas la vidéo.
->>>>>>> 8b357fac546ca0a61551585d0190b03a143838a1
                 </video>
             </div>
             <button class="btn prev" aria-label="Précédent">&#10094;</button>
