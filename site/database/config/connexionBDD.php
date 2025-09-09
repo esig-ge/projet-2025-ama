@@ -18,3 +18,17 @@ try {
     echo json_encode(['ok'=>false,'error'=>'db_connect','msg'=>$e->getMessage()]);
     exit;
 }
+
+
+function dbConnect()
+{
+    try {
+        $pdo = new PDO('mysql:host=hhva.myd.infomaniak.com;dbname=hhva_ardita', 'hhva_ardita', 'Ekq@@oE-6A130', [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        ]);
+        $pdo->exec("SET NAMES 'UTF8'");
+        return $pdo;
+    } catch (PDOException $e) {
+        die('Erreur de connexion : ' . $e->getMessage());
+    }
+}
