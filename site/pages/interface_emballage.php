@@ -1,4 +1,5 @@
 <?php
+// Base URL avec slash final (ex: "/…/site/pages/")
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
@@ -7,83 +8,148 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>DK Bloom — Emballages</title>
+    <title>DK Bloom — Catalogue bouquet</title>
 
+    <!-- CSS -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
 
+    <!-- Expose BASE + API_URL au JS -->
     <script>
-        window.DKBASE  = <?= json_encode($BASE) ?>;
-        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
+        window.DKBASE  = <?= json_encode($BASE) ?>;                         // "/…/site/pages/"
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;        // "/…/site/pages/api/cart.php"
     </script>
+    <!-- JS panier -->
     <script src="<?= $BASE ?>js/commande.js" defer></script>
 </head>
+
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="container">
-    <h1 class="section-title">Emballage</h1>
+<main class="container catalogue-page">
+    <h1 class="section-title">Catalogue bouquet</h1>
 
-    <div id="emballage" class="catalogue">
+    <div id="produit_bouquet" class="catalogue">
         <div>
-            <img src="<?= $BASE ?>img/emballage_blanc.PNG" alt="Emballage blanc">
+            <img src="<?= $BASE ?>img/12Roses.png" alt="12 roses">
+            <h3>12 roses</h3>
+            <p>30 CHF</p>
             <button class="add-to-cart"
-                    data-emb-id="1"
-                    data-emb-name="Emballage blanc"
-                    data-emb-img="<?= $BASE ?>img/emballage_blanc.PNG"
-                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                    data-pro-id="7"
+                    data-pro-name="Bouquet 12 roses"
+                    data-pro-img="<?= $BASE ?>img/12Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
                 Ajouter
             </button>
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/emballage_noir.PNG" alt="Emballage noir">
+            <img src="<?= $BASE ?>img/20Roses.png" alt="20 roses">
+            <h3>20 roses</h3>
+            <p>40 CHF</p>
             <button class="add-to-cart"
-                    data-emb-id="2"
-                    data-emb-name="Emballage noir"
-                    data-emb-img="<?= $BASE ?>img/emballage_noir.PNG"
-                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                    data-pro-id="8"
+                    data-pro-name="Bouquet 20 roses"
+                    data-pro-img="<?= $BASE ?>img/20Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
                 Ajouter
             </button>
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/emballage_rose.PNG" alt="Emballage rose">
+            <img src="<?= $BASE ?>img/20Roses.png" alt="24 roses">
+            <h3>24 roses</h3>
+            <p>45 CHF</p>
             <button class="add-to-cart"
-                    data-emb-id="3"
-                    data-emb-name="Emballage rose"
-                    data-emb-img="<?= $BASE ?>img/emballage_rose.PNG"
-                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                    data-pro-id="9"
+                    data-pro-name="Bouquet 24 roses"
+                    data-pro-img="<?= $BASE ?>img/20Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
                 Ajouter
             </button>
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/emballage_gris.PNG" alt="Emballage gris">
+            <img src="<?= $BASE ?>img/36Roses.png" alt="36 roses">
+            <h3>36 roses</h3>
+            <p>60 CHF</p>
             <button class="add-to-cart"
-                    data-emb-id="4"
-                    data-emb-name="Emballage gris"
-                    data-emb-img="<?= $BASE ?>img/emballage_gris.PNG"
-                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                    data-pro-id="10"
+                    data-pro-name="Bouquet 36 roses"
+                    data-pro-img="<?= $BASE ?>img/36Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
                 Ajouter
             </button>
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/emballage_violet.PNG" alt="Emballage violet">
+            <img src="<?= $BASE ?>img/50Roses.png" alt="50 roses">
+            <h3>50 roses</h3>
+            <p>70 CHF</p>
             <button class="add-to-cart"
-                    data-emb-id="5"
-                    data-emb-name="Emballage violet"
-                    data-emb-img="<?= $BASE ?>img/emballage_violet.PNG"
-                    onclick="addEmballage(this.dataset.embId, this, this.dataset.embName, this.dataset.embImg)">
+                    data-pro-id="11"
+                    data-pro-name="Bouquet 50 roses"
+                    data-pro-img="<?= $BASE ?>img/50Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                Ajouter
+            </button>
+        </div>
+
+        <div>
+            <img src="<?= $BASE ?>img/66Roses.png" alt="66 roses">
+            <h3>66 roses</h3>
+            <p>85 CHF</p>
+            <button class="add-to-cart"
+                    data-pro-id="12"
+                    data-pro-name="Bouquet 66 roses"
+                    data-pro-img="<?= $BASE ?>img/66Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                Ajouter
+            </button>
+        </div>
+
+        <div>
+            <img src="<?= $BASE ?>img/100Roses.png" alt="99 roses">
+            <h3>99 roses</h3>
+            <p>110 CHF</p>
+            <button class="add-to-cart"
+                    data-pro-id="13"
+                    data-pro-name="Bouquet 99 roses"
+                    data-pro-img="<?= $BASE ?>img/100Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                Ajouter
+            </button>
+        </div>
+
+        <div>
+            <img src="<?= $BASE ?>img/100Roses.png" alt="100 roses">
+            <h3>100 roses</h3>
+            <p>112 CHF</p>
+            <button class="add-to-cart"
+                    data-pro-id="14"
+                    data-pro-name="Bouquet 100 roses"
+                    data-pro-img="<?= $BASE ?>img/100Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                Ajouter
+            </button>
+        </div>
+
+        <div>
+            <img src="<?= $BASE ?>img/100Roses.png" alt="101 roses">
+            <h3>101 roses</h3>
+            <p>115 CHF</p>
+            <button class="add-to-cart"
+                    data-pro-id="15"
+                    data-pro-name="Bouquet 101 roses"
+                    data-pro-img="<?= $BASE ?>img/100Roses.png"
+                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
                 Ajouter
             </button>
         </div>
     </div>
 
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
-        <a href="<?= $BASE ?>interface_supplement.php" class="button">Retour</a>
-        <a href="<?= $BASE ?>commande.php" class="button">Suivant</a>
+        <a href="<?= $BASE ?>interface_supplement.php" class="button">Suivant</a>
     </div>
 </main>
 

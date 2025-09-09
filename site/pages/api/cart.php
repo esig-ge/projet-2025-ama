@@ -5,13 +5,12 @@ header('Content-Type: application/json');
 ini_set('display_errors', '0');
 
 try {
-    // On est dans /site/pages/api/
     /** @var PDO $pdo */
     $pdo = require __DIR__ . '/../../database/config/connexionBDD.php';
     if (!$pdo instanceof PDO) {
         throw new RuntimeException('DB connection not returned');
     }
-    // $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // décommente en DEV si besoin
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['ok' => false, 'error' => 'server_error', 'msg' => $e->getMessage()]);
@@ -27,7 +26,6 @@ const DEV_EMAIL       = 'dev.panier@dkbloom.local';
 $IS_DEV = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false)
     || (isset($_GET['dev']));
 
-// ⚠️ ne plus reset à chaque requête : reset volontaire seulement
 if ($IS_DEV && isset($_GET['reset'])) {
     unset($_SESSION['com_id']);
 }
@@ -46,15 +44,24 @@ if (DEV_FORCE_LOGIN && empty($_SESSION['per_id'])) {
             ");
             $insertP->execute(['mail' => DEV_EMAIL]);
             $perId = (int)$pdo->lastInsertId();
-        }
-        $q = $pdo->prepare("SELECT 1 FROM CLIENT WHERE PER_ID = :id");
-        $q->execute(['id' => $perId]);
-        if (!$q->fetchColumn()) {
+
+            // créer aussi un CLIENT
             $insC = $pdo->prepare("
                 INSERT INTO CLIENT (PER_ID, CLI_DATENAISSANCE, CLI_NB_POINTS_FIDELITE)
                 VALUES (:id, '2000-01-01', 0)
             ");
             $insC->execute(['id' => $perId]);
+        } else {
+            // s'assurer qu'il existe côté CLIENT
+            $q = $pdo->prepare("SELECT 1 FROM CLIENT WHERE PER_ID = :id");
+            $q->execute(['id' => $perId]);
+            if (!$q->fetchColumn()) {
+                $insC = $pdo->prepare("
+                    INSERT INTO CLIENT (PER_ID, CLI_DATENAISSANCE, CLI_NB_POINTS_FIDELITE)
+                    VALUES (:id, '2000-01-01', 0)
+                ");
+                $insC->execute(['id' => $perId]);
+            }
         }
         return (int)$perId;
     })($pdo);
@@ -114,6 +121,7 @@ function guessProductType(PDO $pdo, int $proId): string
 
 function addEmballage(PDO $pdo, int $comId, int $embId, int $qty): void
 {
+    // BDD: EMBALLAGE n'a pas de prix → prix 0 géré côté list/subtotal
     $chk = $pdo->prepare("SELECT 1 FROM EMBALLAGE WHERE EMB_ID=:id");
     $chk->execute(['id' => $embId]);
     if (!$chk->fetchColumn()) {
@@ -144,7 +152,7 @@ function addSupplement(PDO $pdo, int $comId, int $supId, int $qty): void
 
 function listOrder(PDO $pdo, int $comId): array
 {
-    // Produits (bouquets/coffrets/fleurs…)
+    // PRODUITS (prix via PRODUIT.PRO_PRIX) — pas de colonne image dans la BDD
     $p = $pdo->prepare("
         SELECT
             'produit'             AS item_type,
@@ -155,8 +163,8 @@ function listOrder(PDO $pdo, int $comId): array
             p.PRO_PRIX            AS prix_unitaire,
             cp.CP_QTE_COMMANDEE   AS CP_QTE_COMMANDEE,
             cp.CP_QTE_COMMANDEE   AS qte,
-            COALESCE(p.PRO_IMAGE, '') AS PRO_IMG,
-            COALESCE(p.PRO_IMAGE, '') AS image
+            ''                    AS PRO_IMG,
+            ''                    AS image
         FROM COMMANDE_PRODUIT cp
         JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
         WHERE cp.COM_ID = :com
@@ -165,19 +173,19 @@ function listOrder(PDO $pdo, int $comId): array
     $p->execute(['com' => $comId]);
     $items = $p->fetchAll(PDO::FETCH_ASSOC);
 
-    // Emballages
+    // EMBALLAGES (aucun prix en BDD → 0.00)
     $e = $pdo->prepare("
         SELECT
             'emballage'           AS item_type,
             ce.EMB_ID             AS id,
             e.EMB_NOM             AS PRO_NOM,
             e.EMB_NOM             AS nom,
-            COALESCE(e.EMB_PRIX, 0.00) AS PRO_PRIX,
-            COALESCE(e.EMB_PRIX, 0.00) AS prix_unitaire,
+            0.00                  AS PRO_PRIX,
+            0.00                  AS prix_unitaire,
             ce.CE_QTE             AS CP_QTE_COMMANDEE,
             ce.CE_QTE             AS qte,
-            COALESCE(e.EMB_IMAGE, '') AS PRO_IMG,
-            COALESCE(e.EMB_IMAGE, '') AS image
+            ''                    AS PRO_IMG,
+            ''                    AS image
         FROM COMMANDE_EMBALLAGE ce
         JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
         WHERE ce.COM_ID = :com
@@ -186,7 +194,7 @@ function listOrder(PDO $pdo, int $comId): array
     $e->execute(['com' => $comId]);
     $items = array_merge($items, $e->fetchAll(PDO::FETCH_ASSOC));
 
-    // Suppléments
+    // SUPPLÉMENTS (prix via SUPPLEMENT.SUP_PRIX_UNITAIRE) — pas d’image
     $s = $pdo->prepare("
         SELECT
             'supplement'          AS item_type,
@@ -197,8 +205,8 @@ function listOrder(PDO $pdo, int $comId): array
             s.SUP_PRIX_UNITAIRE   AS prix_unitaire,
             cs.CS_QTE_COMMANDEE   AS CP_QTE_COMMANDEE,
             cs.CS_QTE_COMMANDEE   AS qte,
-            COALESCE(s.SUP_IMAGE, '') AS PRO_IMG,
-            COALESCE(s.SUP_IMAGE, '') AS image
+            ''                    AS PRO_IMG,
+            ''                    AS image
         FROM COMMANDE_SUPP cs
         JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
         WHERE cs.COM_ID = :com
@@ -227,8 +235,8 @@ function subtotalFromItems(array $items): float
    ROUTES
    ========================= */
 try {
-    // Alias : on accepte aussi action=add_emballage (appel hérité côté front)
-    if ($action === 'add' || $action === 'add_emballage') {
+    // accepte add, add_emballage, add_supplement
+    if ($action === 'add' || $action === 'add_emballage' || $action === 'add_supplement') {
         $qty   = max(1, (int)($_POST['qty'] ?? $_GET['qty'] ?? 1));
         $comId = getOrCreateOpenOrder($pdo, $perId, $IS_DEV);
 
@@ -244,7 +252,7 @@ try {
                 echo json_encode(['ok' => false, 'error' => 'product_not_found']);
                 exit;
             }
-            $type = guessProductType($pdo, $proId);
+            $type = guessProductType($pdo, $proId); // 'fleur' | 'bouquet' | 'coffret'
             $sql  = "INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
                      VALUES (:com,:pro,:q,:t)
                      ON DUPLICATE KEY UPDATE CP_QTE_COMMANDEE = CP_QTE_COMMANDEE + VALUES(CP_QTE_COMMANDEE)";
@@ -279,6 +287,34 @@ try {
         echo json_encode(['ok' => true, 'com_id' => (int)$comId, 'items' => $items, 'subtotal' => $subtotal]);
         exit;
     }
+    
+    if ($action === 'remove') {
+        $comId = $_SESSION['com_id'] ?? null;
+        if (!$comId) { echo json_encode(['ok'=>false,'error'=>'no_order']); exit; }
+
+        $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
+        $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
+        $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
+
+        if ($proId > 0) {
+            $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:p")
+                ->execute(['c'=>$comId,'p'=>$proId]);
+        } elseif ($embId > 0) {
+            $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:e")
+                ->execute(['c'=>$comId,'e'=>$embId]);
+        } elseif ($supId > 0) {
+            $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:s")
+                ->execute(['c'=>$comId,'s'=>$supId]);
+        } else {
+            echo json_encode(['ok'=>false,'error'=>'missing_id']); exit;
+        }
+
+        $items = listOrder($pdo,(int)$comId);
+        $subtotal = subtotalFromItems($items);
+        echo json_encode(['ok'=>true,'items'=>$items,'subtotal'=>$subtotal]);
+        exit;
+    }
+
 
     http_response_code(400);
     echo json_encode(['ok' => false, 'error' => 'bad_action']);

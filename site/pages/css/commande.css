@@ -323,3 +323,29 @@ a:focus,button:focus,input:focus{
     .dk-toast{ transition:none; }
 }
 
+.cart-row {
+    display: grid;
+    grid-template-columns: 60px 1fr auto auto auto 40px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-img {
+    width: 60px;
+    height: auto;
+    border-radius: 4px;
+}
+
+.cart-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #b00;
+}
+.cart-remove:hover {
+    color: #e00;
+}
+

@@ -1,48 +1,33 @@
-// js/commande.js
-
 /* =============== 1) Bases de chemins =============== */
 const PAGE_BASE = (typeof window.DKBASE === 'string' && window.DKBASE.length)
-    ? window.DKBASE                                   // ex: "/.../site/pages/"
-    : location.pathname.replace(/[^/]+$/, '');        // dossier de la page
+    ? window.DKBASE
+    : location.pathname.replace(/[^/]+$/, '');
 
-// Parent de /pages/ → ex: "/.../site/"
 const SITE_BASE = (() => {
     const m = PAGE_BASE.match(/^(.*\/)pages\/$/);
-    return m ? m[1] : PAGE_BASE;                      // fallback safe
+    return m ? m[1] : PAGE_BASE;
 })();
 
-// URL de l'API (injectée par PHP, sinon fallback local)
 const API_URL = (typeof window.API_URL === 'string' && window.API_URL.length)
-    ? window.API_URL                                  // ex: "/.../site/pages/api/cart.php"
-    : PAGE_BASE + 'api/cart.php';
+    ? window.API_URL
+    : SITE_BASE + 'api/cart.php';
 
 console.debug('[DKBloom] PAGE_BASE =', PAGE_BASE);
 console.debug('[DKBloom] SITE_BASE =', SITE_BASE);
 console.debug('[DKBloom] API_URL   =', API_URL);
 
-// Base pour les assets de la page
 const ASSET_BASE = PAGE_BASE;
 
 /* =============== 2) Helpers =============== */
 const chf = n => `${Number(n).toFixed(2)} CHF`;
 
-// Normalise un chemin d’image renvoyé par l’API
 function normImgPath(p) {
-    if (!p) return PAGE_BASE + 'img/placeholder.png';  // assure-toi d'avoir ce fichier
-
-    // absolu déjà ok
+    if (!p) return PAGE_BASE + 'img/placeholder.png';
     if (/^(https?:)?\/\//.test(p) || p.startsWith('/') || p.startsWith('data:')) return p;
-
-    // Si l'API renvoie "img/xxx.png" → les assets de page sont sous /site/pages/img/
-    if (p.startsWith('img/')) return PAGE_BASE + p;
-
-    // (optionnel) si un jour elle renvoie "pages/img/xxx.png"
-    if (p.startsWith('pages/')) return SITE_BASE + p;
-
-    // sinon on considère que c'est relatif à /site/
+    if (p.startsWith('img/'))   return PAGE_BASE + p;   // "/site/pages/img/..."
+    if (p.startsWith('pages/')) return SITE_BASE + p;   // "/site/pages/..."
     return SITE_BASE + p;
 }
-
 
 /* =============== 3) Appels API =============== */
 async function callApi(action, params = {}) {
@@ -80,8 +65,8 @@ function updateSummary(subtotal) {
     const btn = document.getElementById('btn-checkout');
     if (btn) {
         const enabled = subtotal > 0;
+        btn.toggleAttribute('disabled', !enabled);
         btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-        btn.style.pointerEvents = enabled ? 'auto' : 'none';
         btn.style.opacity = enabled ? '' : '0.6';
     }
 }
@@ -93,7 +78,8 @@ async function renderCart() {
 
     wrap.innerHTML = 'Chargement…';
     try {
-        const { items = [] } = await callApi('list');
+        const resp = await callApi('list');
+        const items = resp.items || [];
 
         if (!items.length) {
             wrap.innerHTML = '<p>Votre panier est vide.</p>';
@@ -107,6 +93,8 @@ async function renderCart() {
             const prix  = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
             const total = prix * qte;
             const img   = normImgPath(it.PRO_IMG || it.image || 'img/placeholder.png');
+            const type  = it.item_type || 'produit'; // produit | emballage | supplement
+            const id    = it.id ?? it.PRO_ID ?? 0;
 
             return `
         <div class="cart-row">
@@ -115,14 +103,20 @@ async function renderCart() {
           <div class="cart-qty">x&nbsp;${qte}</div>
           <div class="cart-unit">${chf(prix)}</div>
           <div class="cart-total">${chf(total)}</div>
+          <button class="cart-remove" title="Supprimer"
+                  data-type="${type}" data-id="${id}"
+                  onclick="removeFromCart(this.dataset.type, this.dataset.id)">🗑️</button>
         </div>`;
         }).join('');
 
-        const subtotal = items.reduce((s, it) => {
-            const p = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
-            const q = Math.max(1, Number(it.CP_QTE_COMMANDEE ?? it.qte ?? it.qty ?? 1));
-            return s + p * q;
-        }, 0);
+        // Utilise le subtotal serveur si présent, sinon recalcule
+        const subtotal = typeof resp.subtotal === 'number'
+            ? resp.subtotal
+            : items.reduce((s, it) => {
+                const p = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
+                const q = Math.max(1, Number(it.CP_QTE_COMMANDEE ?? it.qte ?? it.qty ?? 1));
+                return s + p * q;
+            }, 0);
 
         updateSummary(subtotal);
     } catch (e) {
@@ -160,6 +154,7 @@ async function addToCart(proId, btn) {
     }
 }
 
+/* === Sélection de rose (fleurs) === */
 function selectedRoseRadio(){
     return document.querySelector('input[name="rose-color"]:checked');
 }
@@ -167,25 +162,20 @@ function selectedRoseRadio(){
 async function selectRose(btn){
     const r = selectedRoseRadio();
     if (!r) { alert('Choisis une couleur de rose.'); return; }
-
     const proId = r.dataset.proId;
-    const name  = r.dataset.name || 'Rose';
-    const img   = r.dataset.img  || '';
-
-    // réutilise ta fonction globale existante
-    await addToCart(proId, btn, name, img);
+    await addToCart(proId, btn);
 }
 
-// === DÉLÉGATION CLIC: AJOUT EMBALLAGE ===
+/* === Emballage === */
 async function addEmballage(embId, btn){
     const id = Number(embId);
     if (!id) return;
 
     if (btn) btn.disabled = true;
     try {
-        await callApi('add_emballage', { emb_id: id, qty: 1 });
+        // API accepte 'add' avec emb_id (ou alias add_emballage)
+        await callApi('add', { emb_id: id, qty: 1 });
 
-        // si on est sur commande.php, on rafraîchit le récap
         if (document.getElementById('cart-list')) {
             await renderCart();
         }
@@ -203,15 +193,16 @@ async function addEmballage(embId, btn){
     }
 }
 
-async function addSupplement(supId, btn, name, img){
+/* === Supplément === */
+async function addSupplement(supId, btn){
     const id = Number(supId);
     if (!id) return;
 
     if (btn) btn.disabled = true;
     try {
+        // IMPORTANT: on utilise l'action 'add' avec sup_id (compatible avec ton API PHP)
         await callApi('add', { sup_id: id, qty: 1 });
 
-        // Si on est sur commande.php, rafraîchir le récap
         if (document.getElementById('cart-list')) {
             await renderCart();
         }
@@ -229,9 +220,29 @@ async function addSupplement(supId, btn, name, img){
     }
 }
 
+/* =============== 7) Supprimer du panier =============== */
+async function removeFromCart(itemType, id) {
+    try {
+        id = Number(id);
+        if (!id) return;
+
+        const params = {};
+        if (itemType === 'produit')    params.pro_id = id;
+        else if (itemType === 'emballage') params.emb_id = id;
+        else if (itemType === 'supplement') params.sup_id = id;
+
+        await callApi('remove', params);
+        await renderCart();
+    } catch (e) {
+        console.error(e);
+        alert("Impossible de supprimer l'article.");
+    }
+}
+
 /* Expose au global pour onload/onclick inline */
-window.renderCart = renderCart;
-window.addToCart  = addToCart;
-window.selectRose = selectRose;
-window.addSupplement = addSupplement;
-window.addEmballage = addEmballage;
+window.renderCart     = renderCart;
+window.addToCart      = addToCart;
+window.selectRose     = selectRose;
+window.addSupplement  = addSupplement;
+window.addEmballage   = addEmballage;
+window.removeFromCart = removeFromCart;
