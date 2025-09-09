@@ -1,7 +1,7 @@
 <?php
 // Base URL avec slash final (relatif à /site/pages/)
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pages/"
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -16,13 +16,9 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
     <!-- Expose $BASE + API_URL au JS -->
     <script>
-        // ex: "/site/pages/"
-        window.DKBASE  = <?= json_encode($BASE) ?>;
-        // on pointe sur le PROXY sous /site/pages/api/
-        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
+        window.DKBASE  = <?= json_encode($BASE) ?>;               // "/…/site/pages/"
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>; // "/…/site/pages/api/cart.php"
     </script>
-
-    <!-- JS panier -->
     <script src="<?= $BASE ?>js/commande.js" defer></script>
 </head>
 

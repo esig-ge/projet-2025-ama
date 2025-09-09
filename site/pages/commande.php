@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-// Base URL avec slash final (relatif à /site/pages/)
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pages/"
+
 ?>
 <!doctype html>
 <html lang="fr">
@@ -16,16 +16,12 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
 
-    <!-- Expose la base ET l’URL d’API -->
     <script>
-        // ex: "/site/pages/"
-        window.DKBASE  = <?= json_encode($BASE) ?>;
-        // on pointe sur le proxy de l’API
-        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
+        window.DKBASE  = <?= json_encode($BASE) ?>;               // "/…/site/pages/"
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>; // "/…/site/pages/api/cart.php"
     </script>
-
-    <!-- JS panier -->
     <script src="<?= $BASE ?>js/commande.js" defer></script>
+
 </head>
 
 <body onload="renderCart()">
