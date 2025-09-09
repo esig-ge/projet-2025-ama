@@ -30,7 +30,7 @@ main{flex:1}
     display:flex; align-items:center; justify-content:space-between;
     gap:16px; padding:0 20px;
 }
-.logo img{height:10px; width:auto; display:block}
+.logo img{height:28px; width:auto; display:block}
 
 /* bouton mobile (HTML: <button class="menu-toggle">☰</button>) */
 .menu-toggle{
