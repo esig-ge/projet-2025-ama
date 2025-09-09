@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Base URL avec slash final (relatif à /site/pages/)
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
@@ -11,24 +12,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Mon panier</title>
 
-    <link rel="stylesheet" href="../css/style_header_footer.css">
-    <link rel="stylesheet" href="../css/commande.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
 
+    <!-- Expose la base ET l’URL d’API -->
     <script>
         // ex: "/site/pages/"
         window.DKBASE  = <?= json_encode($BASE) ?>;
-        // on pointe sur le PROXY sous /site/pages/api/
+        // on pointe sur le proxy de l’API
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
-    <script src="../js/commande.js" defer></script>
+
+    <!-- JS panier -->
+    <script src="<?= $BASE ?>js/commande.js" defer></script>
 </head>
 
-
-<body onload="renderCart()"><!-- onload OK si renderCart est global -->
+<body onload="renderCart()">
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <script>
-    // Ajuste une variable CSS selon la hauteur du header (utile si sticky)
+    // Ajuster la variable CSS --header-h selon la hauteur du header
     const h = document.querySelector('.site-header');
     if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
 </script>
@@ -37,17 +41,32 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
     <h1 class="page-title">Récapitulatif de ma commande</h1>
 
     <div class="grid">
-        <section class="card" id="cart-list" aria-live="polite" data-state="loading"></section>
+        <!-- Liste des articles -->
+        <section class="card" id="cart-list" aria-live="polite" data-state="loading">
+            <!-- Contenu injecté par commande.js -->
+        </section>
 
+        <!-- Résumé -->
         <aside class="card summary" aria-labelledby="sum-title">
             <h2 id="sum-title" class="sr-only">Résumé de commande</h2>
 
-            <div class="sum-row"><span>Produits</span><span id="sum-subtotal">0.00 CHF</span></div>
-            <div class="sum-row"><span>Livraison</span><span id="sum-shipping">—</span></div>
-            <div class="sum-total"><span>Total</span><span id="sum-total">0.00 CHF</span></div>
+            <div class="sum-row">
+                <span>Produits</span>
+                <span id="sum-subtotal">0.00 CHF</span>
+            </div>
+            <div class="sum-row">
+                <span>Livraison</span>
+                <span id="sum-shipping">—</span>
+            </div>
+            <div class="sum-total">
+                <span>Total</span>
+                <span id="sum-total">0.00 CHF</span>
+            </div>
 
-            <!-- checkout est à /site/checkout.php, donc on remonte -->
-            <a href="../checkout.php" class="btn-primary" id="btn-checkout"
+            <!-- checkout est à /site/checkout.php -->
+            <a href="../checkout.php"
+               class="btn-primary"
+               id="btn-checkout"
                aria-disabled="true"
                onclick="if(this.getAttribute('aria-disabled')==='true'){return false;}">
                 Valider ma commande
@@ -62,7 +81,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
                 <p>Une question ? Contactez-nous au <a href="tel:+41765698541">+41 76 569 85 41</a></p>
                 <ul>
                     <li>Expédition sous 7 jours (si disponible)</li>
-                    <li>Frais livraison?</li>
+                    <li>Frais livraison ?</li>
                     <li>Paiement sécurisé</li>
                 </ul>
             </div>

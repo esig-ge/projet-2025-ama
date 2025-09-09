@@ -1,5 +1,5 @@
 <?php
-// Base URL avec slash final
+// Base URL avec slash final (relatif à /site/pages/)
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
