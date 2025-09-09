@@ -14,6 +14,7 @@ body{
     font-family:Arial, sans-serif;
     padding-top:var(--header-h); /* header fixed => espace en haut */
 }
+
 main{flex:1}
 .container{max-width:var(--container);margin:0 auto;padding:0 16px}
 
@@ -60,7 +61,11 @@ main{flex:1}
 }
 
 /* ============= Footer ============= */
-.site-footer{ background:var(--brand); color:#fff; padding:14px 0; margin-top:48px; }
+.site-footer{
+    background:var(--brand); color:#fff;
+    padding:14px 0; margin-top:48px;
+    overflow:hidden;                    /* évite qu’un média trop grand gonfle le footer */
+}
 .site-footer a{ color:#fff; text-decoration:none }
 .site-footer a:hover{ text-decoration:underline }
 
@@ -70,8 +75,14 @@ main{flex:1}
 }
 .footer-left{ margin:0 }
 .footer-nav{ display:flex; gap:16px; justify-content:center }
+
+/* Icônes réseaux : taille fixe + pas d’espace baseline */
 .reseau_sociaux{ display:flex; gap:12px; justify-content:flex-end }
-.reseau_sociaux img{ width:24px; height:24px; object-fit:contain; display:block }
+.reseau_sociaux a{ display:inline-flex; }
+.reseau_sociaux img{
+    width:24px; height:24px;
+    object-fit:contain; display:block; flex:0 0 24px;
+}
 
 @media (max-width:700px){
     .footer-grid{ grid-template-columns:1fr; text-align:center }
