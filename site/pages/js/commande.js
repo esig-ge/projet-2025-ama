@@ -279,6 +279,51 @@ function toastError(btn, fallback, err){
 function showToast(message, type = 'success', timeout = 2600, title){
     // root
     let root = document.getElementById('dkb-toasts');
+    if(!document.getElementById('dkb-toast-css')){
+        const s = document.createElement('style');
+        s.id = 'dkb-toast-css';
+        s.textContent = `
+  .dkb-toasts{
+    position:fixed; top:12px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; gap:10px; z-index:2147483647; pointer-events:none;
+  }
+  .dkb-toast{
+    --t-border:#CFEAD8;                 /* vert pastel par défaut */
+    display:flex; align-items:center; gap:10px;
+    min-width:260px; max-width:min(92vw,520px);
+    background:#fff !important;         /* fond blanc */
+    color:#111 !important;              /* texte sombre */
+    padding:12px 14px; border-radius:12px;
+    border:2px solid var(--t-border);
+    box-shadow:0 10px 25px rgba(0,0,0,.12);
+    font:500 14px/1.3 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    opacity:0; transform:translateY(-10px);
+    transition:opacity .2s ease, transform .2s ease; pointer-events:auto;
+  }
+  .dkb-toast.show{ opacity:1; transform:translateY(0); }
+
+  /* variantes (pastel) : bordure seulement */
+  .dkb-toast.success{ --t-border:#B9E4C8; }  /* vert pastel */
+  .dkb-toast.info   { --t-border:#C9DAFF; }  /* bleu pastel */
+  .dkb-toast.error  { --t-border:#F6C6C6; }  /* rouge pastel */
+
+  /* petite barre colorée à gauche (option esthétique) */
+  .dkb-toast::before{
+    content:""; width:6px; align-self:stretch;
+    background:var(--t-border); border-radius:8px 0 0 8px;
+  }
+
+  .dkb-toast .title{ font-weight:700; margin-right:4px; }
+
+  /* bouton close — neutre, sans styles globaux */
+  .dkb-toast .dkb-close{
+    all:unset; margin-left:auto; cursor:pointer; opacity:.6;
+    font-size:18px; line-height:1; padding:2px 4px; color:#111;
+  }
+  .dkb-toast .dkb-close:hover{ opacity:1; }
+`;
+        document.head.appendChild(s);
+    }
     if(!root){
         root = document.createElement('div');
         root.id = 'dkb-toasts';
