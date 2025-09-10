@@ -22,9 +22,6 @@ if (!isset($BASE)) {
                      alt="Instagram" width="24" height="24" loading="lazy">
             </a>
 
-            <a href="https://www.tiktok.com/@_dkbloom" target="_blank">
-                <img src="../img/tiktok-removebg-preview.png" alt="tiktok" width="150">
-
             <a href="https://www.tiktok.com/@_dkbloom"
                target="_blank" rel="noopener" aria-label="TikTok">
                 <img src="<?= $BASE ?>img/tiktok-removebg-preview.png"

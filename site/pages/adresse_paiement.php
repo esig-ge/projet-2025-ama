@@ -101,16 +101,6 @@ if (is_file($co_fs_main)) {
                 </div>
             </div>
 
-            <div class="field">
-                <label for="bill_country">Pays</label>
-                <select id="bill_country" name="bill_country" required>
-                    <option value="CH" selected>Suisse</option>
-                    <option value="FR">France</option>
-                    <option value="IT">Italie</option>
-                    <option value="DE">Allemagne</option>
-                </select>
-            </div>
-
             <div class="hr"></div>
 
             <div class="field">
@@ -157,16 +147,6 @@ if (is_file($co_fs_main)) {
                         <input id="ship_city" name="ship_city" required>
                     </div>
                 </div>
-
-                <div class="field">
-                    <label for="ship_country">Pays</label>
-                    <select id="ship_country" name="ship_country" required>
-                        <option value="CH" selected>Suisse</option>
-                        <option value="FR">France</option>
-                        <option value="IT">Italie</option>
-                        <option value="DE">Allemagne</option>
-                    </select>
-                </div>
             </div>
 
             <div class="hr"></div>
@@ -201,6 +181,7 @@ if (is_file($co_fs_main)) {
 
     <div class="note" style="margin-top:18px">
         Astuce : si tu veux, tu peux revenir au panier pour modifier les articles avant de payer.
+       <br> Les commandes sont effectuées que en Suisse !
         <a href="<?= $PAGE_BASE ?>commande.php">Retour au panier</a>
     </div>
 </main>

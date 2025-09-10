@@ -19,15 +19,25 @@ if (is_file($api_fs_main)) {
     $API_URL = $SITE_BASE . 'api/cart.php';      // fallback
 }
 
-/* Détection checkout.php */
-$co_fs_main  = __DIR__ . '/../checkout.php';   // /site/checkout.php
-$co_fs_pages = __DIR__ . '/checkout.php';      // /site/pages/checkout.php
-if (is_file($co_fs_main)) {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
-} elseif (is_file($co_fs_pages)) {
-    $CHECKOUT_URL = $PAGE_BASE . 'checkout.php';
+/* Forcer le bouton vers adresse_paiement.php (et fallback checkout.php si jamais) */
+$pay_pages = __DIR__ . '/adresse_paiement.php';   // /site/pages/adresse_paiement.php
+$pay_main  = __DIR__ . '/../adresse_paiement.php';// /site/adresse_paiement.php
+
+if (is_file($pay_pages)) {
+    $CHECKOUT_URL = $PAGE_BASE . 'adresse_paiement.php';
+} elseif (is_file($pay_main)) {
+    $CHECKOUT_URL = $SITE_BASE . 'adresse_paiement.php';
 } else {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php'; // fallback
+    // fallback sur checkout.php si la page adresses n’existe pas
+    $co_fs_main  = __DIR__ . '/../checkout.php';
+    $co_fs_pages = __DIR__ . '/checkout.php';
+    if (is_file($co_fs_main)) {
+        $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
+    } elseif (is_file($co_fs_pages)) {
+        $CHECKOUT_URL = $PAGE_BASE . 'checkout.php';
+    } else {
+        $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
+    }
 }
 ?>
 <!doctype html>
