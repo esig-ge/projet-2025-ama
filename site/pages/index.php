@@ -14,31 +14,20 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const dd = document.getElementById('dd-account');
-        if (!dd) return;
+        const accountMenu = document.getElementById('account-menu');
+        if (!accountMenu) return;
 
-        const btn = dd.querySelector('.dd-trigger');
+        const trigger = accountMenu.querySelector('.menu-link');
 
-        // Ouvrir/fermer au clic
-        btn.addEventListener('click', (e) => {
+        trigger.addEventListener('click', (e) => {
             e.preventDefault();
-            const open = dd.classList.toggle('open');
-            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            accountMenu.classList.toggle('open');
         });
 
-        // Fermer quand on clique ailleurs
+        // Ferme si on clique ailleurs
         document.addEventListener('click', (e) => {
-            if (!dd.contains(e.target)) {
-                dd.classList.remove('open');
-                btn.setAttribute('aria-expanded', 'false');
-            }
-        });
-
-        // Fermer avec Échap
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                dd.classList.remove('open');
-                btn.setAttribute('aria-expanded', 'false');
+            if (!accountMenu.contains(e.target)) {
+                accountMenu.classList.remove('open');
             }
         });
     });

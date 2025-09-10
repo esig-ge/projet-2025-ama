@@ -19,22 +19,12 @@ $isLogged = !empty($_SESSION['per_id']); // on teste la clé correcte
             <a href="<?= $BASE ?>interface_catalogue_bouquet.php">Catalogue</a>
             <a href="<?= $BASE ?>contact.php">Contact</a>
 
-            <?php if (!empty($_SESSION['per_id'])): ?>
-                <div class="dd-account" id="dd-account">
-                    <a href="#" class="dd-trigger" aria-haspopup="true" aria-expanded="false">
-                        Mon compte <span class="caret">▾</span>
-                    </a>
-                    <div class="dd-panel" role="menu" aria-label="Menu Mon compte">
-                        <a role="menuitem" href="<?= $BASE ?>mon_compte.php">Infos personnelles</a>
-                        <hr>
-                        <a role="menuitem" href="<?= $BASE ?>deconnexion.php">Me déconnecter</a>
-                    </div>
-                </div>
+            <?php if ($isLogged): ?>
+                <a href="<?= $BASE ?>deconnexion.php">Se déconnecter</a>
             <?php else: ?>
                 <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
                 <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
             <?php endif; ?>
-
         </nav>
     </div>
 </header>

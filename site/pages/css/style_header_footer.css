@@ -60,57 +60,37 @@ main{flex:1}
     .menu-toggle{ display:none; }
 }
 
-/* Alignement du menu existant */
-.menu { display:flex; gap:20px; align-items:center; }
-
 /* Bloc dropdown */
-.dd-account { position: relative; }
-
-/* Le déclencheur ressemble aux autres liens */
-.dd-trigger {
-    text-decoration: none; color: #fff; font-weight: 600;
-    display:inline-flex; align-items:center; gap:6px;
-    padding: 6px 0;
+.menu-item.dropdown {
+    position: relative;
 }
-.dd-trigger:hover { text-decoration: underline; }
 
-/* Panneau */
-.dd-panel{
-    position: absolute; top: calc(100% + 10px); right: 0;
+/* Par défaut caché */
+.dropdown-menu {
     display: none;
-    min-width: 240px;
-    background: #8C0B0B; /* rouge DK */
-    color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 10px 28px rgba(0,0,0,.25);
-    padding: 8px 0;
+    position: absolute;
+    top: 100%; left: 0;
+    background: #8C0B0B; /* ton rouge DK */
+    border-radius: 6px;
+    min-width: 180px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
     z-index: 1000;
 }
-.dd-account.open .dd-panel{ display:block; }
 
-/* Liens du panneau */
-.dd-panel a{
-    display:block; padding: 12px 16px;
-    color:#fff; text-decoration:none; font-weight:600;
+/* Liens internes */
+.dropdown-menu a {
+    display: block;
+    padding: 10px 14px;
+    color: #fff;
+    text-decoration: none;
 }
-.dd-panel a:hover{ background: rgba(255,255,255,.08); }
-
-/* Séparateur */
-.dd-panel hr{
-    height:1px; border:none; background: rgba(255,255,255,.25);
-    margin: 6px 0;
+.dropdown-menu a:hover {
+    background: rgba(255,255,255,0.1);
 }
 
-/* Petite flèche */
-.dd-panel::before{
-    content:""; position:absolute; right:14px; top:-8px;
-    width: 0; height: 0; border-left:8px solid transparent;
-    border-right:8px solid transparent; border-bottom:8px solid #8C0B0B;
-}
-
-/* Mobile : occupe toute la largeur si besoin */
-@media (max-width: 768px){
-    .dd-panel{ right:auto; left:0; min-width: 220px; }
+/* Quand ouvert */
+.menu-item.dropdown.open .dropdown-menu {
+    display: block;
 }
 
 
