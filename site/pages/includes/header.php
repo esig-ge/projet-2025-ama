@@ -1,34 +1,30 @@
 <?php
-// Base URL relative au script courant (toujours avec un slash final)
-if (!isset($BASE)) {
-    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
-}
+session_start();
+
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+
+// Utilisateur connecté ?
+$isLogged = !empty($_SESSION['per_id']); // on teste la clé correcte
 ?>
-<header class="site-header" role="banner">
+<header class="site-header">
     <div class="header">
-        <!-- Logo -->
-        <a href="<?= $BASE ?>index.php" class="logo" aria-label="DK Bloom — retour à l'accueil">
-            <img src="<?= $BASE ?>img/logo.jpg" alt="DK Bloom" width="120" height="auto" loading="lazy">
+        <a href="<?= $BASE ?>index.php" class="logo">
+            <img src="<?= $BASE ?>img/logo.jpg" alt="DK Bloom" width="120">
         </a>
 
-        <!-- Bouton menu mobile -->
-        <button class="menu-toggle" aria-expanded="false" aria-label="Menu principal">☰</button>
-
-        <!-- Navigation principale -->
-        <nav class="menu" data-nav role="navigation" aria-label="Navigation principale">
+        <nav class="menu">
             <a href="<?= $BASE ?>index.php">Accueil</a>
             <a href="<?= $BASE ?>apropos.php">À propos</a>
             <a href="<?= $BASE ?>interface_catalogue_bouquet.php">Catalogue</a>
             <a href="<?= $BASE ?>contact.php">Contact</a>
-            <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
-            <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
-            <?php
-            session_start();
-            if (isset($_SESSION['utilisateur'])) { ?>
-                <a href="<?= $BASE ?>deconnexion.php">Se deconncter</a>
-           <?php }
-            ?>
+
+            <?php if ($isLogged): ?>
+                <a href="<?= $BASE ?>deconnexion.php">Se déconnecter</a>
+            <?php else: ?>
+                <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
+                <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
+            <?php endif; ?>
         </nav>
     </div>
 </header>
