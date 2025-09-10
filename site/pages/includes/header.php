@@ -19,7 +19,7 @@ if (!isset($BASE)) {
         <nav class="menu" data-nav role="navigation" aria-label="Navigation principale">
             <a href="<?= $BASE ?>index.php">Accueil</a>
             <a href="<?= $BASE ?>apropos.php">À propos</a>
-            <a href="<?= $BASE ?>interface_catalogue_bouquet.php">Catalogue</a>
+            <a href="<?= $BASE ?>interface_selection_produit.php">Catalogue</a>
             <a href="<?= $BASE ?>contact.php">Contact</a>
             <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
             <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
