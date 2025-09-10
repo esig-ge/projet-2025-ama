@@ -43,5 +43,6 @@ $stmt = $db->prepare($sql);
 $stmt->execute([
     ':per_id'    => $idPersonne,
 ]);
-
-echo "Inscription réussie ! Bienvenue : $idPersonne";
+$_SESSION['message'] = "Inscription réussie ! Bienvenue $prenom $nom";
+header('Location: index.php');
+exit();
