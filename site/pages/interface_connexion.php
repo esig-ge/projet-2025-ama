@@ -1,18 +1,36 @@
 <?php
 // /site/pages/interface_connexion.php
+// Ce fichier correspond à la page de connexion pour les utilisateurs du site DK Bloom.
+// Il contient le formulaire de connexion et la logique d’affichage (mais pas encore le traitement).
+
 session_start();
+// Démarrage de la session PHP : indispensable pour gérer les messages flash (ex: erreurs),
+// les tokens CSRF (sécurité) et la persistance des infos de l’utilisateur connecté.
+
 
 // Base URL + page base (pour liens & includes)
 if (!isset($BASE)) {
+    // dirname($_SERVER['PHP_SELF']) => récupère le chemin relatif du script en cours.
+    // On "rtrim" pour enlever les éventuels slashs à la fin.
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+
+    // Si on est à la racine ou que dirname renvoie '.' alors on force BASE = "/"
+    // Sinon, on ajoute un slash à la fin.
     $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 }
+// En gros, $BASE permet de construire des chemins relatifs corrects pour CSS, JS ou includes,
+// peu importe si le site est en sous-dossier ou à la racine du serveur.
+
 
 // CSRF token
 if (empty($_SESSION['csrf'])) {
+    // On génère un token CSRF unique pour cette session utilisateur,
     $_SESSION['csrf'] = bin2hex(random_bytes(32));
 }
+// Ce token sera inséré dans le formulaire pour éviter les attaques
+// En gros, ça empêche quelqu’un d’envoyer un faux formulaire à la place de l’utilisateur.
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
