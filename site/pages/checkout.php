@@ -1,69 +1,73 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../database/config/stripe.php';
-require_once __DIR__ . '/../database/config/connexionBDD.php';
-
+/* 1) ENV & STRIPE (hors /pages/) */
 require_once __DIR__ . '/../database/config/env.php';
-loadEnv(__DIR__ . '/../database/config/.env');
+loadProjectEnv();
+require_once __DIR__ . '/../database/config/stripe.php';
+require_once __DIR__ . '/../database/config/connexionBDD.php'; // si besoin DB
 
-// 1) commande courante
-$comId = $_SESSION['com_id'] ?? null;
-if (!$comId) {
-    header('Location: commande.php');
-    exit;
+/* 2) Bases de chemins (assets dans /pages, API détectée) */
+$dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+$SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);
+
+/* Détection API cart.php pour récap sur checkout si tu l’utilises */
+$api_fs_main  = __DIR__ . '/../api/cart.php';
+$api_fs_pages = __DIR__ . '/api/cart.php';
+if (is_file($api_fs_main)) {
+    $API_URL = $SITE_BASE . 'api/cart.php';
+} elseif (is_file($api_fs_pages)) {
+    $API_URL = $PAGE_BASE . 'api/cart.php';
+} else {
+    $API_URL = $SITE_BASE . 'api/cart.php';
 }
+?>
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DK Bloom — Paiement</title>
 
-// 2) total depuis la BDD
-$sql = "SELECT SUM(p.PRO_PRIX * cp.CP_QTE_COMMANDEE) AS total
-        FROM COMMANDE_PRODUIT cp
-        JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
-        WHERE cp.COM_ID = :com";
-$stmt = $pdo->prepare($sql);
-$stmt->execute(['com' => $comId]);
-$total = (float) ($stmt->fetchColumn() ?: 0);
+    <!-- ASSETS : DANS /site/pages/ -->
+    <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/checkout.css">
 
-if ($total <= 0) {
-    header('Location: commande.php');
-    exit;
-}
+    <script>
+        window.DKBASE  = <?= json_encode($PAGE_BASE) ?>; // pour images
+        window.API_URL = <?= json_encode($API_URL) ?>;    // cart.php détecté
+        console.debug('[checkout] PAGE_BASE=', DKBASE, 'API_URL=', API_URL);
+    </script>
+    <script src="<?= $PAGE_BASE ?>js/checkout.js" defer></script>
+    <!-- Stripe.js (si tu l’utilises en front) -->
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
 
-$amountCents = (int) round($total * 100);
+<body onload="initCheckout()">
+<?php include __DIR__ . '/includes/header.php'; ?>
 
-// 3) URLs succès/annulation
-$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$base   = $scheme . '://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+<main class="wrap" role="main">
+    <h1 class="page-title">Paiement sécurisé</h1>
 
-$successUrl = $base . '/success.php?session_id={CHECKOUT_SESSION_ID}';
-$cancelUrl  = $base . '/commande.php';
+    <section class="card">
+        <div id="cart-lines" class="cart-lines">Chargement…</div>
 
-// 4) créer la session Checkout
-try {
-    $session = \Stripe\Checkout\Session::create([
-        'mode' => 'payment',
-        'line_items' => [[
-            'price_data' => [
-                'currency' => 'chf',
-                'product_data' => [
-                    'name' => 'Commande DK Bloom #' . $comId
-                ],
-                'unit_amount' => $amountCents,
-            ],
-            'quantity' => 1,
-        ]],
-        'success_url' => $successUrl,
-        'cancel_url'  => $cancelUrl,
-        'metadata'    => ['com_id' => (string) $comId],
-    ]);
+        <div class="sum">
+            <div><span>Produits</span><span id="sum-subtotal">0.00 CHF</span></div>
+            <div><span>Livraison</span><span id="sum-shipping">—</span></div>
+            <div><span>TVA</span><span id="sum-tva">0.00 CHF</span></div>
+            <div class="total"><span>Total</span><span id="sum-total">0.00 CHF</span></div>
+        </div>
 
-    header('Location: ' . filter_var($session->url, FILTER_SANITIZE_URL));
-    exit;
+        <form id="pay-form" onsubmit="return onPay(this)">
+            <div id="payment-element"></div>
+            <p id="form-message" class="form-msg" aria-live="polite"></p>
+            <button id="pay-btn" class="btn-primary" type="submit" disabled>Payer</button>
+        </form>
+    </section>
+</main>
 
-} catch (Throwable $e) {
-    http_response_code(500);
-    echo "<h1>Erreur Stripe</h1>";
-    echo "<p>Impossible de créer la session de paiement.</p>";
-    // ⚠️ À masquer en production
-    echo "<pre>" . htmlspecialchars($e->getMessage()) . "</pre>";
-    exit;
-}
+<?php include __DIR__ . '/includes/footer.php'; ?>
+</body>
+</html>
