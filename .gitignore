@@ -17,7 +17,7 @@ vendor/
 composer.lock
 
 # --- Environnements locaux ---
-site/database/config/.env
+.env
 
 # --- Config locales spécifiques ---
 /config/*.local.php

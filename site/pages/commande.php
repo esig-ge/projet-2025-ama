@@ -1,9 +1,44 @@
 <?php
 session_start();
 
-$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pages/"
+/* Bases de chemins :
+   - $PAGE_BASE = dossier courant (souvent /…/site/pages/)
+   - $SITE_BASE = racine du site (souvent /…/site/) */
+$dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+$SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);
 
+/* Détection API cart.php */
+$api_fs_main  = __DIR__ . '/../api/cart.php';  // /site/api/cart.php (si api hors /pages)
+$api_fs_pages = __DIR__ . '/api/cart.php';     // /site/pages/api/cart.php
+if (is_file($api_fs_main)) {
+    $API_URL = $SITE_BASE . 'api/cart.php';
+} elseif (is_file($api_fs_pages)) {
+    $API_URL = $PAGE_BASE . 'api/cart.php';
+} else {
+    $API_URL = $SITE_BASE . 'api/cart.php';      // fallback
+}
+
+/* Forcer le bouton vers adresse_paiement.php (et fallback checkout.php si jamais) */
+$pay_pages = __DIR__ . '/adresse_paiement.php';   // /site/pages/adresse_paiement.php
+$pay_main  = __DIR__ . '/../adresse_paiement.php';// /site/adresse_paiement.php
+
+if (is_file($pay_pages)) {
+    $CHECKOUT_URL = $PAGE_BASE . 'adresse_paiement.php';
+} elseif (is_file($pay_main)) {
+    $CHECKOUT_URL = $SITE_BASE . 'adresse_paiement.php';
+} else {
+    // fallback sur checkout.php si la page adresses n’existe pas
+    $co_fs_main  = __DIR__ . '/../checkout.php';
+    $co_fs_pages = __DIR__ . '/checkout.php';
+    if (is_file($co_fs_main)) {
+        $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
+    } elseif (is_file($co_fs_pages)) {
+        $CHECKOUT_URL = $PAGE_BASE . 'checkout.php';
+    } else {
+        $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
+    }
+}
 ?>
 <!doctype html>
 <html lang="fr">
@@ -12,23 +47,25 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pa
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Mon panier</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
+    <!-- ASSETS : comme ils sont DANS /site/pages/, on utilise PAGE_BASE -->
+    <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/commande.css">
 
     <script>
-        window.DKBASE  = <?= json_encode($BASE) ?>;               // "/…/site/pages/"
-        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>; // "/…/site/pages/api/cart.php"
+        // DKBASE = dossier de cette page (pour assets/images)
+        // API_URL = endpoint détecté (hors/avec pages)
+        window.DKBASE       = <?= json_encode($PAGE_BASE) ?>;
+        window.API_URL      = <?= json_encode($API_URL) ?>;
+        window.CHECKOUT_URL = <?= json_encode($CHECKOUT_URL) ?>;
+        console.debug('[cmd] PAGE_BASE=', DKBASE, 'API_URL=', API_URL, 'CHECKOUT_URL=', CHECKOUT_URL);
     </script>
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
-
+    <script src="<?= $PAGE_BASE ?>js/commande.js" defer></script>
 </head>
 
 <body onload="renderCart()">
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <script>
-    // Ajuster la variable CSS --header-h selon la hauteur du header
     const h = document.querySelector('.site-header');
     if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
 </script>
@@ -38,29 +75,18 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pa
 
     <div class="grid">
         <!-- Liste des articles -->
-        <section class="card" id="cart-list" aria-live="polite" data-state="loading">
-            <!-- Contenu injecté par commande.js -->
-        </section>
+        <section class="card" id="cart-list" aria-live="polite" data-state="loading"></section>
 
         <!-- Résumé -->
         <aside class="card summary" aria-labelledby="sum-title">
             <h2 id="sum-title" class="sr-only">Résumé de commande</h2>
 
-            <div class="sum-row">
-                <span>Produits</span>
-                <span id="sum-subtotal">0.00 CHF</span>
-            </div>
-            <div class="sum-row">
-                <span>Livraison</span>
-                <span id="sum-shipping">—</span>
-            </div>
-            <div class="sum-total">
-                <span>Total</span>
-                <span id="sum-total">0.00 CHF</span>
-            </div>
+            <div class="sum-row"><span>Produits</span><span id="sum-subtotal">0.00 CHF</span></div>
+            <div class="sum-row"><span>Livraison</span><span id="sum-shipping">—</span></div>
+            <div class="sum-total"><span>Total</span><span id="sum-total">0.00 CHF</span></div>
 
-            <!-- checkout est à /site/checkout.php -->
-            <a href="../checkout.php"
+            <!-- On utilise l’URL détectée -->
+            <a href="<?= $CHECKOUT_URL ?>"
                class="btn-primary"
                id="btn-checkout"
                aria-disabled="true"
