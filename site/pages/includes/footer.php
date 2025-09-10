@@ -21,15 +21,14 @@ if (!isset($BASE)) {
                 <img src="<?= $BASE ?>img/Instagram_icon.png"
                      alt="Instagram" width="24" height="24" loading="lazy">
             </a>
-<<<<<<< HEAD
+
             <a href="https://www.tiktok.com/@_dkbloom" target="_blank">
                 <img src="../img/tiktok-removebg-preview.png" alt="tiktok" width="150">
-=======
+
             <a href="https://www.tiktok.com/@_dkbloom"
                target="_blank" rel="noopener" aria-label="TikTok">
                 <img src="<?= $BASE ?>img/tiktok-removebg-preview.png"
                      alt="TikTok" width="24" height="24" loading="lazy">
->>>>>>> 8b357fac546ca0a61551585d0190b03a143838a1
             </a>
         </div>
     </div>
