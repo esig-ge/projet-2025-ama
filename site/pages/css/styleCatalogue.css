@@ -97,6 +97,15 @@ a.button:hover{ background:indianred; color:#fff; transform:scale(1.05); }
 
 
 /*---------------------page general--------------------- */
+.color-radio{
+    position:absolute;
+    left:-9999px;
+}
+
+/* Pastilles couleur */
+.swatches{
+    display:flex; gap:12px; margin:12px 0; border:0; padding:0;
+}
 
 .swatch span{
     --size:28px;
@@ -104,11 +113,16 @@ a.button:hover{ background:indianred; color:#fff; transform:scale(1.05); }
     width:var(--size); height:var(--size);
     border-radius:50%;
     background:var(--swatch);
-    border:2px solid #ccc;
+
     cursor:pointer;
     transition:transform .15s ease;
 }
 .swatch span:hover{ transform:scale(1.1); }
+
+.swatch:has(input:checked) span {
+    border: 3px solid black;
+    box-shadow: 0 0 0 4px rgba(0,0,0,0.15);
+}
 
 h1{
     color: darkred;
