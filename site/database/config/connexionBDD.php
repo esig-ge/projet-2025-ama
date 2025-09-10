@@ -45,4 +45,13 @@ function dbConnect()
     } catch (PDOException $e) {
         die('Erreur de connexion : ' . $e->getMessage());
     }
-} */
+}
+
+*/
+
+function getAllPersonnes(PDO $pdo): array {
+    $sql = "SELECT PER_ID, PER_NOM, PER_PRENOM, PER_EMAIL, PER_NUM_TEL
+            FROM PERSONNE";
+    $stmt = $pdo->query($sql);
+    return $stmt->fetchAll();
+}
