@@ -33,7 +33,7 @@ try {
 return $pdo;   // ⬅⬅⬅ IMPORTANT
 
 
-/*
+
 function dbConnect()
 {
     try {
@@ -47,7 +47,7 @@ function dbConnect()
     }
 }
 
-*/
+
 
 function getAllPersonnes(PDO $pdo): array {
     $sql = "SELECT PER_ID, PER_NOM, PER_PRENOM, PER_EMAIL, PER_NUM_TEL
