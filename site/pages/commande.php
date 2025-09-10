@@ -1,9 +1,22 @@
 <?php
 session_start();
 
-$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pages/"
+$dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';         // ex: "/…/site/pages/"
+$SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);                 // ex: "/…/site/"
 
+// Résolution filesystem pour trouver la vraie API
+$api_fs_main  = __DIR__ . '/../api/cart.php';      // /site/api/cart.php
+$api_fs_pages = __DIR__ . '/api/cart.php';         // /site/pages/api/cart.php
+
+if (is_file($api_fs_main)) {
+    $API_URL = $SITE_BASE . 'api/cart.php';        // ✅ /site/api/cart.php
+} elseif (is_file($api_fs_pages)) {
+    $API_URL = $PAGE_BASE . 'api/cart.php';        // ✅ /site/pages/api/cart.php
+} else {
+    // dernier recours : garde quelque chose de visible en console
+    $API_URL = $SITE_BASE . 'api/cart.php';
+}
 ?>
 <!doctype html>
 <html lang="fr">
@@ -13,14 +26,15 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pa
     <title>DK Bloom — Mon panier</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
+    <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/commande.css">
 
     <script>
-        window.DKBASE  = <?= json_encode($BASE) ?>;               // "/…/site/pages/"
-        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>; // "/…/site/pages/api/cart.php"
+        window.DKBASE  = <?= json_encode($PAGE_BASE) ?>;               // "/…/site/pages/"
+        window.API_URL = <?= json_encode($API_URL) ?>;      // ✅ juste $API_URL, pas de concat
+        console.debug('PAGE_BASE=', window.DKBASE, 'API_URL=', window.API_URL);
     </script>
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
+    <script src="<?= $PAGE_BASE ?>js/commande.js" defer></script>
 
 </head>
 
@@ -60,7 +74,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: "/…/site/pa
             </div>
 
             <!-- checkout est à /site/checkout.php -->
-            <a href="../checkout.php"
+            <a href="<?= $PAGE_BASE ?>checkout.php"
                class="btn-primary"
                id="btn-checkout"
                aria-disabled="true"

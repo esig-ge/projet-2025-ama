@@ -65,7 +65,8 @@ function updateSummary(subtotal) {
     const btn = document.getElementById('btn-checkout');
     if (btn) {
         const enabled = subtotal > 0;
-        btn.toggleAttribute('disabled', !enabled);
+        btn.toggleAttribute('tabindex', !enabled); // tabindex="-1" quand désactivé
+        btn.style.pointerEvents = enabled ? '' : 'none';
         btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
         btn.style.opacity = enabled ? '' : '0.6';
     }
