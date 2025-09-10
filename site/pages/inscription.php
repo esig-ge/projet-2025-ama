@@ -16,6 +16,31 @@ if (!isset($BASE)) {
     <title>DK Bloom — Inscription</title>
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/style_connexion_inscription.css">
+
+    <style>
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper input {
+            flex: 1;
+            padding-right: 45px; /* un peu plus de place */
+            font-size: 1rem;     /* tu peux aussi augmenter si besoin */
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.4rem;   /* <-- augmenté (avant 1rem) */
+            line-height: 1;      /* garde compact */
+            padding: 4px;        /* clique plus confortable */
+        }
+    </style>
 </head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
@@ -45,7 +70,10 @@ if (!isset($BASE)) {
             <input type="email" id="email" name="email" required>
 
             <label for="password">Mot de passe</label>
-            <input type="password" id="password" name="password" required>
+            <div class="password-wrapper">
+                <input type="password" id="password" name="password" required>
+                <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
+            </div>
 
             <input type="submit" value="S'inscrire">
         </form>
@@ -53,5 +81,18 @@ if (!isset($BASE)) {
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+
+<script>
+    function togglePassword(fieldId, btn) {
+        const field = document.getElementById(fieldId);
+        if (field.type === "password") {
+            field.type = "text";
+            btn.textContent = "🕶";
+        } else {
+            field.type = "password";
+            btn.textContent = "👁";
+        }
+    }
+</script>
 </body>
 </html>
