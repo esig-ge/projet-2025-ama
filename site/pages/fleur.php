@@ -28,8 +28,6 @@ if (!isset($BASE)) {
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <main class="container">
-    <h1 class="section-title">Nos fleurs</h1>
-
     <section class="catalogue">
         <div class="produit">
             <div class="produit-info">
