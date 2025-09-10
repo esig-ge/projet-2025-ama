@@ -69,6 +69,7 @@ if (!isset($BASE)) {
                     <label class="swatch" for="c-noir"   title="Noir"><span style="--swatch:#111"></span></label>
                     <label class="swatch" for="c-bleu"   title="Bleu"><span style="--swatch:#0418a5"></span></label>
                 </fieldset>
+                <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
 
                 <!-- Sélectionner = ajoute au panier la radio cochée -->
                 <button class="btn" onclick="selectRose(this)">Sélectionner</button>
