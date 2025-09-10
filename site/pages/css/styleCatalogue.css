@@ -98,7 +98,17 @@ a.button:hover{ background:indianred; color:#fff; transform:scale(1.05); }
 
 /*---------------------page general--------------------- */
 
-
+.swatch span{
+    --size:28px;
+    display:inline-block;
+    width:var(--size); height:var(--size);
+    border-radius:50%;
+    background:var(--swatch);
+    border:2px solid #ccc;
+    cursor:pointer;
+    transition:transform .15s ease;
+}
+.swatch span:hover{ transform:scale(1.1); }
 
 h1{
     color: darkred;
