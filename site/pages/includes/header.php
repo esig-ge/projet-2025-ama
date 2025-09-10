@@ -23,6 +23,12 @@ if (!isset($BASE)) {
             <a href="<?= $BASE ?>contact.php">Contact</a>
             <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
             <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
+            <?php
+            session_start();
+            if (isset($_SESSION['utilisateur'])) { ?>
+                <a href="<?= $BASE ?>deconnexion.php">Se deconncter</a>
+           <?php }
+            ?>
         </nav>
     </div>
 </header>
