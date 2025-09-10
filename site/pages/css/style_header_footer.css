@@ -60,6 +60,30 @@ main{flex:1}
     .menu-toggle{ display:none; }
 }
 
+/* Conteneur du menu déroulant */
+.menu .dropdown { position: relative; }
+
+/* Bouton qui ressemble à un lien de nav */
+.menu .dropdown-toggle{
+    background: none; border: 0; color: inherit; font: inherit; cursor: pointer;
+    padding: 0; margin: 0 0 0 16px;
+}
+
+/* Sous-menu */
+.menu .submenu{
+    position: absolute; right: 0; top: 100%;
+    display: none; list-style: none; margin: 8px 0 0; padding: 8px 0;
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; min-width: 220px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.12); z-index: 1000;
+}
+.menu .submenu li a{
+    display: block; padding: 10px 14px; text-decoration: none; color: #600; /* rouge DK */
+}
+.menu .submenu li a:hover{ background: #f7f2f2; }
+
+/* Ouvert */
+.menu .dropdown.open .submenu{ display: block; }
+
 /* ============= Footer ============= */
 .site-footer{
     background:var(--brand);

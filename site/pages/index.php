@@ -11,6 +11,42 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
     <title>DK Bloom — Accueil</title>
     <link rel="stylesheet" href="<?= $BASE ?>css/squeletteIndex.css">
 </head>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Ouvrir/fermer au clic
+        document.querySelectorAll('.menu .dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const dd = btn.closest('.dropdown');
+                const isOpen = dd.classList.toggle('open');
+                btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        });
+
+        // Fermer si clic à l'extérieur
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('.menu .dropdown.open').forEach(dd => {
+                if (!dd.contains(e.target)) {
+                    dd.classList.remove('open');
+                    const btn = dd.querySelector('.dropdown-toggle');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+
+        // Fermer avec Échap
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.menu .dropdown.open').forEach(dd => {
+                    dd.classList.remove('open');
+                    const btn = dd.querySelector('.dropdown-toggle');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+    });
+</script>
+
 <body class="corps">
 
 <?php include __DIR__ . '/includes/header.php'; ?>
