@@ -14,38 +14,36 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const dd = document.getElementById('dd-account');
+        if (!dd) return;
+
+        const btn = dd.querySelector('.dd-trigger');
+
         // Ouvrir/fermer au clic
-        document.querySelectorAll('.menu .dropdown-toggle').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const dd = btn.closest('.dropdown');
-                const isOpen = dd.classList.toggle('open');
-                btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            });
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const open = dd.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
         });
 
-        // Fermer si clic à l'extérieur
+        // Fermer quand on clique ailleurs
         document.addEventListener('click', (e) => {
-            document.querySelectorAll('.menu .dropdown.open').forEach(dd => {
-                if (!dd.contains(e.target)) {
-                    dd.classList.remove('open');
-                    const btn = dd.querySelector('.dropdown-toggle');
-                    if (btn) btn.setAttribute('aria-expanded', 'false');
-                }
-            });
+            if (!dd.contains(e.target)) {
+                dd.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+            }
         });
 
         // Fermer avec Échap
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.menu .dropdown.open').forEach(dd => {
-                    dd.classList.remove('open');
-                    const btn = dd.querySelector('.dropdown-toggle');
-                    if (btn) btn.setAttribute('aria-expanded', 'false');
-                });
+                dd.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
             }
         });
     });
 </script>
+
 
 <body class="corps">
 

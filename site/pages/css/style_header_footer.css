@@ -60,29 +60,59 @@ main{flex:1}
     .menu-toggle{ display:none; }
 }
 
-/* Conteneur du menu déroulant */
-.menu .dropdown { position: relative; }
+/* Alignement du menu existant */
+.menu { display:flex; gap:20px; align-items:center; }
 
-/* Bouton qui ressemble à un lien de nav */
-.menu .dropdown-toggle{
-    background: none; border: 0; color: inherit; font: inherit; cursor: pointer;
-    padding: 0; margin: 0 0 0 16px;
+/* Bloc dropdown */
+.dd-account { position: relative; }
+
+/* Le déclencheur ressemble aux autres liens */
+.dd-trigger {
+    text-decoration: none; color: #fff; font-weight: 600;
+    display:inline-flex; align-items:center; gap:6px;
+    padding: 6px 0;
+}
+.dd-trigger:hover { text-decoration: underline; }
+
+/* Panneau */
+.dd-panel{
+    position: absolute; top: calc(100% + 10px); right: 0;
+    display: none;
+    min-width: 240px;
+    background: #8C0B0B; /* rouge DK */
+    color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.25);
+    padding: 8px 0;
+    z-index: 1000;
+}
+.dd-account.open .dd-panel{ display:block; }
+
+/* Liens du panneau */
+.dd-panel a{
+    display:block; padding: 12px 16px;
+    color:#fff; text-decoration:none; font-weight:600;
+}
+.dd-panel a:hover{ background: rgba(255,255,255,.08); }
+
+/* Séparateur */
+.dd-panel hr{
+    height:1px; border:none; background: rgba(255,255,255,.25);
+    margin: 6px 0;
 }
 
-/* Sous-menu */
-.menu .submenu{
-    position: absolute; right: 0; top: 100%;
-    display: none; list-style: none; margin: 8px 0 0; padding: 8px 0;
-    background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; min-width: 220px;
-    box-shadow: 0 6px 20px rgba(0,0,0,.12); z-index: 1000;
+/* Petite flèche */
+.dd-panel::before{
+    content:""; position:absolute; right:14px; top:-8px;
+    width: 0; height: 0; border-left:8px solid transparent;
+    border-right:8px solid transparent; border-bottom:8px solid #8C0B0B;
 }
-.menu .submenu li a{
-    display: block; padding: 10px 14px; text-decoration: none; color: #600; /* rouge DK */
-}
-.menu .submenu li a:hover{ background: #f7f2f2; }
 
-/* Ouvert */
-.menu .dropdown.open .submenu{ display: block; }
+/* Mobile : occupe toute la largeur si besoin */
+@media (max-width: 768px){
+    .dd-panel{ right:auto; left:0; min-width: 220px; }
+}
+
 
 /* ============= Footer ============= */
 .site-footer{
