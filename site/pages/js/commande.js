@@ -65,7 +65,8 @@ function updateSummary(subtotal) {
     const btn = document.getElementById('btn-checkout');
     if (btn) {
         const enabled = subtotal > 0;
-        btn.toggleAttribute('disabled', !enabled);
+        btn.toggleAttribute('tabindex', !enabled); // tabindex="-1" quand désactivé
+        btn.style.pointerEvents = enabled ? '' : 'none';
         btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
         btn.style.opacity = enabled ? '' : '0.6';
     }
@@ -128,31 +129,21 @@ async function renderCart() {
 }
 
 /* =============== 6) Ajouter au panier =============== */
-async function addToCart(proId, btn) {
-    if (!proId) return;
-    const pid = Number(proId);
-    if (!pid) return;
-
+async function addToCart(proId, btn){
+    const pid = Number(proId); if(!pid) return;
     if (btn) btn.disabled = true;
     try {
         await callApi('add', { pro_id: pid, qty: 1 });
-
-        if (document.getElementById('cart-list')) {
-            await renderCart();
-        }
-
-        if (btn) {
-            const old = btn.textContent;
-            btn.textContent = 'Ajouté ✓';
-            setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
-        }
-    } catch (err) {
-        alert("Impossible d'ajouter au panier.\n" + (err?.message || ''));
-        console.error(err);
+        if (document.getElementById('cart-list')) await renderCart();
+        toastAdded(btn, `Produit #${pid}`);
+        if (btn){ const old=btn.textContent; btn.textContent='Ajouté ✓'; setTimeout(()=>btn.textContent=old||'Ajouter', 900); }
+    } catch (e) {
+        toastError(btn, `Produit #${pid}`, e);
     } finally {
         if (btn) btn.disabled = false;
     }
 }
+
 
 /* === Sélection de rose (fleurs) === */
 function selectedRoseRadio(){
@@ -180,13 +171,17 @@ async function addEmballage(embId, btn){
             await renderCart();
         }
 
+        // Toast : emballage ajouté
+        const name = btn?.dataset?.embName || `Emballage #${id}`;
+        showToast(`${name} a bien été ajouté au panier !`, 'success');
+
         if (btn){
             const old = btn.textContent;
             btn.textContent = 'Ajouté ✓';
             setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
         }
     } catch (e){
-        alert('Impossible d’ajouter cet emballage.\n' + (e?.message || ''));
+        toastError(btn, `Emballage #${id}`, e);
         console.error(e);
     } finally {
         if (btn) btn.disabled = false;
@@ -207,13 +202,18 @@ async function addSupplement(supId, btn){
             await renderCart();
         }
 
+        // Toast : supplément ajouté
+        const name = btn?.dataset?.supName || `Supplément #${id}`;
+        showToast(`${name} a bien été ajouté au panier !`, 'success');
+
+
         if (btn){
             const old = btn.textContent;
             btn.textContent = 'Ajouté ✓';
             setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
         }
     } catch (e){
-        alert('Impossible d’ajouter ce supplément.\n' + (e?.message || ''));
+        toastError(btn, `Supplément #${id}`, e);
         console.error(e);
     } finally {
         if (btn) btn.disabled = false;
@@ -238,6 +238,145 @@ async function removeFromCart(itemType, id) {
         alert("Impossible de supprimer l'article.");
     }
 }
+
+/* =============== 8) Toast Helper =============== */
+function getToastRoot() {
+    let root = document.getElementById('dkb-toasts');
+    if (!root) {
+        root = document.createElement('div');
+        root.id = 'dkb-toasts';
+        root.className = 'dkb-toasts';
+        root.setAttribute('aria-live', 'polite');
+        root.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(root);
+    }
+    return root;
+}
+
+function toastAdded(btn, fallback){
+    const label = btn?.dataset?.proName
+        || btn?.dataset?.embName
+        || btn?.dataset?.suppName
+        || fallback;
+    showToast(`${label} a bien été ajouté au panier !`, 'success');
+}
+function toastError(btn, fallback, err){
+    const label = btn?.dataset?.proName
+        || btn?.dataset?.embName
+        || btn?.dataset?.suppName
+        || fallback;
+    showToast(`Échec de l’ajout : ${label}`, 'error', 3600, 'Erreur');
+    console.error(err);
+}
+
+
+/**
+ * Affiche un toast.
+ * @param {string} message  - Texte principal
+ * @param {('success'|'info'|'error')} [type='success']
+ * @param {number} [timeout=2600] Durée avant auto-fermeture (ms). Mettre 0 pour désactiver.
+ * @param {string} [title]  - Petit titre gras optionnel
+ */
+function showToast(message, type = 'success', timeout = 2600, title){
+    // root
+    let root = document.getElementById('dkb-toasts');
+    if(!document.getElementById('dkb-toast-css')){
+        const s = document.createElement('style');
+        s.id = 'dkb-toast-css';
+        s.textContent = `
+  .dkb-toasts{
+    position:fixed; top:12px; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; gap:10px; z-index:2147483647; pointer-events:none;
+  }
+  .dkb-toast{
+    --t-border:#CFEAD8;                 /* vert pastel par défaut */
+    display:flex; align-items:center; gap:10px;
+    min-width:260px; max-width:min(92vw,520px);
+    background:#fff !important;         /* fond blanc */
+    color:#111 !important;              /* texte sombre */
+    padding:12px 14px; border-radius:12px;
+    border:2px solid var(--t-border);
+    box-shadow:0 10px 25px rgba(0,0,0,.12);
+    font:500 14px/1.3 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    opacity:0; transform:translateY(-10px);
+    transition:opacity .2s ease, transform .2s ease; pointer-events:auto;
+  }
+  .dkb-toast.show{ opacity:1; transform:translateY(0); }
+
+  /* variantes (pastel) : bordure seulement */
+  .dkb-toast.success{ --t-border:#B9E4C8; }  /* vert pastel */
+  .dkb-toast.info   { --t-border:#C9DAFF; }  /* bleu pastel */
+  .dkb-toast.error  { --t-border:#F6C6C6; }  /* rouge pastel */
+
+  /* petite barre colorée à gauche (option esthétique) */
+  .dkb-toast::before{
+    content:""; width:6px; align-self:stretch;
+    background:var(--t-border); border-radius:8px 0 0 8px;
+  }
+
+  .dkb-toast .title{ font-weight:700; margin-right:4px; }
+
+  /* bouton close — neutre, sans styles globaux */
+  .dkb-toast .dkb-close{
+    all:unset; margin-left:auto; cursor:pointer; opacity:.6;
+    font-size:18px; line-height:1; padding:2px 4px; color:#111;
+  }
+  .dkb-toast .dkb-close:hover{ opacity:1; }
+`;
+        document.head.appendChild(s);
+    }
+    if(!root){
+        root = document.createElement('div');
+        root.id = 'dkb-toasts';
+        root.className = 'dkb-toasts';
+        root.setAttribute('aria-live','polite');
+        root.setAttribute('aria-atomic','true');
+        document.body.appendChild(root);
+    }
+
+    // toast
+    const toast = document.createElement('div');
+    toast.className = `dkb-toast ${type}`;
+    toast.role = 'status';
+
+    const content = document.createElement('div');
+    if (title){
+        const strong = document.createElement('span');
+        strong.className = 'title';
+        strong.textContent = title;
+        content.appendChild(strong);
+    }
+    content.append(document.createTextNode(message));
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'dkb-close';
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label','Fermer');
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', () => removeToast(toast));
+
+    toast.append(content, closeBtn);
+    root.prepend(toast);
+
+    // force reflow + animation (anti-couac)
+    void toast.offsetHeight;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.add('show'), 50);
+
+    if (timeout > 0){
+        toast._timer = setTimeout(()=>removeToast(toast), timeout);
+        toast.addEventListener('mouseenter', ()=>clearTimeout(toast._timer));
+        toast.addEventListener('mouseleave', ()=>{
+            if (timeout > 0) toast._timer = setTimeout(()=>removeToast(toast), 900);
+        });
+    }
+}
+function removeToast(toast){
+    if (!toast) return;
+    toast.classList.remove('show');
+    setTimeout(()=>toast.remove(), 200);
+}
+
 
 /* Expose au global pour onload/onclick inline */
 window.renderCart     = renderCart;

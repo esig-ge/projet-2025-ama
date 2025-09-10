@@ -152,6 +152,32 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
                 Ajouter
             </button>
         </div>
+        <div>
+            <!-- Radios (portent l'ID produit + nom + image) -->
+            <h3>Selectionner la couleur du bouquet</h3>
+            <input type="radio" id="c-rouge"  name="rose-color" class="color-radio"
+                   data-pro-id="1" data-name="Rose rouge"  data-img="<?= $BASE ?>img/rouge.png" checked>
+            <input type="radio" id="c-rose"   name="rose-color" class="color-radio"
+                   data-pro-id="2" data-name="Rose rose"   data-img="<?= $BASE ?>img/rose.png">
+            <input type="radio" id="c-roseC"  name="rose-color" class="color-radio"
+                   data-pro-id="3" data-name="Rose claire" data-img="<?= $BASE ?>img/rose_claire.png">
+            <input type="radio" id="c-blanc"  name="rose-color" class="color-radio"
+                   data-pro-id="4" data-name="Rose blanche" data-img="<?= $BASE ?>img/rosesBlanche.png">
+            <input type="radio" id="c-noir"   name="rose-color" class="color-radio"
+                   data-pro-id="5" data-name="Rose noire"   data-img="<?= $BASE ?>img/noir.png">
+            <input type="radio" id="c-bleu"   name="rose-color" class="color-radio"
+                   data-pro-id="6" data-name="Rose bleue"   data-img="<?= $BASE ?>img/bleu.png">
+
+            <fieldset class="swatches" aria-label="Couleur de la rose">
+                <label class="swatch" for="c-rouge"  title="Rouge"><span style="--swatch:red"></span></label>
+                <label class="swatch" for="c-rose"   title="Rose"><span style="--swatch:#ffa0c4"></span></label>
+                <label class="swatch" for="c-roseC"  title="Rose claire"><span style="--swatch:pink"></span></label>
+                <label class="swatch" for="c-blanc"  title="Blanc"><span style="--swatch:#e9e9e9"></span></label>
+                <label class="swatch" for="c-noir"   title="Noir"><span style="--swatch:#111"></span></label>
+                <label class="swatch" for="c-bleu"   title="Bleu"><span style="--swatch:#0418a5"></span></label>
+            </fieldset>
+
+        </div>
     </div>
 
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
