@@ -40,6 +40,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
         <div class="card product">
             <img src="<?= $BASE ?>img/12Roses.png" alt="Bouquet 12 roses" loading="lazy">
             <h3>12 roses</h3><p class="price">30 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="7"
                     data-pro-name="Bouquet 12 roses"
@@ -53,6 +54,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/20Roses.png" alt="Bouquet de 20 roses" loading="lazy">
             <h3>20 roses</h3>
             <p class="price">40 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="8"
                     data-pro-name="Bouquet 20 roses"
@@ -66,6 +68,8 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/20Roses.png" alt="Bouquet de 24 roses" loading="lazy">
             <h3>24 roses</h3>
             <p class="price">45 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-pro-id="9"
                     data-pro-name="Bouquet 24 roses"
@@ -79,6 +83,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/36Roses.png" alt="Bouquet de 36 roses" loading="lazy">
             <h3>36 roses</h3>
             <p class="price">60 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="10"
                     data-pro-name="Bouquet 36 roses"
@@ -92,6 +97,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/50Roses.png" alt="Bouquet de 50 roses" loading="lazy">
             <h3>50 roses</h3>
             <p class="price">70 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="11"
                     data-pro-name="Bouquet 50 roses"
@@ -105,6 +111,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/66Roses.png" alt="Bouquet de 66 roses" loading="lazy">
             <h3>66 roses</h3>
             <p class="price">85 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="12"
                     data-pro-name="Bouquet 66 roses"
@@ -118,6 +125,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/100Roses.png" alt="Bouquet de 99 roses" loading="lazy">
             <h3>99 roses</h3>
             <p class="price">110 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="13"
                     data-pro-name="Bouquet 99 roses"
@@ -131,6 +139,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/100Roses.png" alt="Bouquet de 100 roses" loading="lazy">
             <h3>100 roses</h3>
             <p class="price">112 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="14"
                     data-pro-name="Bouquet 100 roses"
@@ -144,6 +153,7 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
             <img src="<?= $BASE ?>img/100Roses.png" alt="Bouquet de 101 roses" loading="lazy">
             <h3>101 roses</h3>
             <p class="price">115 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
             <button class="add-to-cart"
                     data-pro-id="15"
                     data-pro-name="Bouquet 101 roses"
