@@ -22,7 +22,7 @@ const ASSET_BASE = PAGE_BASE;
 const chf = n => `${Number(n).toFixed(2)} CHF`;
 
 function normImgPath(p) {
-    if (!p) return PAGE_BASE + 'img/placeholder.png';
+    if (!p) return SITE_BASE + 'img/placeholder.png';
     if (/^(https?:)?\/\//.test(p) || p.startsWith('/') || p.startsWith('data:')) return p;
     if (p.startsWith('img/'))   return PAGE_BASE + p;   // "/site/pages/img/..."
     if (p.startsWith('pages/')) return SITE_BASE + p;   // "/site/pages/..."

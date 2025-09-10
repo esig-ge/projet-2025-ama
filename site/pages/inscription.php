@@ -1,10 +1,18 @@
 <?php
+session_start();
+
 // Base URL avec slash final
 if (!isset($BASE)) {
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
     $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 }
+
+// CSRF token
+if (empty($_SESSION['csrf'])) {
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -25,7 +33,16 @@ if (!isset($BASE)) {
     <div class="conteneur_form">
         <h2>S'inscrire</h2>
 
-        <form action="traitement_inscription.php" method="POST">
+        <?php if (!empty($_SESSION['message'])): ?>
+            <div class="flash" role="alert" style="margin:10px 0; background:#fff3cd; border:1px solid #ffeeba; padding:10px; border-radius:8px;">
+                <?= htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8') ?>
+            </div>
+            <?php unset($_SESSION['message']); ?>
+        <?php endif; ?>
+
+        <form action="traitement_inscription.php" method="POST" novalidate>
+            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
+
             <label for="lastname">Nom</label>
             <input type="text" id="lastname" name="lastname" required placeholder="Ton nom" />
 
@@ -39,7 +56,7 @@ if (!isset($BASE)) {
             <input type="email" id="email" name="email" required placeholder="exemple@mail.com" />
 
             <label for="password">Mot de passe</label>
-            <input type="password" id="password" name="mdp" required placeholder="••••" />
+            <input type="password" id="password" name="password" required placeholder="••••••••" />
 
             <input type="submit" value="S'inscrire">
         </form>

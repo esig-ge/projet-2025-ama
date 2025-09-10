@@ -1,3 +1,4 @@
+/*
 // site/pages/js/checkout.js
 let stripe, elements, paymentElement;
 
@@ -84,3 +85,4 @@ export async function onPay(form) {
 // expose pour l’inline onload/onsubmit
 window.initCheckout = initCheckout;
 window.onPay = onPay;
+*/

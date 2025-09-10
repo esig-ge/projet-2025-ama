@@ -152,19 +152,22 @@ function addSupplement(PDO $pdo, int $comId, int $supId, int $qty): void
 
 function listOrder(PDO $pdo, int $comId): array
 {
-    // PRODUITS (prix via PRODUIT.PRO_PRIX) — pas de colonne image dans la BDD
+    // PRODUITS
     $p = $pdo->prepare("
         SELECT
             'produit'             AS item_type,
             cp.PRO_ID             AS id,
+
+            -- originaux
             p.PRO_NOM             AS PRO_NOM,
-            p.PRO_NOM             AS nom,
             p.PRO_PRIX            AS PRO_PRIX,
-            p.PRO_PRIX            AS prix_unitaire,
             cp.CP_QTE_COMMANDEE   AS CP_QTE_COMMANDEE,
-            cp.CP_QTE_COMMANDEE   AS qte,
-            ''                    AS PRO_IMG,
-            ''                    AS image
+
+            -- normalisés pour le front
+            p.PRO_NOM             AS name,
+            p.PRO_PRIX            AS price,
+            cp.CP_QTE_COMMANDEE   AS qty,
+            ''                    AS img
         FROM COMMANDE_PRODUIT cp
         JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
         WHERE cp.COM_ID = :com
@@ -173,19 +176,20 @@ function listOrder(PDO $pdo, int $comId): array
     $p->execute(['com' => $comId]);
     $items = $p->fetchAll(PDO::FETCH_ASSOC);
 
-    // EMBALLAGES (aucun prix en BDD → 0.00)
+    // EMBALLAGES (prix 0.00)
     $e = $pdo->prepare("
         SELECT
             'emballage'           AS item_type,
             ce.EMB_ID             AS id,
+
             e.EMB_NOM             AS PRO_NOM,
-            e.EMB_NOM             AS nom,
             0.00                  AS PRO_PRIX,
-            0.00                  AS prix_unitaire,
             ce.CE_QTE             AS CP_QTE_COMMANDEE,
-            ce.CE_QTE             AS qte,
-            ''                    AS PRO_IMG,
-            ''                    AS image
+
+            e.EMB_NOM             AS name,
+            0.00                  AS price,
+            ce.CE_QTE             AS qty,
+            ''                    AS img
         FROM COMMANDE_EMBALLAGE ce
         JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
         WHERE ce.COM_ID = :com
@@ -194,19 +198,20 @@ function listOrder(PDO $pdo, int $comId): array
     $e->execute(['com' => $comId]);
     $items = array_merge($items, $e->fetchAll(PDO::FETCH_ASSOC));
 
-    // SUPPLÉMENTS (prix via SUPPLEMENT.SUP_PRIX_UNITAIRE) — pas d’image
+    // SUPPLÉMENTS
     $s = $pdo->prepare("
         SELECT
             'supplement'          AS item_type,
             cs.SUP_ID             AS id,
+
             s.SUP_NOM             AS PRO_NOM,
-            s.SUP_NOM             AS nom,
             s.SUP_PRIX_UNITAIRE   AS PRO_PRIX,
-            s.SUP_PRIX_UNITAIRE   AS prix_unitaire,
             cs.CS_QTE_COMMANDEE   AS CP_QTE_COMMANDEE,
-            cs.CS_QTE_COMMANDEE   AS qte,
-            ''                    AS PRO_IMG,
-            ''                    AS image
+
+            s.SUP_NOM             AS name,
+            s.SUP_PRIX_UNITAIRE   AS price,
+            cs.CS_QTE_COMMANDEE   AS qty,
+            ''                    AS img
         FROM COMMANDE_SUPP cs
         JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
         WHERE cs.COM_ID = :com
@@ -222,14 +227,15 @@ function subtotalFromItems(array $items): float
 {
     $sum = 0.0;
     foreach ($items as $it) {
-        $unit = isset($it['PRO_PRIX']) ? (float)$it['PRO_PRIX']
-            : (isset($it['prix_unitaire']) ? (float)$it['prix_unitaire'] : 0.0);
-        $qte  = isset($it['CP_QTE_COMMANDEE']) ? (int)$it['CP_QTE_COMMANDEE']
-            : (isset($it['qte']) ? (int)$it['qte'] : 1);
+        $unit = isset($it['price']) ? (float)$it['price']
+            : (isset($it['PRO_PRIX']) ? (float)$it['PRO_PRIX'] : 0.0);
+        $qte  = isset($it['qty']) ? (int)$it['qty']
+            : (isset($it['CP_QTE_COMMANDEE']) ? (int)$it['CP_QTE_COMMANDEE'] : 1);
         $sum += $unit * $qte;
     }
     return round($sum, 2);
 }
+
 
 /* =========================
    ROUTES
