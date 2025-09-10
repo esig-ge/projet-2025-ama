@@ -19,7 +19,12 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
     <section class="entete_accueil">
         <div class="image_texte">
             <div class="texte">
-                <h1>Bienvenue <span class="accent">élégance</span></h1>
+                <h1>
+                    Bienvenu<?php if (!empty($_SESSION['per_prenom'])): ?>e <?= htmlspecialchars($_SESSION['per_prenom']) ?>
+                    <?php else: ?>
+                        <span class="accent">élégance</span>
+                    <?php endif; ?>
+                </h1>
                 <p class="paragraphe">
                     L’art floral intemporel, au service d’une expérience unique et raffinée.
                     La beauté qui ne fane jamais.
