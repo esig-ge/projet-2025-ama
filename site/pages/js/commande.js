@@ -128,31 +128,21 @@ async function renderCart() {
 }
 
 /* =============== 6) Ajouter au panier =============== */
-async function addToCart(proId, btn) {
-    if (!proId) return;
-    const pid = Number(proId);
-    if (!pid) return;
-
+async function addToCart(proId, btn){
+    const pid = Number(proId); if(!pid) return;
     if (btn) btn.disabled = true;
     try {
         await callApi('add', { pro_id: pid, qty: 1 });
-
-        if (document.getElementById('cart-list')) {
-            await renderCart();
-        }
-
-        if (btn) {
-            const old = btn.textContent;
-            btn.textContent = 'Ajouté ✓';
-            setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
-        }
-    } catch (err) {
-        alert("Impossible d'ajouter au panier.\n" + (err?.message || ''));
-        console.error(err);
+        if (document.getElementById('cart-list')) await renderCart();
+        toastAdded(btn, `Produit #${pid}`);
+        if (btn){ const old=btn.textContent; btn.textContent='Ajouté ✓'; setTimeout(()=>btn.textContent=old||'Ajouter', 900); }
+    } catch (e) {
+        toastError(btn, `Produit #${pid}`, e);
     } finally {
         if (btn) btn.disabled = false;
     }
 }
+
 
 /* === Sélection de rose (fleurs) === */
 function selectedRoseRadio(){
@@ -180,13 +170,17 @@ async function addEmballage(embId, btn){
             await renderCart();
         }
 
+        // Toast : emballage ajouté
+        const name = btn?.dataset?.embName || `Emballage #${id}`;
+        showToast(`${name} a bien été ajouté au panier !`, 'success');
+
         if (btn){
             const old = btn.textContent;
             btn.textContent = 'Ajouté ✓';
             setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
         }
     } catch (e){
-        alert('Impossible d’ajouter cet emballage.\n' + (e?.message || ''));
+        toastError(btn, `Emballage #${id}`, e);
         console.error(e);
     } finally {
         if (btn) btn.disabled = false;
@@ -207,13 +201,18 @@ async function addSupplement(supId, btn){
             await renderCart();
         }
 
+        // Toast : supplément ajouté
+        const name = btn?.dataset?.supName || `Supplément #${id}`;
+        showToast(`${name} a bien été ajouté au panier !`, 'success');
+
+
         if (btn){
             const old = btn.textContent;
             btn.textContent = 'Ajouté ✓';
             setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
         }
     } catch (e){
-        alert('Impossible d’ajouter ce supplément.\n' + (e?.message || ''));
+        toastError(btn, `Supplément #${id}`, e);
         console.error(e);
     } finally {
         if (btn) btn.disabled = false;
@@ -238,6 +237,100 @@ async function removeFromCart(itemType, id) {
         alert("Impossible de supprimer l'article.");
     }
 }
+
+/* =============== 8) Toast Helper =============== */
+function getToastRoot() {
+    let root = document.getElementById('dkb-toasts');
+    if (!root) {
+        root = document.createElement('div');
+        root.id = 'dkb-toasts';
+        root.className = 'dkb-toasts';
+        root.setAttribute('aria-live', 'polite');
+        root.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(root);
+    }
+    return root;
+}
+
+function toastAdded(btn, fallback){
+    const label = btn?.dataset?.proName
+        || btn?.dataset?.embName
+        || btn?.dataset?.suppName
+        || fallback;
+    showToast(`${label} a bien été ajouté au panier !`, 'success');
+}
+function toastError(btn, fallback, err){
+    const label = btn?.dataset?.proName
+        || btn?.dataset?.embName
+        || btn?.dataset?.suppName
+        || fallback;
+    showToast(`Échec de l’ajout : ${label}`, 'error', 3600, 'Erreur');
+    console.error(err);
+}
+
+
+/**
+ * Affiche un toast.
+ * @param {string} message  - Texte principal
+ * @param {('success'|'info'|'error')} [type='success']
+ * @param {number} [timeout=2600] Durée avant auto-fermeture (ms). Mettre 0 pour désactiver.
+ * @param {string} [title]  - Petit titre gras optionnel
+ */
+function showToast(message, type = 'success', timeout = 2600, title){
+    // root
+    let root = document.getElementById('dkb-toasts');
+    if(!root){
+        root = document.createElement('div');
+        root.id = 'dkb-toasts';
+        root.className = 'dkb-toasts';
+        root.setAttribute('aria-live','polite');
+        root.setAttribute('aria-atomic','true');
+        document.body.appendChild(root);
+    }
+
+    // toast
+    const toast = document.createElement('div');
+    toast.className = `dkb-toast ${type}`;
+    toast.role = 'status';
+
+    const content = document.createElement('div');
+    if (title){
+        const strong = document.createElement('span');
+        strong.className = 'title';
+        strong.textContent = title;
+        content.appendChild(strong);
+    }
+    content.append(document.createTextNode(message));
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'dkb-close';
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label','Fermer');
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', () => removeToast(toast));
+
+    toast.append(content, closeBtn);
+    root.prepend(toast);
+
+    // force reflow + animation (anti-couac)
+    void toast.offsetHeight;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.add('show'), 50);
+
+    if (timeout > 0){
+        toast._timer = setTimeout(()=>removeToast(toast), timeout);
+        toast.addEventListener('mouseenter', ()=>clearTimeout(toast._timer));
+        toast.addEventListener('mouseleave', ()=>{
+            if (timeout > 0) toast._timer = setTimeout(()=>removeToast(toast), 900);
+        });
+    }
+}
+function removeToast(toast){
+    if (!toast) return;
+    toast.classList.remove('show');
+    setTimeout(()=>toast.remove(), 200);
+}
+
 
 /* Expose au global pour onload/onclick inline */
 window.renderCart     = renderCart;

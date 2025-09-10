@@ -144,7 +144,7 @@ body img{
 /*---------------------page index--------------------- */
 @font-face {
     font-family:"mapolice" ;
-    src: url("../police/Milton_One.otf");
+    src: url("../css/police/Milton_One.otf");
     font-weight: normal;
     font-style: italic;
 
