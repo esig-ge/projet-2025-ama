@@ -34,107 +34,142 @@ if (!isset($BASE)) {
 
         <!-- ⚠️ Adapte les PRO_ID à ta BDD (table PRODUIT + COFFRET) -->
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Anniversaire">
-            <h3>Anniversaire</h3>
-            <p>90 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="16"
-                    data-pro-name="Coffret Anniversaire"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+                <img src="<?= $BASE ?>img/coffret.png" alt=" coffret Anniversaire" loading="lazy">
+                <h3>Anniversaire</h3>
+                <p>90 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="16"
+                        data-pro-name="Coffret Anniversaire"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+            </form>
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Saint-Valentin">
-            <h3>Saint-Valentin</h3>
-            <p>90 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="17"
-                    data-pro-name="Coffret Saint-Valentin"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+                <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Saint-Valentin">
+                <h3>Saint-Valentin</h3>
+                <p>90 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="17"
+                        data-pro-name="Coffret Saint-Valentin"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+            </form>
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Fête des mères">
-            <h3>Fête des mères</h3>
-            <p>100 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="18"
-                    data-pro-name="Coffret Fête des mères"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+                <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Fête des mères">
+                <h3>Fête des mères</h3>
+                <p>100 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="18"
+                        data-pro-name="Coffret Fête des mères"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+            </form>
+
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Baptême">
-            <h3>Baptême</h3>
-            <p>100 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="19"
-                    data-pro-name="Coffret Baptême"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+
+                <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Baptême">
+                <h3>Baptême</h3>
+                <p>100 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="19"
+                        data-pro-name="Coffret Baptême"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+            </form>
+
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Mariage">
-            <h3>Mariage</h3>
-            <p>100 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="20"
-                    data-pro-name="Coffret Mariage"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+                <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Mariage">
+                <h3>Mariage</h3>
+                <p>100 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="20"
+                        data-pro-name="Coffret Mariage"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+
+            </form>
+
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Pâques">
-            <h3>Pâques</h3>
-            <p>100 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="21"
-                    data-pro-name="Coffret Pâques"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+                <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Pâques">
+                <h3>Pâques</h3>
+                <p>100 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="21"
+                        data-pro-name="Coffret Pâques"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+
+            </form>
+
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Noël">
-            <h3>Noël</h3>
-            <p>100 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="22"
-                    data-pro-name="Coffret Noël"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+                <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Noël">
+                <h3>Noël</h3>
+                <p>100 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="22"
+                        data-pro-name="Coffret Noël"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+
+            </form>
+
         </div>
 
         <div>
-            <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Nouvel an">
-            <h3>Nouvel an</h3>
-            <p>150 CHF</p>
-            <button class="add-to-cart"
-                    data-pro-id="23"
-                    data-pro-name="Coffret Nouvel an"
-                    data-pro-img="<?= $BASE ?>img/coffret.png"
-                    onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
-                Ajouter
-            </button>
+            <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+
+                <img src="<?= $BASE ?>img/coffret.png" alt="Coffret Nouvel an">
+                <h3>Nouvel an</h3>
+                <p>150 CHF</p>
+                <label class="sr-only" for="qty-15">Quantité</label>
+                <button class="add-to-cart"
+                        data-pro-id="23"
+                        data-pro-name="Coffret Nouvel an"
+                        data-pro-img="<?= $BASE ?>img/coffret.png"
+                        onclick="addToCart(this.dataset.proId, this, this.dataset.proName, this.dataset.proImg)">
+                    Ajouter
+                </button>
+            </form>
+
         </div>
 
     </div>

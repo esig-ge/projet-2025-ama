@@ -93,6 +93,7 @@ function productImg(string $base, int $id): string {
             <a class="btn-primary" href="<?= $BASE ?>interface_catalogue_bouquet.php">Parcourir le catalogue</a>
         </p>
     <?php else: ?>
+<<<<<<< HEAD
         <div class="grid">
             <!-- Colonne gauche : liste des articles -->
             <section class="card">
@@ -175,6 +176,54 @@ function productImg(string $base, int $id): string {
                         <li>Frais de port offerts dès 50 CHF</li>
                         <li>Paiement sécurisé</li>
                     </ul>
+=======
+        <div class="card">
+            <h2>Commande #<?= (int)$com['COM_ID'] ?> du <?= htmlspecialchars($com['COM_DATE']) ?></h2>
+            <div class="table-responsive">
+                <table class="table-panier">
+                    <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Type</th>
+                        <th>Prix unité</th>
+                        <th>Qté</th>
+                        <th>Sous-total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($lines as $L):
+                        $pu = (float)$L['PRO_PRIX'];
+                        $q  = (int)$L['CP_QTE_COMMANDEE'];
+                        $st = $pu * $q;
+                        ?>
+                        <tr>
+                            <td><?= htmlspecialchars($L['PRO_NOM']) ?></td>
+                            <td><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?></td>
+                            <td><?= number_format($pu, 2, '.', ' ') ?> CHF</td>
+                            <td><?= $q ?></td>
+                            <td><?= number_format($st, 2, '.', ' ') ?> CHF</td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th colspan="4" style="text-align:right">Total</th>
+                        <th><?= number_format($total, 2, '.', ' ') ?> CHF</th>
+                    </tr>
+                    </tfoot>
+                </table>
+
+            </div>
+            <fieldset class="full group">
+                <p>Type de livraison <span class="req">*</span></p>
+
+                <div class="options-row">
+                   <p>* par défaut le mode de livraison est en retrait.</p>
+                    <label class="opt">
+                        <input type="radio" name="livraison" value="standard" required>
+                        <span>Standard (48h)</span>
+                    </label>
+>>>>>>> bc951d2a9ca68592345093e76508a5d13f713c34
                 </div>
             </aside>
         </div>

@@ -247,3 +247,32 @@ a.add-to-cart:hover {
 /* ---------- Utilitaires ---------- */
 .sr-only { position: absolute; left: -9999px; }
 .flash { text-align: center; margin: 10px auto 16px; }
+/*---------------------------radios couleur*/
+
+.swatches {
+    display: flex;
+    gap: 10px;
+    margin: 12px 0;
+    border: none;
+    padding: 0;
+}
+
+.swatches input[type="radio"] {
+    display: none; /* cache le vrai bouton */
+}
+
+.swatches .swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--c);
+    border: 2px solid transparent;
+    display: inline-block;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+/* quand la radio est cochée → contour noir */
+.swatches input[type="radio"]:checked + .swatch {
+    border-color: #000;
+}
