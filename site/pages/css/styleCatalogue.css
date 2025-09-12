@@ -1,189 +1,18 @@
-/*---------------------page catalogue bouquet--------------------- */
-/* ---------- Page catalogue bouquet ---------- */
+/* =========================================================
+   DK Bloom — styleCatalogue.css
+   ========================================================= */
 
-/* Titre de page */
-.catalogue-page .section-title{
+/* ---------- Titres ---------- */
+h1,
+.catalogue-page .section-title {
     color: darkred;
+    text-align: center;
     margin: 0 0 12px;
-    text-align: center;
+    padding: 0;
 }
 
-/* Grille produits */
-#produit_bouquet{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:space-between;
-    gap:20px;
-}
-#produit_bouquet > div{
-    flex: 0 1 calc(25% - 20px);
-    box-sizing:border-box;
-    padding:10px;
-    text-align:center;
-}
-#produit_bouquet img{
-    display:block;
-    margin:0 auto 10px;
-    width:200px;          /* scope uniquement aux images des produits */
-    max-width:100%;
-    height:auto;
-}
-
-/* Boutons */
-button{
-    background: darkred;
-    color: #fff;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 15px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: bold;
-    transition: background .3s, transform .2s;
-}
-button:hover{ background: indianred; transform: scale(1.05); }
-
-a.button{
-    display:inline-block;
-    margin:10px;
-    padding:8px 13px;
-    background:#fff;
-    color:darkred;
-    text-decoration:none;
-    font-weight:bold;
-    border-radius:15px;
-    box-shadow:0 2px 5px rgba(0,0,0,.15);
-    transition: background .3s, transform .2s;
-}
-a.button:hover{ background:indianred; color:#fff; transform:scale(1.05); }
-
-/* ---------- Sections génériques éventuelles (scopées) ---------- */
-.catalogue{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px; }
-.catalogue > div{
-    flex: 0 1 calc(25% - 20px);
-    box-sizing:border-box;
-    padding:10px;
-    text-align:center;
-}
-.catalogue img{
-    display:block; margin:0 auto 10px; max-width:100%; height:auto;
-}
-
-/* Emballage (si utilisé sur cette feuille) */
-#emballage{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px; }
-#emballage > div{ flex:0 1 calc(25% - 20px); box-sizing:border-box; padding:10px; text-align:center; }
-#emballage img{ display:block; margin:0 auto 10px; max-width:100%; height:auto; }
-
-/* Slider (si utilisé sur cette feuille) */
-.slider{
-    position:relative; max-width:990px; margin:0 auto; overflow:hidden;
-    border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,.2);
-}
-.slides{ display:flex; transition: transform .5s ease-in-out; }
-.slides video, .slides img{ max-width:100%; height:550px; object-fit:cover; }
-.btn{ position:absolute; top:50%; transform:translateY(-50%); font-size:2rem; color:#fff; background:rgba(0,0,0,.4); border:none; cursor:pointer; padding:10px; border-radius:50%; }
-.btn.prev{ left:10px; } .btn.next{ right:10px; }
-
-/* Responsive */
-@media (max-width:1100px){
-    #produit_bouquet > div{ flex: 0 1 calc(33.333% - 20px); }
-}
-@media (max-width:700px){
-    #produit_bouquet > div{ flex: 0 1 calc(50% - 20px); }
-}
-@media (max-width:480px){
-    #produit_bouquet > div{ flex: 0 1 100%; }
-}
-
-
-/*---------------------page general--------------------- */
-.color-radio{
-    position:absolute;
-    left:-9999px;
-}
-
-/* Pastilles couleur */
-.swatches{
-    display:flex; gap:12px; margin:12px 0; border:0; padding:0;
-}
-
-.swatch span{
-    --size:28px;
-    display:inline-block;
-    width:var(--size); height:var(--size);
-    border-radius:50%;
-    background:var(--swatch);
-
-    cursor:pointer;
-    transition:transform .15s ease;
-}
-.swatch span:hover{ transform:scale(1.1); }
-
-.swatch:has(input:checked) span {
-    border: 3px solid black;
-    box-shadow: 0 0 0 4px rgba(0,0,0,0.15);
-}
-
-h1{
-    color: darkred;
-    margin-top: 0;
-    padding-top: 0;
-    text-align: center;
-}
-
-.catalogue{
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-}
-
-
-.catalogue > div {
-    flex: 0 1 calc(25% - 20px); /* largeur ~33% moins l'espace de gap */
-    box-sizing: border-box;         /* inclure padding et bordures dans la largeur */
-    padding: 10px;
-    text-align: center;
-
-}
-
-.catalogue img {
-    display: block;
-    margin: 0 auto 10px;
-    max-width: 100%;
-    height: auto;
-}
-
-
-/*---------------------page emballage--------------------- */
-
-#emballage{
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-
-}
-
-#emballage > div {
-    flex: 0 1 calc(25% - 20px); /* largeur ~33% moins l'espace de gap */
-    box-sizing: border-box;         /* inclure padding et bordures dans la largeur */
-    padding: 10px;
-    text-align: center;
-
-}
-
-#emballage img {
-    display: block;
-    margin: 0 auto 10px;
-    max-width: 100%;
-    height: auto;
-}
-
-
-/* bouton "selectionner" */
+/* ---------- Boutons ---------- */
 button {
-
     background: darkred;
     color: #fff;
     border: none;
@@ -192,117 +21,168 @@ button {
     cursor: pointer;
     font-size: 13px;
     font-weight: bold;
-    transition: background 0.3s, transform 0.2s;
+    transition: background .3s, transform .2s;
 }
-button:hover {
-    background: indianred;
-    transform: scale(1.05);
-}
+button:hover { background: indianred; transform: scale(1.05); }
 
-/* les liens en bas (retour / panier) */
-a.button {
-    display: inline-block;
-    margin:  10px;
-    padding: 8px 13px;
-    background: white;
-    color: darkred;
-    text-decoration: none;
-    font-weight: bold;
-    border-radius: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: background 0.3s, transform 0.2s;
-}
-a.button:hover {
-    background: indianred;
-    transform: scale(1.05);
-}
-
+/* Liens “boutons” */
+a.button,
 a.add-to-cart {
     display: inline-block;
-    margin:  10px;
+    margin: 10px;
     padding: 8px 13px;
-    background: white;
+    background: #fff;
     color: darkred;
     text-decoration: none;
     font-weight: bold;
     border-radius: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: background 0.3s, transform 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,.15);
+    transition: background .3s, transform .2s;
 }
+a.button:hover,
 a.add-to-cart:hover {
     background: indianred;
+    color: #fff;
     transform: scale(1.05);
 }
 
+/* ---------- Grilles unifiées (Bouquets / Suppléments / Emballages) ---------- */
+/* Utilise la même grille pour #produit_bouquet, .catalogue, #emballage */
+:root { --card-min: 220px; }
 
-/*---------------------page selection produit--------------------- */
-
-#select_produit a{
-    margin:  10px;
-    padding: 8px 13px;
-    background: darkred;
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 30px;
-    border-radius: 18px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    transition: background 0.3s, transform 0.2s;
-
+#produit_bouquet,
+.catalogue,
+#emballage {
+    display: grid;
+    gap: 20px;
+    justify-items: center;
 }
 
-#select_produit a:hover {
-    background: indianred;
-    transform: scale(1.05);
+/* 5 -> 4 -> 3 -> 2 -> 1 colonnes selon la largeur */
+@media (min-width: 1500px) {
+    #produit_bouquet, .catalogue, #emballage { grid-template-columns: repeat(5, minmax(var(--card-min), 1fr)); }
+}
+@media (min-width: 1200px) and (max-width: 1499px) {
+    #produit_bouquet, .catalogue, #emballage { grid-template-columns: repeat(4, minmax(var(--card-min), 1fr)); }
+}
+@media (min-width: 900px) and (max-width: 1199px) {
+    #produit_bouquet, .catalogue, #emballage { grid-template-columns: repeat(3, minmax(var(--card-min), 1fr)); }
+}
+@media (min-width: 600px) and (max-width: 899px) {
+    #produit_bouquet, .catalogue, #emballage { grid-template-columns: repeat(2, minmax(var(--card-min), 1fr)); }
+}
+@media (max-width: 599px) {
+    #produit_bouquet, .catalogue, #emballage { grid-template-columns: 1fr; }
 }
 
-#select_produit{
+/* Cartes produits (forme compacte identique partout) */
+#produit_bouquet > *,
+.catalogue .card.product,
+#emballage > * {
+    background: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    text-align: center;
+    width: 100%;
+    max-width: 240px;
+}
+
+/* Images des cartes (évite les images géantes) */
+#produit_bouquet img,
+.catalogue .card.product img,
+#emballage img {
+    max-width: 180px;
+    height: auto;
+    display: block;
+    margin: 0 auto 8px;
+    border-radius: 8px;
+}
+
+/* Prix mis en évidence (optionnel) */
+.price { font-weight: 600; }
+
+/* ---------- Sélecteur de couleurs (swatches) ---------- */
+.color-radio { position: absolute; left: -9999px; }
+
+.swatches {
+    display: flex;
+    gap: 12px;
+    margin: 12px 0;
+    border: 0;
+    padding: 0;
+}
+
+.swatch span {
+    --size: 28px;
+    display: inline-block;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: var(--swatch);
+    cursor: pointer;
+    transition: transform .15s ease;
+}
+.swatch span:hover { transform: scale(1.1); }
+
+.swatch:has(input:checked) span {
+    border: 3px solid #000;
+    box-shadow: 0 0 0 4px rgba(0,0,0,.15);
+}
+
+/* ---------- Page sélection produit ---------- */
+#select_produit {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 100px;
 }
+#select_produit a {
+    margin: 10px;
+    padding: 8px 13px;
+    background: darkred;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 30px;
+    border-radius: 18px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.15);
+    transition: background .3s, transform .2s;
+}
+#select_produit a:hover { background: indianred; transform: scale(1.05); }
 
-
-
-#select_produit img{
-   height: 400px;
+#select_produit img {
     width: 400px;
-
-
+    height: 400px;
+    object-fit: cover;
 }
 
-/*---------------------page creations--------------------- */
-
-
+/* ---------- Slider (créations) ---------- */
 .slider {
     position: relative;
     max-width: 990px;
     margin: 0 auto;
     overflow: hidden;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,.2);
 }
-
 .slides {
     display: flex;
     transition: transform .5s ease;
 }
-
-.slides > video{
+.slides > video,
+.slides > img {
     max-width: 100%;
     height: 550px;
     object-fit: cover;
 }
-
-/* Boutons */
 .btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     font-size: 2rem;
-    color: white;
-    background: rgba(0,0,0,0.4);
+    color: #fff;
+    background: rgba(0,0,0,.4);
     border: none;
     cursor: pointer;
     padding: 10px;
@@ -311,8 +191,7 @@ a.add-to-cart:hover {
 .btn.prev { left: 10px; }
 .btn.next { right: 10px; }
 
-
-/* ===== Toasts DK Bloom ===== */
+/* ---------- Toasts (DK Bloom) ---------- */
 .dkb-toasts {
     position: fixed;
     top: 12px;
@@ -321,10 +200,9 @@ a.add-to-cart:hover {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 2147483647; /* au-dessus de tout */
-    pointer-events: none; /* clics passent à travers le conteneur */
+    z-index: 2147483647;
+    pointer-events: none;
 }
-
 .dkb-toast {
     display: flex;
     align-items: center;
@@ -340,19 +218,16 @@ a.add-to-cart:hover {
     opacity: 0;
     transform: translateY(-10px);
     transition: opacity .2s ease, transform .2s ease;
-    pointer-events: auto; /* permet de cliquer sur la croix */
+    pointer-events: auto; /* clic sur la croix */
     border: 1px solid #ffffff22;
 }
-
 .dkb-toast.show { opacity: 1; transform: translateY(0); }
+.dkb-toast.success { background: #116149; }
+.dkb-toast.info    { background: #2f3a5a; }
+.dkb-toast.error   { background: #7a1f1f; }
+.dkb-toast .title  { font-weight: 700; margin-right: 8px; }
 
-.dkb-toast.success { background: #116149; }  /* vert */
-.dkb-toast.info    { background: #2f3a5a; }  /* bleu/gris */
-.dkb-toast.error   { background: #7a1f1f; }  /* rouge */
-
-.dkb-toast .title { font-weight: 700; margin-right: 8px; }
-
-/* IMPORTANT : style la nouvelle classe .dkb-close et neutralise les règles globales button{...} */
+/* Neutralise les styles globaux de button pour le bouton fermer des toasts */
 .dkb-toast .dkb-close {
     background: transparent !important;
     color: inherit !important;
@@ -368,3 +243,7 @@ a.add-to-cart:hover {
     width: auto; height: auto;
 }
 .dkb-toast .dkb-close:hover { opacity: 1; }
+
+/* ---------- Utilitaires ---------- */
+.sr-only { position: absolute; left: -9999px; }
+.flash { text-align: center; margin: 10px auto 16px; }

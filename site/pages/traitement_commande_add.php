@@ -1,13 +1,20 @@
 <?php
+// /site/pages/traitement_commande_add.php
 session_start();
-if (empty($_SESSION['per_id'])) { $_SESSION['message']="Veuillez vous connecter."; header('Location: interface_connexion.php'); exit; }
+
+if (empty($_SESSION['per_id'])) {
+    $_SESSION['message'] = "Veuillez vous connecter.";
+    header('Location: interface_connexion.php'); exit;
+}
 $perId = (int)$_SESSION['per_id'];
 
+// Base URL (au cas où tu en as besoin plus tard)
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
-$pdo  = require __DIR__ . '/../database/config/connexionBDD.php';
+$pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
+// ====== Paramètres entrés ======
 $kind = $_POST['kind'] ?? 'produit';                 // 'produit' | 'supp' | 'emb'
 $type = $_POST['type'] ?? null;                      // 'bouquet' | 'fleur' | 'coffret' (si kind=produit)
 $proId= isset($_POST['pro_id'])? (int)$_POST['pro_id'] : 0;
@@ -15,8 +22,24 @@ $supId= isset($_POST['sup_id'])? (int)$_POST['sup_id'] : 0;
 $embId= isset($_POST['emb_id'])? (int)$_POST['emb_id'] : 0;
 $qty  = max( (int)($_POST['qty'] ?? 0), 0 );
 
-if ($qty < 1) { $_SESSION['message']="Quantité invalide."; header('Location: commande.php'); exit; }
+// Normalisation: accepter "type=supplement|emballage" (au cas où)
+if ($kind === 'produit' && $type && $proId === 0) {
+    if ($type === 'supplement' && $supId > 0)      $kind = 'supp';
+    elseif ($type === 'emballage' && $embId > 0)   $kind = 'emb';
+}
 
+// Redirection après traitement (par défaut vers la page commande)
+$redirect = $_POST['redirect'] ?? 'commande.php';
+if (!preg_match('#^[A-Za-z0-9/_\-\.]+\.php$#', $redirect)) {
+    $redirect = 'commande.php';
+}
+
+if ($qty < 1 && $kind !== 'emb') { // emb sera forcé à 1 plus bas
+    $_SESSION['message']="Quantité invalide.";
+    header('Location: ' . $redirect); exit;
+}
+
+// ====== Helpers ======
 function getOrCreateOpenOrder(PDO $pdo, int $perId): int {
     $st=$pdo->prepare("SELECT COM_ID FROM COMMANDE WHERE PER_ID=:p AND COM_STATUT='en préparation' ORDER BY COM_ID DESC LIMIT 1");
     $st->execute([':p'=>$perId]); $id=(int)$st->fetchColumn();
@@ -34,13 +57,18 @@ function getOrderType(PDO $pdo, int $comId): string {
     if(count($types)>1) return 'mixed';
     return $types[0];
 }
+
 function assertCanAdd(string $currentType, string $toAdd): void {
     if($currentType==='none') return;
     if($toAdd==='supp' || $toAdd==='emb'){
-        if($currentType!=='bouquet') throw new RuntimeException("Suppléments/emballages: seulement avec une commande bouquet.");
+        if($currentType!=='bouquet') {
+            throw new RuntimeException("Suppléments/emballages: seulement avec une commande bouquet.");
+        }
         return;
     }
-    if($currentType!==$toAdd) throw new RuntimeException("Cette commande est « $currentType ». Impossible d'ajouter « $toAdd ».");
+    if($currentType!==$toAdd) {
+        throw new RuntimeException("Cette commande est « $currentType ». Impossible d'ajouter « $toAdd ».");
+    }
 }
 
 try {
@@ -55,10 +83,9 @@ try {
 
         assertCanAdd($currentType, $type);
 
-        // Lock & check produit + stock selon type
-        $prod = null;
+        // Lock & check produit + stock
         if ($type==='bouquet') {
-            $st=$pdo->prepare("SELECT p.PRO_ID,p.PRO_NOM,p.PRO_PRIX,b.BOU_QTE_STOCK,b.BOU_COULEUR
+            $st=$pdo->prepare("SELECT p.PRO_ID,p.PRO_NOM,p.PRO_PRIX,b.BOU_QTE_STOCK
                                FROM PRODUIT p JOIN BOUQUET b ON b.PRO_ID=p.PRO_ID
                                WHERE p.PRO_ID=:id FOR UPDATE");
             $st->execute([':id'=>$proId]); $prod=$st->fetch(PDO::FETCH_ASSOC);
@@ -137,35 +164,45 @@ try {
         if ($embId<=0) throw new RuntimeException("Emballage invalide.");
         assertCanAdd($currentType, 'emb');
 
+        // Un seul emballage : on force qty=1
+        $qty = 1;
+
+        // Retirer l'éventuel emballage existant et restaurer le stock
+        $st = $pdo->prepare("SELECT EMB_ID, CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c FOR UPDATE");
+        $st->execute([':c'=>$comId]);
+        $olds = $st->fetchAll(PDO::FETCH_ASSOC);
+        if ($olds) {
+            foreach ($olds as $old) {
+                $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK = EMB_QTE_STOCK + :q WHERE EMB_ID=:e")
+                    ->execute([':q'=>$old['CE_QTE'], ':e'=>$old['EMB_ID']]);
+            }
+            $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c")
+                ->execute([':c'=>$comId]);
+        }
+
+        // Vérifier stock du nouvel emballage
         $st=$pdo->prepare("SELECT EMB_NOM,EMB_QTE_STOCK FROM EMBALLAGE WHERE EMB_ID=:e FOR UPDATE");
         $st->execute([':e'=>$embId]); $emb=$st->fetch(PDO::FETCH_ASSOC);
         if(!$emb) throw new RuntimeException("Emballage introuvable.");
         if((int)$emb['EMB_QTE_STOCK']<$qty) throw new RuntimeException("Stock emballage insuffisant.");
 
-        $st=$pdo->prepare("SELECT CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:e FOR UPDATE");
-        $st->execute([':c'=>$comId, ':e'=>$embId]);
-        if($x=$st->fetch(PDO::FETCH_ASSOC)){
-            $newQty=(int)$x['CE_QTE']+$qty;
-            $pdo->prepare("UPDATE COMMANDE_EMBALLAGE SET CE_QTE=:q WHERE COM_ID=:c AND EMB_ID=:e")
-                ->execute([':q'=>$newQty, ':c'=>$comId, ':e'=>$embId]);
-        }else{
-            $pdo->prepare("INSERT INTO COMMANDE_EMBALLAGE (COM_ID,EMB_ID,CE_QTE) VALUES (:c,:e,:q)")
-                ->execute([':c'=>$comId, ':e'=>$embId, ':q'=>$qty]);
-        }
-
+        // Insérer l'unique emballage + décrémenter le stock
+        $pdo->prepare("INSERT INTO COMMANDE_EMBALLAGE (COM_ID,EMB_ID,CE_QTE) VALUES (:c,:e,:q)")
+            ->execute([':c'=>$comId, ':e'=>$embId, ':q'=>$qty]);
         $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK=EMB_QTE_STOCK-:q WHERE EMB_ID=:e")
             ->execute([':q'=>$qty, ':e'=>$embId]);
 
-        $_SESSION['message'] = "Emballage « {$emb['EMB_NOM']} » ajouté.";
+        $_SESSION['message'] = "Emballage « {$emb['EMB_NOM']} » sélectionné.";
+
     } else {
         throw new RuntimeException("Action inconnue.");
     }
 
     $pdo->commit();
-    header('Location: commande.php'); exit;
+    header('Location: ' . $redirect); exit;
 
 } catch (Throwable $e) {
     if($pdo->inTransaction()) $pdo->rollBack();
     $_SESSION['message'] = "Erreur: ".$e->getMessage();
-    header('Location: commande.php'); exit;
+    header('Location: ' . $redirect); exit;
 }

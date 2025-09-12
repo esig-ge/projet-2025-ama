@@ -1,163 +1,102 @@
 <?php
-// Base URL (slash final)
-if (!isset($BASE)) {
-    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
-}
+// /site/pages/interface_emballage.php
 session_start();
+
+// Base URL avec slash final (ex: "/…/site/pages/")
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>DK Bloom — Emballages</title>
 
-    <!-- CSS globaux -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
 
-    <style>
-        /* --- Mise en page locale de la grille d'emballages --- */
-        main.emballages {
-            max-width: 1200px;
-            margin: 120px auto 80px; /* marge sup pour header fixé */
-            padding: 0 24px;
-        }
-        .grid-emballages {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(160px, 1fr));
-            gap: 28px;
-            justify-items: center;
-        }
-        @media (max-width: 1100px){
-            .grid-emballages { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
-        }
-        @media (max-width: 780px){
-            .grid-emballages { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
-            main.emballages { margin-top: 100px; }
-        }
-        @media (max-width: 480px){
-            .grid-emballages { grid-template-columns: 1fr; }
-        }
-
-        .emb-card{
-            width: 100%;
-            max-width: 240px;     /* plus petit */
-            text-align: center;
-        }
-        .emb-card img{
-            width: 100%;
-            height: 180px;        /* taille uniforme */
-            object-fit: contain;  /* pas de rognage */
-            background: #fff;     /* fond neutre sous PNG */
-            border-radius: 14px;
-            box-shadow: 0 6px 20px rgba(0,0,0,.12);
-        }
-        .emb-title{
-            margin: 10px 0 2px;
-            font-weight: 700;
-        }
-        .emb-offert{
-            font-size: .92rem;
-            color: #1f7a1f;       /* vert doux */
-        }
-        .add-to-cart{
-            margin-top: 10px;
-        }
-
-        /* Boutons Retour / Suivant centrés */
-        .nav-actions{
-            margin-top: 26px;
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-        }
-    </style>
-
-    <!-- Expose BASE + API_URL au JS si tu utilises commande.js -->
+    <!-- Expose BASE + API_URL au JS -->
     <script>
         window.DKBASE  = <?= json_encode($BASE) ?>;
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
-</head>
 
+    <!-- JS panier (contient callApi, addEmballage, animations, toast, etc.) -->
+    <script src="<?= $BASE ?>js/commande.js" defer></script>
+
+    <!-- Hook léger pour empêcher la soumission et appeler addEmballage() -->
+    <script>
+        function addEmballageForm(form){
+            event?.preventDefault();
+            const embInput = form.querySelector('input[name="emb_id"]');
+            const btn      = form.querySelector('button.add-to-cart');
+            if(!embInput) return false;
+            // Appelle la fonction globale (commande.js) : remplace l’ancien emballage si besoin
+            window.addEmballage?.(embInput.value, btn);
+            return false;
+        }
+    </script>
+
+    <!-- Garde-fou visuel (au cas où) pour garder les cartes compactes -->
+    <style>
+        .catalogue{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;justify-items:center}
+        .catalogue .card.product{background:#fff;padding:12px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);text-align:center;max-width:240px}
+        .catalogue .card.product img{max-width:180px;height:auto;display:block;margin:0 auto 8px;border-radius:8px}
+        .price{font-weight:600}
+        .sr-only{position:absolute;left:-9999px}
+    </style>
+</head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="emballages">
-    <h1 style="text-align:center; margin-bottom:22px;">Choisissez votre emballage</h1>
+<main class="container catalogue-page" role="main">
+    <h1 class="section-title">Emballages</h1>
 
-    <section class="grid-emballages">
+    <?php if (!empty($_SESSION['message'])): ?>
+        <div class="flash" role="status"><?= htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8') ?></div>
+        <?php unset($_SESSION['message']); ?>
+    <?php endif; ?>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_blanc.PNG" alt="Emballage blanc">
-            <div class="emb-title">Blanc</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_blanc"
-                    data-pro-name="Emballage blanc"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_blanc.PNG">
-                Ajouter
-            </button>
-        </article>
+    <p class="muted" style="text-align:center;margin:-6px 0 16px;">
+        Un seul emballage peut être sélectionné par commande. Ajouter un nouvel emballage remplace l’actuel.
+    </p>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_noir.PNG" alt="Emballage noir">
-            <div class="emb-title">Noir</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_noir"
-                    data-pro-name="Emballage noir"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_noir.PNG">
-                Ajouter
-            </button>
-        </article>
+    <div class="catalogue" aria-label="Liste d'emballages">
+        <!-- Emballage Classique -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="1">
+            <img src="<?= $BASE ?>img/emb_classique.png" alt="Emballage Classique" loading="lazy">
+            <h3>Emballage Classique</h3>
+            <button type="submit" class="add-to-cart" data-emb-name="Emballage Classique">Ajouter</button>
+        </form>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_rose.PNG" alt="Emballage rose">
-            <div class="emb-title">Rose</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_rose"
-                    data-pro-name="Emballage rose"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_rose.PNG">
-                Ajouter
-            </button>
-        </article>
+        <!-- Emballage Luxe -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="2">
+            <img src="<?= $BASE ?>img/emb_luxe.png" alt="Emballage Luxe" loading="lazy">
+            <h3>Emballage Luxe</h3>
+            <button type="submit" class="add-to-cart" data-emb-name="Emballage Luxe">Ajouter</button>
+        </form>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_gris.PNG" alt="Emballage gris">
-            <div class="emb-title">Gris</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_gris"
-                    data-pro-name="Emballage gris"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_gris.PNG">
-                Ajouter
-            </button>
-        </article>
+        <!-- Boîte ronde -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="3">
+            <img src="<?= $BASE ?>img/emb_boite_ronde.png" alt="Boîte ronde" loading="lazy">
+            <h3>Boîte ronde</h3><p class="price">20 CHF</p>
+            <button type="submit" class="add-to-cart" data-emb-name="Boîte ronde">Ajouter</button>
+        </form>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_violet.PNG" alt="Emballage violet">
-            <div class="emb-title">Violet</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_violet"
-                    data-pro-name="Emballage violet"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_violet.PNG">
-                Ajouter
-            </button>
-        </article>
+        <!-- Boîte cœur -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="4">
+            <img src="<?= $BASE ?>img/emb_boite_coeur.png" alt="Boîte cœur" loading="lazy">
+            <h3>Boîte cœur</h3><p class="price">22 CHF</p>
+            <button type="submit" class="add-to-cart" data-emb-name="Boîte cœur">Ajouter</button>
+        </form>
+    </div>
 
-    </section>
-
-    <div class="nav-actions">
+    <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
         <a href="<?= $BASE ?>interface_supplement.php" class="button">Retour</a>
         <a href="<?= $BASE ?>commande.php" class="button">Suivant</a>
     </div>
