@@ -103,7 +103,26 @@ if ($com) {
                 </table>
 
             </div>
+            <fieldset class="full group">
+                <legend>Type de livraison <span class="req">*</span></legend>
 
+                <div class="options-row">
+                    <label class="opt">
+                        <input type="radio" name="livraison" value="standard" required>
+                        <span>Standard (48h)</span>
+                    </label>
+
+                    <label class="opt">
+                        <input type="radio" name="livraison" value="express">
+                        <span>Express (24h)</span>
+                    </label>
+
+                    <label class="opt">
+                        <input type="radio" name="livraison" value="retrait">
+                        <span>Retrait en boutique</span>
+                    </label>
+                </div>
+            </fieldset>
             <div class="actions" style="display:flex; gap:12px; flex-wrap:wrap">
                 <a class="button" href="<?= $BASE ?>interface_catalogue_bouquet.php">Continuer mes achats</a>
                 <a class="button" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
