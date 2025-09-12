@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+
+// Utilisateur connecté ?
+$isLogged = !empty($_SESSION['per_id']); // on teste la clé correcte
+?>
 
 <!DOCTYPE html>
 <html lang="fr">
