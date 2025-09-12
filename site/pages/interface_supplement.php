@@ -1,20 +1,19 @@
 <?php
-// Base URL avec slash final
-if (!isset($BASE)) {
-    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
-}
+// /site/pages/interface_supplement.php
+session_start();
+
+// Base URL avec slash final (ex: "/…/site/pages/")
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>DK Bloom — Suppléments</title>
 
-    <!-- CSS global -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <!-- CSS spécifique -->
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
 
     <!-- Expose BASE + API_URL au JS -->
@@ -23,151 +22,196 @@ if (!isset($BASE)) {
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
 
-    <!-- JS panier -->
+    <!-- JS panier (callApi, addSupplement, animations, toast, etc.) -->
     <script src="<?= $BASE ?>js/commande.js" defer></script>
-</head>
 
+    <!-- Hook pour empêcher la soumission et appeler addSupplement() -->
+    <script>
+        function addSupplementForm(form){
+            event?.preventDefault();
+            const supInput = form.querySelector('input[name="sup_id"]');
+            const btn      = form.querySelector('button.add-to-cart');
+            if(!supInput) return false;
+            // getQtyFromButton() (dans commande.js) récupère la .qty du même bloc
+            window.addSupplement?.(supInput.value, btn);
+            return false;
+        }
+    </script>
+
+    <!-- Garde-fou visuel au cas où -->
+    <style>
+        /* Grille catalogue : 4 ou 5 colonnes selon largeur */
+        .catalogue {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            justify-items: center;
+        }
+
+        .catalogue .card.product {
+            background: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
+            text-align: center;
+            max-width: 240px;
+        }
+
+        .catalogue .card.product img {
+            max-width: 180px;
+            height: auto;
+            display: block;
+            margin: 0 auto 8px;
+            border-radius: 8px;
+        }
+             /* === Grille SUPPLÉMENTS — scoppée et prioritaire === */
+         #supp-grid{
+             display: grid !important;
+             gap: 20px;
+             justify-items: center;
+             grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+         }
+        /* Cap à 5 colonnes max sur très grand écran */
+        @media (min-width: 1500px){
+            #supp-grid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        }
+
+        /* Cartes compactes et cohérentes */
+        #supp-grid .card.product{
+            background:#fff; padding:12px; border-radius:12px;
+            box-shadow:0 4px 12px rgba(0,0,0,.1);
+            text-align:center; width:100%; max-width:260px;
+        }
+        #supp-grid .card.product img {
+            display: block;
+            margin: 0 auto 8px;
+            border-radius: 8px;
+            max-width: 180px;
+            height: auto;
+        }
+
+    </style>
+</head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="container">
+<main class="container catalogue-page" role="main">
     <h1 class="section-title">Suppléments</h1>
 
-    <div class="catalogue">
-        <div>
-            <img src="<?= $BASE ?>img/ours_blanc.PNG" alt="Mini ourson">
-            <h3>Mini ourson</h3>
-            <p>2 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+    <?php if (!empty($_SESSION['message'])): ?>
+        <div class="flash" role="status"><?= htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8') ?></div>
+        <?php unset($_SESSION['message']); ?>
+    <?php endif; ?>
 
-            <button class="add-to-cart"
-                    data-sup-id="1"
-                    data-sup-name="Mini ourson"
-                    data-sup-img="<?= $BASE ?>img/ours_blanc.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
+    <div id="supp-grid" class="catalogue" aria-label="Liste de suppléments">
 
-        <div>
-            <img src="<?= $BASE ?>img/happybirthday.PNG" alt="Décoration anniversaire">
-            <h3>Décoration anniversaire</h3>
-            <p>2 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+    <!-- Mini ourson -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="1">
+            <img src="<?= $BASE ?>img/ours_blanc.PNG" alt="Mini ourson" loading="lazy">
+            <h3>Mini ourson</h3><p class="price">2 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-1">Quantité</label>
+            <input id="qty-sup-1" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Mini ourson">Ajouter</button>
+        </form>
 
-            <button class="add-to-cart"
-                    data-sup-id="2"
-                    data-sup-name="Décoration anniversaire"
-                    data-sup-img="<?= $BASE ?>img/happybirthday.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
+        <!-- Décoration anniversaire -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="2">
+            <img src="<?= $BASE ?>img/happybirthday.PNG" alt="Décoration anniversaire" loading="lazy">
+            <h3>Déco anniv</h3><p class="price">2 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-2">Quantité</label>
+            <input id="qty-sup-2" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Décoration anniversaire">Ajouter</button>
+        </form>
 
-        <div>
-            <img src="<?= $BASE ?>img/papillon_doree.PNG" alt="Papillons">
-            <h3>Papillons</h3>
-            <p>2 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+        <!-- Papillons -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="3">
+            <img src="<?= $BASE ?>img/papillon_doree.PNG" alt="Papillons dorés" loading="lazy">
+            <h3>Papillons</h3><p class="price">2 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-3">Quantité</label>
+            <input id="qty-sup-3" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Papillons">Ajouter</button>
+        </form>
 
-            <button class="add-to-cart"
-                    data-sup-id="3"
-                    data-sup-name="Papillons"
-                    data-sup-img="<?= $BASE ?>img/papillon_doree.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
+        <!-- Bâton cœur -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="4">
+            <img src="<?= $BASE ?>img/baton_coeur.PNG" alt="Bâton cœur" loading="lazy">
+            <h3>Bâton cœur</h3><p class="price">2 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-4">Quantité</label>
+            <input id="qty-sup-4" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Bâton cœur">Ajouter</button>
+        </form>
 
-        <div>
-            <img src="<?= $BASE ?>img/baton_coeur.PNG" alt="Bâton cœur">
-            <h3>Bâton cœur</h3>
-            <p>2 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+        <!-- Diamant -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="5">
+            <img src="<?= $BASE ?>img/diamant.PNG" alt="Diamant décoratif" loading="lazy">
+            <h3>Diamant</h3><p class="price">5 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-5">Quantité</label>
+            <input id="qty-sup-5" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Diamant">Ajouter</button>
+        </form>
 
-            <button class="add-to-cart"
-                    data-sup-id="4"
-                    data-sup-name="Bâton cœur"
-                    data-sup-img="<?= $BASE ?>img/baton_coeur.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
+        <!-- Couronne -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="6">
+            <img src="<?= $BASE ?>img/couronne.PNG" alt="Couronne décorative" loading="lazy">
+            <h3>Couronne</h3><p class="price">5 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-6">Quantité</label>
+            <input id="qty-sup-6" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Couronne">Ajouter</button>
+        </form>
 
-        <div>
-            <img src="<?= $BASE ?>img/diamant.PNG" alt="Diamant">
-            <h3>Diamant</h3>
-            <p>5 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+        <!-- Paillettes -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="7">
+            <img src="<?= $BASE ?>img/paillette_argent.PNG" alt="Paillettes argentées" loading="lazy">
+            <h3>Paillettes</h3><p class="price">9 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-7">Quantité</label>
+            <input id="qty-sup-7" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Paillettes">Ajouter</button>
+        </form>
 
-            <button class="add-to-cart"
-                    data-sup-id="5"
-                    data-sup-name="Diamant"
-                    data-sup-img="<?= $BASE ?>img/diamant.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
+        <!-- Lettre -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="8">
+            <img src="<?= $BASE ?>img/lettre.png" alt="Carte lettre" loading="lazy">
+            <h3>Lettre</h3> <p class="price">10 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-8">Quantité</label>
+            <input id="qty-sup-8" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Lettre">Ajouter</button>
+        </form>
 
-        <div>
-            <img src="<?= $BASE ?>img/couronne.PNG" alt="Couronne">
-            <h3>Couronne</h3>
-            <p>5 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
-
-            <button class="add-to-cart"
-                    data-sup-id="6"
-                    data-sup-name="Couronne"
-                    data-sup-img="<?= $BASE ?>img/couronne.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
-
-        <div>
-            <img src="<?= $BASE ?>img/paillette_argent.PNG" alt="Paillettes">
-            <h3>Paillettes</h3>
-            <p>9 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
-
-            <button class="add-to-cart"
-                    data-sup-id="7"
-                    data-sup-name="Paillettes"
-                    data-sup-img="<?= $BASE ?>img/paillette_argent.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
-
-        <div>
-            <img src="<?= $BASE ?>img/lettre.JPG" alt="Lettre">
-            <h3>Lettre</h3>
-            <p>10 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
-
-            <button class="add-to-cart"
-                    data-sup-id="8"
-                    data-sup-name="Lettre"
-                    data-sup-img="<?= $BASE ?>img/lettre.JPG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
-
-        <div>
-            <img src="<?= $BASE ?>img/carte.PNG" alt="Carte pour mot">
-            <h3>Carte pour mot</h3>
-            <p>3 CHF</p>
-            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
-
-            <button class="add-to-cart"
-                    data-sup-id="9"
-                    data-sup-name="Carte pour mot"
-                    data-sup-img="<?= $BASE ?>img/carte.PNG"
-                    onclick="addSupplement(this.dataset.supId, this, this.dataset.supName, this.dataset.supImg)">
-                Ajouter
-            </button>
-        </div>
+        <!-- Carte pour mot -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+            <input type="hidden" name="sup_id" value="9">
+            <img src="<?= $BASE ?>img/carte.PNG" alt="Carte pour mot" loading="lazy">
+            <h3>Carte pour mot</h3><p class="price">3 CHF</p>
+            <br>
+            <label class="sr-only" for="qty-sup-9">Quantité</label>
+            <input id="qty-sup-9" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <br><br>
+            <button type="submit" class="add-to-cart" data-sup-name="Carte pour mot">Ajouter</button>
+        </form>
     </div>
 
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">

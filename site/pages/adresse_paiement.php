@@ -2,6 +2,13 @@
 // /site/pages/adresse_paiement.php
 session_start();
 
+/* ===== 0) Accès ===== */
+if (empty($_SESSION['per_id'])) {
+    $_SESSION['message'] = "Veuillez vous connecter pour continuer.";
+    header('Location: interface_connexion.php'); exit;
+}
+$perId = (int)$_SESSION['per_id'];
+
 /* ===== 1) Bases de chemins (identiques à commande.php) ===== */
 $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
@@ -18,22 +25,68 @@ if (is_file($co_fs_main)) {
     $CHECKOUT_URL = $SITE_BASE . 'checkout.php'; // fallback
 }
 
-/* Détection API cart.php pour afficher le récap */
-$api_fs_main  = __DIR__ . '/../api/cart.php';  // /site/api/cart.php
-$api_fs_pages = __DIR__ . '/api/cart.php';     // /site/pages/api/cart.php
+/* Détection API cart.php pour afficher le récap (si tu gardes l'API) */
+$api_fs_main  = __DIR__ . '/../api/cart.php';
+$api_fs_pages = __DIR__ . '/api/cart.php';
 if (is_file($api_fs_main)) {
     $API_URL = $SITE_BASE . 'api/cart.php';
 } elseif (is_file($api_fs_pages)) {
     $API_URL = $PAGE_BASE . 'api/cart.php';
 } else {
-    $API_URL = $SITE_BASE . 'api/cart.php';      // fallback
+    $API_URL = $SITE_BASE . 'api/cart.php';
 }
 
 $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
     ? $PAGE_BASE . 'img/placeholder.png'
     : $SITE_BASE . 'img/placeholder.png';
-?>
 
+/* ===== 2) DB + commande ouverte ===== */
+$pdo = require __DIR__ . '/../database/config/connexionBDD.php';
+
+/** Récupère la commande "en préparation" **/
+$st = $pdo->prepare("SELECT COM_ID FROM COMMANDE
+                     WHERE PER_ID=:p AND COM_STATUT='en préparation'
+                     ORDER BY COM_ID DESC LIMIT 1");
+$st->execute([':p' => $perId]);
+$comId = (int)$st->fetchColumn();
+if (!$comId) {
+    $_SESSION['message'] = "Votre panier est vide.";
+    header('Location: commande.php'); exit;
+}
+
+/* ===== 3) Helpers & validation métier ===== */
+// NEW: on laisse les helpers ici (ou mets-les dans /site/lib/commande_utils.php)
+function getOrderType(PDO $pdo, int $comId): string {
+    $st = $pdo->prepare("SELECT DISTINCT CP_TYPE_PRODUIT
+                         FROM COMMANDE_PRODUIT WHERE COM_ID=:c");
+    $st->execute([':c' => $comId]);
+    $types = array_column($st->fetchAll(PDO::FETCH_NUM), 0);
+    if (!$types) return 'none';
+    if (count($types) > 1) return 'mixed';
+    return $types[0]; // 'bouquet' | 'fleur' | 'coffret'
+}
+function mustHavePackagingIfBouquet(PDO $pdo, int $comId): void {
+    $type = getOrderType($pdo, $comId);
+    if ($type !== 'bouquet') return;
+    $st = $pdo->prepare("SELECT COUNT(*) FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c");
+    $st->execute([':c' => $comId]);
+    if ((int)$st->fetchColumn() < 1) {
+        throw new RuntimeException("Votre bouquet nécessite un emballage. Merci d'en ajouter un.");
+    }
+}
+
+// NEW: on bloque l’accès si bouquet sans emballage
+try {
+    mustHavePackagingIfBouquet($pdo, $comId);
+} catch (RuntimeException $e) {
+    $_SESSION['message'] = $e->getMessage();
+    header('Location: commande.php'); exit;
+}
+
+/* ===== 4) CSRF pour POST → checkout.php ===== */
+$_SESSION['csrf_checkout'] = bin2hex(random_bytes(16));
+$CSRF = $_SESSION['csrf_checkout'];
+?>
 <!doctype html>
 <html lang="fr">
 <head>
@@ -41,29 +94,20 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Adresses & paiement</title>
 
-    <!-- tes CSS globales -->
+    <!-- tes CSS -->
     <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/commande.css">
 
     <style>
         /* ===== mini styles layout ===== */
         .wrap { max-width: 1150px; margin-inline:auto; }
-        .grid-pay {
-            display:grid; gap:18px;
-            grid-template-columns: 1fr;         /* mobile */
-        }
-        @media (min-width: 980px){
-            .grid-pay { grid-template-columns: 1fr 1fr; } /* deux colonnes: formes */
-        }
-        @media (min-width: 1180px){
-            .grid-pay { grid-template-columns: 1fr 1fr .85fr; } /* + récap à droite */
-        }
+        .grid-pay { display:grid; gap:18px; grid-template-columns: 1fr; }
+        @media (min-width: 980px){ .grid-pay { grid-template-columns: 1fr 1fr; } }
+        @media (min-width: 1180px){ .grid-pay { grid-template-columns: 1fr 1fr .85fr; } }
 
         .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
         form#checkout-form { display:grid; gap:18px; grid-template-columns: 1fr; }
-        @media (min-width: 980px){
-            form#checkout-form { grid-template-columns: 1fr 1fr; } /* billing + shipping/pay */
-        }
+        @media (min-width: 980px){ form#checkout-form { grid-template-columns: 1fr 1fr; } }
 
         .group { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
         .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
@@ -78,7 +122,7 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
         .btn-primary[aria-disabled="true"] { opacity:.6; pointer-events:none; }
         .note { background:#fff8e5; border:1px solid #ffecb3; padding:10px 12px; border-radius:8px; }
 
-        /* ===== mini-cart (récap non éditable) ===== */
+        /* ===== mini-cart ===== */
         .mini-title { font-size:1.15rem; font-weight:800; margin-bottom:8px; }
         .mini-cart-list { display:flex; flex-direction:column; gap:10px; }
         .mini-row { display:grid; grid-template-columns: 56px 1fr auto; gap:10px; align-items:center; }
@@ -90,9 +134,11 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
     </style>
 
     <script>
-        // Expose les URLs au JS
+        // Expose au JS
         window.CHECKOUT_URL = <?= json_encode($CHECKOUT_URL) ?>;
         window.API_URL      = <?= json_encode($API_URL) ?>;
+        window.CSRF_CHECKOUT= <?= json_encode($CSRF) ?>; // NEW
+        window.PLACEHOLDER  = <?= json_encode($PLACEHOLDER) ?>;
     </script>
 </head>
 
@@ -102,10 +148,15 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
 <main class="wrap" style="padding-top:var(--header-h,80px)">
     <h1 class="page-title">Adresses & paiement</h1>
 
+    <?php if (!empty($_SESSION['message'])): ?>
+        <div class="flash" role="status"><?= htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8') ?></div>
+        <?php unset($_SESSION['message']); ?>
+    <?php endif; ?>
+
     <div class="grid-pay">
-        <!-- ===== FORMULAIRE (2 colonnes) ===== -->
+        <!-- ===== FORMULAIRE ===== -->
         <form id="checkout-form" autocomplete="on">
-            <!-- ============ Colonne 1 : FACTURATION ============ -->
+            <!-- Colonne 1 : FACTURATION -->
             <section class="card" aria-labelledby="bill-title">
                 <h2 id="bill-title">Adresse de facturation</h2>
                 <div class="group">
@@ -145,7 +196,6 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
                     </div>
                 </div>
 
-                <!-- Pays fixé à CH (commande Suisse) -->
                 <input type="hidden" id="bill_country" name="bill_country" value="CH">
 
                 <div class="hr"></div>
@@ -158,7 +208,7 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
                 </div>
             </section>
 
-            <!-- ============ Colonne 2 : LIVRAISON + PAIEMENT ============ -->
+            <!-- Colonne 2 : LIVRAISON + PAIEMENT -->
             <section class="card" aria-labelledby="ship-title">
                 <h2 id="ship-title">Adresse de livraison</h2>
 
@@ -196,7 +246,6 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
                     </div>
                 </div>
 
-                <!-- Pays fixé à CH -->
                 <input type="hidden" id="ship_country" name="ship_country" value="CH">
 
                 <div class="hr"></div>
@@ -221,15 +270,12 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
 
                 <div class="hr"></div>
 
-                <button type="submit" id="btn-pay" class="btn-primary">
-                    Payer maintenant
-                </button>
-
+                <button type="submit" id="btn-pay" class="btn-primary">Payer maintenant</button>
                 <p id="form-msg" class="muted" role="status" style="margin-top:10px"></p>
             </section>
         </form>
 
-        <!-- ===== Colonne 3 (ou bloc dessous en mobile) : RÉCAP PANIER ===== -->
+        <!-- Colonne 3 : RÉCAP PANIER -->
         <aside class="card" id="mini-cart" aria-live="polite">
             <div class="mini-title">Récapitulatif</div>
             <div id="mini-cart-list" class="mini-cart-list">
@@ -242,7 +288,7 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
     </div>
 
     <div class="note" style="margin-top:18px">
-        Astuce : si tu veux, tu peux revenir au panier pour modifier les articles avant de payer.
+        Astuce : tu peux revenir au panier pour modifier les articles avant de payer.
         <br> Les commandes sont effectuées uniquement en Suisse.
         <a href="<?= $PAGE_BASE ?>commande.php">Retour au panier</a>
     </div>
@@ -284,19 +330,13 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
         });
         if (disabled) copyBillingToShipping();
     }
-
     same.addEventListener('change', () => setShippingDisabled(same.checked));
     ['bill_lastname','bill_firstname','bill_phone','bill_address','bill_postal','bill_city','bill_country']
-        .forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.addEventListener('input', () => { if (same.checked) copyBillingToShipping(); });
-        });
-
-    // état initial
+        .forEach(id => document.getElementById(id)?.addEventListener('input', () => { if (same.checked) copyBillingToShipping(); }));
     setShippingDisabled(same.checked);
 
     /* ==========================
-       2) Soumission → create_checkout
+       2) Soumission → checkout.php
        ========================== */
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -305,6 +345,7 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
         const fd = new FormData(form);
         fd.append('action', 'create_checkout');
         fd.append('same_as_billing', same.checked ? '1' : '0');
+        fd.append('csrf', window.CSRF_CHECKOUT); // NEW
 
         try {
             const res  = await fetch(window.CHECKOUT_URL, {
@@ -317,13 +358,9 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
             try { data = JSON.parse(text); } catch (_) {}
 
             if (res.ok && data && data.ok && data.url) {
-                window.location.href = data.url;
-                return;
+                window.location.href = data.url; return;
             }
-            if (res.redirected) {
-                window.location.href = res.url;
-                return;
-            }
+            if (res.redirected) { window.location.href = res.url; return; }
             if (!res.ok) throw new Error(`HTTP ${res.status} — ${text.slice(0,200)}`);
 
             const m = text.match(/https:\/\/checkout\.stripe\.com\/pay\/[A-Za-z0-9_%\-]+/);
@@ -337,7 +374,7 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
     });
 
     /* ==========================
-       3) Mini-récap du panier (lecture seule)
+       3) Mini-récap du panier (lecture seule, via API cart.php)
        ========================== */
     async function renderMiniCart(){
         const box = document.getElementById('mini-cart-list');
@@ -367,19 +404,19 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
                 const name  = it.name || it.pro_nom || 'Article';
                 const qty   = Number(it.qty ?? it.quantite ?? 1);
                 const price = Number(it.price ?? it.prix ?? it.unit_price ?? 0);
-                const img   = it.img || it.image || '';
+                const img   = it.img || it.image || window.PLACEHOLDER;
                 const line  = qty * price;
                 subtotal += line;
 
                 html += `
-            <div class="mini-row">
-                <img src="${img || '<?= $PAGE_BASE ?>img/placeholder.png'}" alt="" class="mini-thumb" onerror="this.src='<?= $PAGE_BASE ?>img/placeholder.png'">
-                <div>
-                    <div class="mini-name">${name}</div>
-                    <div class="mini-meta">x ${qty} · ${price.toFixed(2)} CHF</div>
-                </div>
-                <div class="mini-meta">${line.toFixed(2)} CHF</div>
-            </div>`;
+        <div class="mini-row">
+            <img src="${img}" alt="" class="mini-thumb" onerror="this.src='${window.PLACEHOLDER}'">
+            <div>
+                <div class="mini-name">${name}</div>
+                <div class="mini-meta">x ${qty} · ${price.toFixed(2)} CHF</div>
+            </div>
+            <div class="mini-meta">${line.toFixed(2)} CHF</div>
+        </div>`;
             });
 
             box.innerHTML = html;
@@ -392,8 +429,6 @@ $PLACEHOLDER = is_file(__DIR__ . '/img/placeholder.png')
             document.getElementById('mini-total').style.display = 'none';
         }
     }
-
-    // au chargement
     renderMiniCart();
 </script>
 </body>

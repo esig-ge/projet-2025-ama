@@ -14,16 +14,16 @@ $isLogged = !empty($_SESSION['per_id']); // on teste la clé correcte
         </a>
 
         <nav class="menu">
-            <a href="../index.php">Accueil</a>
-            <a href="../apropos.php">À propos</a>
-            <a href="../interface_selection_produit.php">Catalogue</a>
-            <a href="../contact.php">Contact</a>
+            <a href="<?= $BASE ?>index.php">Accueil</a>
+            <a href="<?= $BASE ?>apropos.php">À propos</a>
+            <a href="<?= $BASE ?>interface_selection_produit.php">Catalogue</a>
+            <a href="<?= $BASE ?>contact.php">Contact</a>
 
             <?php if ($isLogged): ?>
-                <a href="../deconnexion.php">Se déconnecter</a>
+                <a href="<?= $BASE ?>deconnexion.php">Se déconnecter</a>
             <?php else: ?>
-                <a href="../inscription.php">S'inscrire</a>
-                <a href="../interface_connexion.php">Se connecter</a>
+                <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
+                <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
             <?php endif; ?>
         </nav>
     </div>

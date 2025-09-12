@@ -1,163 +1,199 @@
 <?php
-// Base URL (slash final)
-if (!isset($BASE)) {
-    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
-}
+// /site/pages/interface_emballage.php
 session_start();
+
+// Base URL avec slash final (ex: "/…/site/pages/")
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>DK Bloom — Emballages</title>
 
-    <!-- CSS globaux -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
 
-    <style>
-        /* --- Mise en page locale de la grille d'emballages --- */
-        main.emballages {
-            max-width: 1200px;
-            margin: 120px auto 80px; /* marge sup pour header fixé */
-            padding: 0 24px;
-        }
-        .grid-emballages {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(160px, 1fr));
-            gap: 28px;
-            justify-items: center;
-        }
-        @media (max-width: 1100px){
-            .grid-emballages { grid-template-columns: repeat(3, minmax(160px, 1fr)); }
-        }
-        @media (max-width: 780px){
-            .grid-emballages { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
-            main.emballages { margin-top: 100px; }
-        }
-        @media (max-width: 480px){
-            .grid-emballages { grid-template-columns: 1fr; }
-        }
-
-        .emb-card{
-            width: 100%;
-            max-width: 240px;     /* plus petit */
-            text-align: center;
-        }
-        .emb-card img{
-            width: 100%;
-            height: 180px;        /* taille uniforme */
-            object-fit: contain;  /* pas de rognage */
-            background: #fff;     /* fond neutre sous PNG */
-            border-radius: 14px;
-            box-shadow: 0 6px 20px rgba(0,0,0,.12);
-        }
-        .emb-title{
-            margin: 10px 0 2px;
-            font-weight: 700;
-        }
-        .emb-offert{
-            font-size: .92rem;
-            color: #1f7a1f;       /* vert doux */
-        }
-        .add-to-cart{
-            margin-top: 10px;
-        }
-
-        /* Boutons Retour / Suivant centrés */
-        .nav-actions{
-            margin-top: 26px;
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-        }
-    </style>
-
-    <!-- Expose BASE + API_URL au JS si tu utilises commande.js -->
+    <!-- Expose BASE + API_URL au JS -->
     <script>
         window.DKBASE  = <?= json_encode($BASE) ?>;
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
-</head>
 
+    <!-- JS panier -->
+    <script src="<?= $BASE ?>js/commande.js" defer></script>
+
+    <script>
+        function addEmballageForm(form){
+            event?.preventDefault();
+            const embInput = form.querySelector('input[name="emb_id"]');
+            const btn      = form.querySelector('button.add-to-cart');
+            if(!embInput) return false;
+            window.addEmballage?.(embInput.value, btn);
+            return false;
+        }
+    </script>
+
+    <style>
+        .catalogue{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+            gap:20px;justify-items:center
+        }
+        .catalogue .card.product{
+            background:#fff;
+            padding:12px;
+            border-radius:12px;
+            box-shadow:0 4px 12px rgba(0,0,0,.1);
+            text-align:center;
+            max-width:240px
+        }
+        .catalogue .card.product img{
+            max-width:180px;
+            height:auto;
+            display:block;
+            margin:0 auto 8px;
+            border-radius:8px
+        }
+        .price{
+            font-weight:600;
+            color:#2c7a2c
+        } /* vert pour “offert” */
+
+        /* ===== Emballages = grille comme Suppléments ===== */
+         #emb-page .catalogue{
+             display:grid !important;
+             grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+             gap:24px !important;
+             max-width:1200px;
+             margin:0 auto;
+             align-items:stretch;
+         }
+
+        #emb-page .card.product{
+            width:100% !important;
+            max-width:none !important;
+            background:#fff;
+            border-radius:14px;
+            box-shadow:0 6px 18px rgba(0,0,0,.08);
+            padding:14px 14px 16px;
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-start;
+        }
+
+        #emb-page .card.product img{
+            width:100%;
+            height:200px;              /* même gabarit visuel que Suppléments */
+            object-fit:cover;
+            border-radius:10px;
+            margin-bottom:10px;
+        }
+
+        #emb-page .card.product h3{
+            margin:6px 0 2px;
+            font-size:1.05rem;
+        }
+
+        #emb-page .price{
+            font-weight:600;
+            color:#2c7a2c;
+            margin-bottom:10px;
+        }
+
+        #emb-page .add-to-cart{
+            align-self:center;
+            padding:.5rem 1.1rem;
+            border-radius:999px;
+            background:var(--accent, #7b0d15);
+            color:#fff;
+            border:none;
+            cursor:pointer;
+            transition:transform .06s ease, filter .2s ease;
+        }
+        #emb-page .add-to-cart:hover{ filter:brightness(1.05); }
+        #emb-page .add-to-cart:active{ transform:translateY(1px); }
+
+        /* Petits écrans : 2 colonnes mini */
+        @media (max-width: 640px){
+            #emb-page .catalogue{
+                grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+            }
+        }
+    </style>
+
+</head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="emballages">
-    <h1 style="text-align:center; margin-bottom:22px;">Choisissez votre emballage</h1>
+<main id="emb-page" class="container catalogue-page" role="main">
+    <h1 class="section-title">Emballages</h1>
+<br>
+    <p class="muted" style="text-align:center;margin:-6px 0 16px;">
+        Choisissez un emballage pour votre/vos fleur(s) ou votre/vos bouquet(s).<br>
+        <strong class="price">Emballage offert</strong> — un seul emballage possible par fleur/bouquet.
+    </p>
 
-    <section class="grid-emballages">
+    <div class="catalogue" aria-label="Liste d'emballages">
+        <!-- Blanc -->
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="1">
+            <img src="<?= $BASE ?>img/emballage_blanc.PNG" alt="Emballage blanc" loading="lazy">
+            <h3>Emballage blanc</h3>
+            <br>
+            <p class="price">Offert</p>
+            <br>
+            <button type="submit" class="add-to-cart" data-emb-name="Emballage blanc">Ajouter</button>
+        </form>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_blanc.PNG" alt="Emballage blanc">
-            <div class="emb-title">Blanc</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_blanc"
-                    data-pro-name="Emballage blanc"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_blanc.PNG">
-                Ajouter
-            </button>
-        </article>
+        <!-- Gris -->
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="2">
+            <img src="<?= $BASE ?>img/emballage_gris.PNG" alt="Emballage gris" loading="lazy">
+            <h3>Emballage gris</h3>
+            <br>
+            <p class="price">Offert</p>
+            <br>
+            <button type="submit" class="add-to-cart" data-emb-name="Emballage gris">Ajouter</button>
+        </form>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_noir.PNG" alt="Emballage noir">
-            <div class="emb-title">Noir</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_noir"
-                    data-pro-name="Emballage noir"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_noir.PNG">
-                Ajouter
-            </button>
-        </article>
+        <!-- Noir -->
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="3">
+            <img src="<?= $BASE ?>img/emballage_noir.PNG" alt="Emballage noir" loading="lazy">
+            <h3>Emballage noir</h3>
+            <br>
+            <p class="price">Offert</p>
+            <br>
+            <button type="submit" class="add-to-cart" data-emb-name="Emballage noir">Ajouter</button>
+        </form>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_rose.PNG" alt="Emballage rose">
-            <div class="emb-title">Rose</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_rose"
-                    data-pro-name="Emballage rose"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_rose.PNG">
-                Ajouter
-            </button>
-        </article>
+        <!-- Rose -->
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="4">
+            <img src="<?= $BASE ?>img/emballage_rose.PNG" alt="Emballage rose" loading="lazy">
+            <h3>Emballage rose</h3>
+            <br>
+            <p class="price">Offert</p>
+            <br>
+            <button type="submit" class="add-to-cart" data-emb-name="Emballage rose">Ajouter</button>
+        </form>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_gris.PNG" alt="Emballage gris">
-            <div class="emb-title">Gris</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_gris"
-                    data-pro-name="Emballage gris"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_gris.PNG">
-                Ajouter
-            </button>
-        </article>
+        <!-- Violet -->
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+            <input type="hidden" name="emb_id" value="5">
+            <img src="<?= $BASE ?>img/emballage_violet.PNG" alt="Emballage violet" loading="lazy">
+            <h3>Emballage violet</h3>
+            <br>
+            <p class="price">Offert</p>
+            <br>
+            <button type="submit" class="add-to-cart" data-emb-name="Emballage violet">Ajouter</button>
+        </form>
+    </div>
 
-        <article class="emb-card">
-            <img src="<?= $BASE ?>img/emballage_violet.PNG" alt="Emballage violet">
-            <div class="emb-title">Violet</div>
-            <div class="emb-offert">Emballage offert</div>
-            <button class="add-to-cart"
-                    data-pro-id="emb_violet"
-                    data-pro-name="Emballage violet"
-                    data-pro-price="0"
-                    data-pro-img="<?= $BASE ?>img/emballage_violet.PNG">
-                Ajouter
-            </button>
-        </article>
-
-    </section>
-
-    <div class="nav-actions">
+    <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
         <a href="<?= $BASE ?>interface_supplement.php" class="button">Retour</a>
         <a href="<?= $BASE ?>commande.php" class="button">Suivant</a>
     </div>
