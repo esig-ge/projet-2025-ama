@@ -87,7 +87,7 @@ if ($com) {
                         ?>
                         <tr>
                             <td><?= htmlspecialchars($L['PRO_NOM']) ?></td>
-                            <td><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?></td>
+                            <td><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?></td>/*
                             <td><?= number_format($pu, 2, '.', ' ') ?> CHF</td>
                             <td><?= $q ?></td>
                             <td><?= number_format($st, 2, '.', ' ') ?> CHF</td>
@@ -101,6 +101,7 @@ if ($com) {
                     </tr>
                     </tfoot>
                 </table>
+
             </div>
 
             <div class="actions" style="display:flex; gap:12px; flex-wrap:wrap">

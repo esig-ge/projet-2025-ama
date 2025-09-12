@@ -129,7 +129,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
     </div>
 
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
-        <a href="<?= $BASE ?>index.php" class="button">Retour</a>
+        <a href="<?= $BASE ?>interface_catalogue_bouquet.php" class="button">Retour</a>
         <a href="<?= $BASE ?>interface_supplement.php" class="button">Suivant</a>
     </div>
 </main>

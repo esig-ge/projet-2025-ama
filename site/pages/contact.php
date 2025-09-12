@@ -32,7 +32,7 @@ if (!isset($BASE)) {
             <h2 id="titre-contact">Écris-nous</h2>
             <p class="muted">Une question, un événement ? Remplis le formulaire et nous te répondons rapidement.</p>
 
-            <form id="contactForm" method="post" action="<?= $BASE ?>infos_contact.php" novalidate>
+            <form id="contactForm" method="post" action="<?= $BASE ?>traitement_page_contact.php" novalidate>
                 <div>
                     <label for="nom">Nom <span class="req">*</span></label>
                     <input id="nom" name="nom" required autocomplete="family-name" />
