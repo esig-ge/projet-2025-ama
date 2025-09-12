@@ -130,10 +130,10 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
 <main id="emb-page" class="container catalogue-page" role="main">
     <h1 class="section-title">Emballages</h1>
-
+<br>
     <p class="muted" style="text-align:center;margin:-6px 0 16px;">
-        Choisissez un emballage pour votre bouquet.<br>
-        <strong>Emballage offert</strong> — un seul emballage possible par commande.
+        Choisissez un emballage pour votre/vos fleur(s) ou votre/vos bouquet(s).<br>
+        <strong class="price">Emballage offert</strong> — un seul emballage possible par fleur/bouquet.
     </p>
 
     <div class="catalogue" aria-label="Liste d'emballages">
