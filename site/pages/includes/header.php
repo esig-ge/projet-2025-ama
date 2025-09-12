@@ -16,7 +16,7 @@ $isLogged = !empty($_SESSION['per_id']); // on teste la clé correcte
         <nav class="menu">
             <a href="<?= $BASE ?>index.php">Accueil</a>
             <a href="<?= $BASE ?>apropos.php">À propos</a>
-            <a href="<?= $BASE ?>interface_catalogue_bouquet.php">Catalogue</a>
+            <a href="<?= $BASE ?>interface_selection_produt.php">Catalogue</a>
             <a href="<?= $BASE ?>contact.php">Contact</a>
 
             <?php if ($isLogged): ?>
