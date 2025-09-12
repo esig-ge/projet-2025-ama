@@ -66,7 +66,29 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>12 roses</h3><p class="price">30 CHF</p>
             <label class="sr-only" for="qty-7">Quantité</label>
             <input id="qty-7" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <label>
+                <input type="radio" name="couleur" value="rouge" required>
+                <span class="swatch" style=" background: red"></span>
+            </label>
+            <label>
+                <input type="radio" name="couleur" value="rose">
+                <span class="swatch" style="background:pink"></span>
+            </label>
+            <label>
+                <input type="radio" name="couleur" value="blanc">
+                <span class="swatch" style="background:beige; border:1px solid #aaa"></span>
+            </label>
+            <label>
+                <input type="radio" name="couleur" value="bleu">
+                <span class="swatch" style="background:blue"></span>
+            </label>
+            <label>
+                <input type="radio" name="couleur" value="noir">
+                <span class="swatch" style="background:black"></span>
+            </label>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 12 roses">Ajouter</button>
+            <input type="radio" id="c-rouge"  name="rose-color" class="color-radio"
+                   data-pro-id="1" data-name="Rose rouge"  data-img="<?= $BASE ?>img/rouge.png" checked>
         </form>
 
         <!-- 20 roses -->
