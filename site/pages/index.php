@@ -38,6 +38,8 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 
 <?php include __DIR__ . '/includes/header.php'; ?>
 
+
+
 <main>
     <section class="entete_accueil">
         <div class="image_texte">
