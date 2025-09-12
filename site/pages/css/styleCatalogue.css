@@ -262,11 +262,11 @@ a.add-to-cart:hover {
 }
 
 .swatches .swatch {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--c);
-    border: 2px solid transparent;
+    border: 2px solid gray;
     display: inline-block;
     cursor: pointer;
     transition: border-color 0.2s;
