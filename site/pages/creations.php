@@ -24,15 +24,10 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
         <div class="slider">
             <div class="slides">
 
-                <!-- Slide 1 -->
-
                 <video controls>
                     <source src="img/videofleur2.mp4" type="video/mp4" >
                 </video>
 
-
-                <video controls>
-                    <source src="img/videofleur3.mp4" type="video/mp4" >
 
             </div>
             <button class="btn prev" aria-label="Précédent">&#10094;</button>
