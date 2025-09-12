@@ -164,7 +164,6 @@ $API_URL = $api_in_pages ? ($BASE . 'api/cart.php')
         </div>
         <div>
             <!-- Radios (portent l'ID produit + nom + image) -->
-            <h3>Selectionner la couleur du bouquet</h3>
             <input type="radio" id="c-rouge"  name="rose-color" class="color-radio"
                    data-pro-id="1" data-name="Rose rouge"  data-img="<?= $BASE ?>img/rouge.png" >
             <input type="radio" id="c-rose"   name="rose-color" class="color-radio"

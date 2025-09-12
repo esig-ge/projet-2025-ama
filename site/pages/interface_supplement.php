@@ -38,6 +38,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/ours_blanc.PNG" alt="Mini ourson">
             <h3>Mini ourson</h3>
             <p>2 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="1"
                     data-sup-name="Mini ourson"
@@ -51,6 +53,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/happybirthday.PNG" alt="Décoration anniversaire">
             <h3>Décoration anniversaire</h3>
             <p>2 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="2"
                     data-sup-name="Décoration anniversaire"
@@ -64,6 +68,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/papillon_doree.PNG" alt="Papillons">
             <h3>Papillons</h3>
             <p>2 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="3"
                     data-sup-name="Papillons"
@@ -77,6 +83,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/baton_coeur.PNG" alt="Bâton cœur">
             <h3>Bâton cœur</h3>
             <p>2 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="4"
                     data-sup-name="Bâton cœur"
@@ -90,6 +98,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/diamant.PNG" alt="Diamant">
             <h3>Diamant</h3>
             <p>5 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="5"
                     data-sup-name="Diamant"
@@ -103,6 +113,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/couronne.PNG" alt="Couronne">
             <h3>Couronne</h3>
             <p>5 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="6"
                     data-sup-name="Couronne"
@@ -116,6 +128,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/paillette_argent.PNG" alt="Paillettes">
             <h3>Paillettes</h3>
             <p>9 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="7"
                     data-sup-name="Paillettes"
@@ -129,6 +143,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/lettre.JPG" alt="Lettre">
             <h3>Lettre</h3>
             <p>10 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="8"
                     data-sup-name="Lettre"
@@ -142,6 +158,8 @@ if (!isset($BASE)) {
             <img src="<?= $BASE ?>img/carte.PNG" alt="Carte pour mot">
             <h3>Carte pour mot</h3>
             <p>3 CHF</p>
+            <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+
             <button class="add-to-cart"
                     data-sup-id="9"
                     data-sup-name="Carte pour mot"
