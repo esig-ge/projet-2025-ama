@@ -87,7 +87,7 @@ if ($com) {
                         ?>
                         <tr>
                             <td><?= htmlspecialchars($L['PRO_NOM']) ?></td>
-                            <td><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?></td>/*
+                            <td><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?></td>
                             <td><?= number_format($pu, 2, '.', ' ') ?> CHF</td>
                             <td><?= $q ?></td>
                             <td><?= number_format($st, 2, '.', ' ') ?> CHF</td>
@@ -104,22 +104,13 @@ if ($com) {
 
             </div>
             <fieldset class="full group">
-                <legend>Type de livraison <span class="req">*</span></legend>
+                <p>Type de livraison <span class="req">*</span></p>
 
                 <div class="options-row">
+                   <p>* par défaut le mode de livraison est en retrait.</p>
                     <label class="opt">
                         <input type="radio" name="livraison" value="standard" required>
                         <span>Standard (48h)</span>
-                    </label>
-
-                    <label class="opt">
-                        <input type="radio" name="livraison" value="express">
-                        <span>Express (24h)</span>
-                    </label>
-
-                    <label class="opt">
-                        <input type="radio" name="livraison" value="retrait">
-                        <span>Retrait en boutique</span>
                     </label>
                 </div>
             </fieldset>
