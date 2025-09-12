@@ -173,7 +173,7 @@ if (!isset($BASE)) {
     </div>
 
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
-        <a href="<?= $BASE ?>catalogue.php" class="button">Retour</a>
+        <a href="<?= $BASE ?>interface_selection_produit.php" class="button">Retour</a>
         <a href="<?= $BASE ?>commande.php" class="button">Suivant</a>
     </div>
 </main>
