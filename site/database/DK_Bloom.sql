@@ -162,15 +162,21 @@ CREATE TABLE `BOUQUET` (
                            `PRO_ID` BIGINT PRIMARY KEY,
                            `BOU_DESCRIPTION` VARCHAR(600) NOT NULL,
                            `BOU_TYPE` ENUM('standard','personnalise','mariage','anniversaire','naissance','deuil','romantique','saisonnier','luxe') NOT NULL,
+                           `BOU_COULEUR` ENUM('rouge','blanc','rose','jaune','orange','violet','bleu','vert','noir','multicolore') NOT NULL DEFAULT 'rouge',
+                           `BOU_COULEUR_CODE` CHAR(7) NULL,
                            `BOU_QTE_STOCK` INT NOT NULL DEFAULT 0,
                            CONSTRAINT `CK_BOUQUET_DESC_MIN10`
                                CHECK (CHAR_LENGTH(`BOU_DESCRIPTION`) >= 10),
                            CONSTRAINT `CK_BOU_STOCK_NON_NEG`
                                CHECK (`BOU_QTE_STOCK` >= 0),
-                           CONSTRAINT `FK_BOUQUET_PRODUIT`
-                               FOREIGN KEY (`PRO_ID`) REFERENCES `PRODUIT`(`PRO_ID`)
-                                   ON UPDATE CASCADE ON DELETE CASCADE
+                           CONSTRAINT `CK_BOU_COULEUR_CODE_HEX`
+                               CHECK (`BOU_COULEUR_CODE` IS NULL OR `BOU_COULEUR_CODE` REGEXP '^#[0-9A-Fa-f]{6}$'),
+
+  CONSTRAINT `FK_BOUQUET_PRODUIT`
+    FOREIGN KEY (`PRO_ID`) REFERENCES `PRODUIT`(`PRO_ID`)
+      ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 CREATE TABLE `BOUQUET_FLEUR` (
                                  `BOUQUET_ID` BIGINT NOT NULL,
