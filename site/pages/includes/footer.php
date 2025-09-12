@@ -10,9 +10,9 @@ if (!isset($BASE)) {
         <p class="legal">© <?= date('Y') ?> DK Bloom. Tous droits réservés.</p>
 
         <nav class="footer-links" aria-label="Pied de page">
-            <a href="<?= $BASE ?>mentions.php">Mentions légales</a>
-            <a href="<?= $BASE ?>contact.php">Contact</a>
-            <a href="<?= $BASE ?>login.php">Espace client</a>
+            <a href="<?= $BASE ?>mentions.php"> Mentions légales </a>
+            <a href="<?= $BASE ?>contact.php"> Contact </a>
+            <a href="<?= $BASE ?>login.php"> Espace client </a>
         </nav>
 
         <div class="footer-social">
@@ -24,7 +24,7 @@ if (!isset($BASE)) {
 
             <a href="https://www.tiktok.com/@_dkbloom"
                target="_blank" rel="noopener" aria-label="TikTok">
-                <img src="<?= $BASE ?>img/tiktok-removebg-preview.png"
+                <img src="<?= $BASE ?>img/tiktok.png"
                      alt="TikTok" width="24" height="24" loading="lazy">
             </a>
         </div>
