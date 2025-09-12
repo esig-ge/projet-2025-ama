@@ -249,32 +249,30 @@ a.add-to-cart:hover {
 .flash { text-align: center; margin: 10px auto 16px; }
 /*---------------------------radios couleur*/
 
-.color-choices {
-    margin: 10px 0;
+.swatches {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
+    margin: 12px 0;
     border: none;
     padding: 0;
 }
-.color-choices label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
+
+.swatches input[type="radio"] {
+    display: none; /* cache le vrai bouton */
 }
-.color-choices input[type="radio"] {
-    display: none;
-}
-.color-choices .swatch {
-    width: 18px;
-    height: 18px;
+
+.swatches .swatch {
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
+    background: var(--c);
+    border: 2px solid transparent;
     display: inline-block;
-    border: 1px solid #444;
+    cursor: pointer;
+    transition: border-color 0.2s;
 }
-.color-choices input[type="radio"]:checked + .swatch {
-    outline: 2px solid var(--accent, #e0112b);
-    outline-offset: 2px;
+
+/* quand la radio est cochée → contour noir */
+.swatches input[type="radio"]:checked + .swatch {
+    border-color: #000;
 }

@@ -66,26 +66,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>12 roses</h3><p class="price">30 CHF</p>
             <label class="sr-only" for="qty-7">Quantité</label>
             <input id="qty-7" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <label>
-                <input type="radio" name="couleur" value="rouge" required>
-                <span class="swatch" style=" background: red"></span>
-            </label>
-            <label>
-                <input type="radio" name="couleur" value="rose">
-                <span class="swatch" style="background:pink"></span>
-            </label>
-            <label>
-                <input type="radio" name="couleur" value="blanc">
-                <span class="swatch" style="background:beige; border:1px solid #aaa"></span>
-            </label>
-            <label>
-                <input type="radio" name="couleur" value="bleu">
-                <span class="swatch" style="background:blue"></span>
-            </label>
-            <label>
-                <input type="radio" name="couleur" value="noir">
-                <span class="swatch" style="background:black"></span>
-            </label>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 12 roses">Ajouter</button>
             <input type="radio" id="c-rouge"  name="rose-color" class="color-radio"
                    data-pro-id="1" data-name="Rose rouge"  data-img="<?= $BASE ?>img/rouge.png" checked>
@@ -99,6 +100,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>20 roses</h3><p class="price">40 CHF</p>
             <label class="sr-only" for="qty-8">Quantité</label>
             <input id="qty-8" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 20 roses">Ajouter</button>
         </form>
 
@@ -110,6 +132,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>24 roses</h3><p class="price">45 CHF</p>
             <label class="sr-only" for="qty-9">Quantité</label>
             <input id="qty-9" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 24 roses">Ajouter</button>
         </form>
 
@@ -121,6 +164,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>36 roses</h3><p class="price">60 CHF</p>
             <label class="sr-only" for="qty-10">Quantité</label>
             <input id="qty-10" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 36 roses">Ajouter</button>
         </form>
 
@@ -132,6 +196,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>50 roses</h3><p class="price">70 CHF</p>
             <label class="sr-only" for="qty-11">Quantité</label>
             <input id="qty-11" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 50 roses">Ajouter</button>
         </form>
 
@@ -143,6 +228,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>66 roses</h3><p class="price">85 CHF</p>
             <label class="sr-only" for="qty-12">Quantité</label>
             <input id="qty-12" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 66 roses">Ajouter</button>
         </form>
 
@@ -154,6 +260,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>99 roses</h3><p class="price">110 CHF</p>
             <label class="sr-only" for="qty-13">Quantité</label>
             <input id="qty-13" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 99 roses">Ajouter</button>
         </form>
 
@@ -165,6 +292,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>100 roses</h3><p class="price">112 CHF</p>
             <label class="sr-only" for="qty-14">Quantité</label>
             <input id="qty-14" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 100 roses">Ajouter</button>
         </form>
 
@@ -176,6 +324,27 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>101 roses</h3><p class="price">115 CHF</p>
             <label class="sr-only" for="qty-15">Quantité</label>
             <input id="qty-15" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches">
+                <label>
+                    <input type="radio" name="couleur" value="rouge" required>
+                    <span class="swatch" style="--c:red"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="rose">
+                    <span class="swatch" style="--c:pink"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="blanc">
+                    <span class="swatch" style="--c:light grey" ></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="bleu">
+                    <span class="swatch" style="--c:blue"></span>
+                </label>
+                <label>
+                    <input type="radio" name="couleur" value="noir">
+                    <span class="swatch" style="--c:black"></span>
+                </label></div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 101 roses">Ajouter</button>
         </form>
     </div>
