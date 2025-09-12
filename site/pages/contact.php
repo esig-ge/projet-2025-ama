@@ -68,7 +68,7 @@ if (!isset($BASE)) {
                 <div class="full">
                     <label for="message">Message <span class="req">*</span></label>
                     <textarea id="message" name="message" required maxlength="2000"
-                              placeholder="Décris ton besoin, la date souhaitée, le budget, etc."></textarea>
+                              placeholder="Décris ton besoin, la date souhaitée etc."></textarea>
                 </div>
 
                 <div class="full row-inline">
