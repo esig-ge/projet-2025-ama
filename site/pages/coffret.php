@@ -31,8 +31,6 @@ if (!isset($BASE)) {
     <h1 class="section-title">Nos coffrets</h1>
 
     <div class="catalogue">
-
-        <!-- ⚠️ Adapte les PRO_ID à ta BDD (table PRODUIT + COFFRET) -->
         <div>
             <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
                 <img src="<?= $BASE ?>img/coffret.png" alt=" coffret Anniversaire" loading="lazy">
@@ -175,7 +173,7 @@ if (!isset($BASE)) {
     </div>
 
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
-        <a href="<?= $BASE ?>catalogue.php" class="button">Retour</a>
+        <a href="<?= $BASE ?>interface_selection_produit.php" class="button">Retour</a>
         <a href="<?= $BASE ?>commande.php" class="button">Suivant</a>
     </div>
 </main>

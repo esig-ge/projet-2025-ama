@@ -22,8 +22,6 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
     <h1>Nos prestations déjà réalisées</h1>
 
     <section class="dkb-video-carousel" role="region" aria-label="Prestations DK Bloom">
-        <h1>Nos prestations déjà réalisées</h1>
-
         <div class="dkb-carousel" data-active="0">
             <div class="dkb-track">
                 <!-- Slide 1 -->
