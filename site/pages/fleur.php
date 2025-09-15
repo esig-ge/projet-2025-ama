@@ -77,7 +77,7 @@ if (!isset($BASE)) {
         </div>
 
         <div class="btn_accueil">
-            <a href="<?= $BASE ?>catalogue.php" class="button">Retour</a>
+            <a href="<?= $BASE ?>interface_selection_produit.php" class="button">Retour</a>
             <a href="<?= $BASE ?>interface_supplement.php" class="button">Suivant</a>
         </div>
     </section>
