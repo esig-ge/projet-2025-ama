@@ -36,8 +36,18 @@
     justify-content:center;
     margin:24px 0;
 }
+
+/* Reset de sécu contre d’anciens styles (opacity/position) */
+.rose .img-rose{
+    opacity:1 !important;
+    position:static !important;
+    inset:auto !important;
+    object-fit:contain;
+}
+
+/* Cachées par défaut, on affiche la bonne via les radios */
 .img-rose{
-    display:none;                 /* cachées par défaut */
+    display:none;
     width:min(520px, 90vw);
     max-width:100%;
     height:auto;
@@ -71,20 +81,20 @@
     width:var(--size);
     height:var(--size);
     border-radius:50%;
-    background:var(--swatch);     /* défini en inline style */
+    background:var(--swatch); /* défini en inline style */
     border:2px solid #ccc;
     cursor:pointer;
     transition:transform .15s ease;
 }
 .swatch span:hover{ transform:scale(1.1); }
 
-/* Liseré noir sur la pastille sélectionnée */
-#c-rouge:checked  ~ .swatches label[for="c-rouge"]  .swatch,
-#c-roseC:checked  ~ .swatches label[for="c-roseC"] .swatch,
-#c-rose:checked   ~ .swatches label[for="c-rose"]   .swatch,
-#c-blanc:checked  ~ .swatches label[for="c-blanc"]  .swatch,
-#c-bleu:checked   ~ .swatches label[for="c-bleu"]   .swatch,
-#c-noir:checked   ~ .swatches label[for="c-noir"]   .swatch{
+/* Liseré noir sur la pastille sélectionnée (viser le SPAN !) */
+#c-rouge:checked  ~ .swatches label[for="c-rouge"]  span,
+#c-roseC:checked  ~ .swatches label[for="c-roseC"] span,
+#c-rose:checked   ~ .swatches label[for="c-rose"]   span,
+#c-blanc:checked  ~ .swatches label[for="c-blanc"]  span,
+#c-bleu:checked   ~ .swatches label[for="c-bleu"]   span,
+#c-noir:checked   ~ .swatches label[for="c-noir"]   span{
     outline:1px solid #000;
     outline-offset:2px;
 }

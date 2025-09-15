@@ -15,6 +15,78 @@ $perId = (int)($_SESSION['per_id'] ?? 0);
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
+// Fonction pour récupérer l'image selon le produit
+// Normalise un libellé (minuscule, accents retirés, espaces compactés, tolère pluriel)
+function norm_name(string $s): string {
+    $s = strtolower(trim($s));
+    $s = iconv('UTF-8', 'ASCII//TRANSLIT', $s);        // accents -> ASCII
+    $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s);        // enlève ponctuation
+    $s = preg_replace('/\s+/', ' ', $s);                // espaces multiples -> 1
+    $s = preg_replace('/(.)\1{2,}/', '$1', $s);         // tolère répétitions "pailllettes" -> "pailletes"
+    $s = rtrim($s, 's');                                // tolère pluriels basiques
+    return trim($s);
+}
+
+function getProductImage($name) {
+    $k = norm_name($name);
+
+    // Correspondances exactes
+    static $map = [
+        // --- Bouquets
+        '12 roses'    => '12Roses.png',   'bouquet 12'  => '12Roses.png',
+        '20 roses'    => '20Roses.png',   'bouquet 20'  => '20Roses.png',
+        '36 roses'    => '36Roses.png',   'bouquet 36'  => '36Roses.png',
+        '50 roses'    => '50Roses.png',   'bouquet 50'  => '50Roses.png',
+        '66 roses'    => '66Roses.png',   'bouquet 66'  => '66Roses.png',
+        '100 roses'   => '100Roses.png',  'bouquet 100' => '100Roses.png',
+
+        // --- Roses à l’unité
+        'rose rouge'   => 'rouge.png',
+        'rose rose'    => 'rose.png',
+        'rose claire'  => 'rose_claire.png',
+        'rose blanche' => 'rosesBlanche.png',
+        'rose bleue'   => 'bleu.png',
+        'rose noire'   => 'noir.png',
+
+        // --- Suppléments
+        'mini ourson'          => 'ours_blanc.PNG',
+        'deco anniv'           => 'happybirthday.PNG',
+        'decoration anniversaire' => 'happybirthday.PNG',
+        'papillon'              => 'papillon_doree.PNG',
+        'papillon dore'         => 'papillon_doree.PNG',
+        'papillon doree'        => 'papillon_doree.PNG',
+        'baton coeur'          => 'baton_coeur.PNG',
+        'diamant'              => 'diamant.PNG',
+        'couronne'             => 'couronne.PNG',
+        'paillette argent'     => 'paillette_argent.PNG',
+        'lettre'               => 'lettre.png',
+        'carte pour mot'       => 'carte.PNG',
+        'carte'                => 'carte.PNG',
+
+        // --- Emballages (d’après ta page)
+        'emballage blanc'   => 'emballage_blanc.PNG',
+        'emballage gris'    => 'emballage_gris.PNG',
+        'emballage noir'    => 'emballage_noir.PNG',
+        'emballage rose'    => 'emballage_rose.PNG',
+        'emballage violet'  => 'emballage_violet.PNG',
+
+        // --- Paniers (s'ils apparaissent)
+        'panier vide'       => 'panier_vide.png',
+        'panier rempli'     => 'panier_rempli.png',
+    ];
+
+    if (isset($map[$k])) return $map[$k];
+
+    // Coffrets : n'importe quel libellé qui commence par "coffret …"
+    if (strpos($k, 'coffret') === 0) {
+        return 'coffret.png';
+    }
+
+    return 'placeholder.png';
+}
+
+
+
 /* ========= A) SUPPRESSION D’UN ARTICLE ========= */
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
@@ -125,14 +197,6 @@ $hasItems = $hasOrder && !empty($lines);
 $shipping = 0.00;
 $total = $subtotal + $shipping;
 
-/* Helpers images */
-function imagePath(string $base, string $kind, int $id): string {
-    if ($kind === 'produit')      $rel = "img/produits/{$id}.jpg";
-    elseif ($kind === 'supplement') $rel = "img/supplements/{$id}.jpg";
-    else                          $rel = "img/emballages/{$id}.jpg";
-    $fs = __DIR__ . "/{$rel}";
-    return is_file($fs) ? $base.$rel : $base."img/placeholder.jpg";
-}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -203,7 +267,7 @@ function imagePath(string $base, string $kind, int $id): string {
                     $pu   = (float)$L['UNIT_PRICE'];
                     $lt   = $pu * $q;
                     $sub  = $L['SUBTYPE'];
-                    $img  = imagePath($BASE, $kind, $id);
+                    $img = $BASE . 'img/' . getProductImage($L['NAME']);
                     ?>
                     <div class="cart-row">
                         <img class="cart-img" src="<?= htmlspecialchars($img) ?>" alt="">
