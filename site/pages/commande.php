@@ -15,19 +15,28 @@ $perId = (int)($_SESSION['per_id'] ?? 0);
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
-/* ===== A) SUPPRESSION D’UN ARTICLE ===== */
+/* ========= A) SUPPRESSION D’UN ARTICLE ========= */
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
-    $delPro = (int)($_POST['pro_id'] ?? 0);
+    $itemId = (int)($_POST['item_id'] ?? 0);   // PRO_ID | SUP_ID | EMB_ID
+    $kind   = $_POST['kind'] ?? 'produit';     // produit | supplement | emballage
 
-    if ($delCom > 0 && $delPro > 0) {
+    if ($delCom > 0 && $itemId > 0) {
         $chk = $pdo->prepare("SELECT 1 FROM COMMANDE
                               WHERE COM_ID = :c AND PER_ID = :p AND COM_STATUT = 'en préparation' LIMIT 1");
-        $chk->execute([':c' => $delCom, ':p' => $perId]);
+        $chk->execute([':c'=>$delCom, ':p'=>$perId]);
+
         if ($chk->fetchColumn()) {
-            $del = $pdo->prepare("DELETE FROM COMMANDE_PRODUIT
-                                  WHERE COM_ID = :c AND PRO_ID = :p LIMIT 1");
-            $del->execute([':c' => $delCom, ':p' => $delPro]);
+            if ($kind === 'produit') {
+                $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id LIMIT 1")
+                    ->execute([':c'=>$delCom, ':id'=>$itemId]);
+            } elseif ($kind === 'supplement') {
+                $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id LIMIT 1")
+                    ->execute([':c'=>$delCom, ':id'=>$itemId]);
+            } else { // emballage
+                $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id LIMIT 1")
+                    ->execute([':c'=>$delCom, ':id'=>$itemId]);
+            }
             $_SESSION['message'] = "Article supprimé de votre commande.";
         } else {
             $_SESSION['message'] = "Action non autorisée.";
@@ -38,14 +47,14 @@ if (($_POST['action'] ?? '') === 'del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
-/* ===== B) CHARGEMENT DE LA COMMANDE + LIGNES ===== */
+/* ========= B) CHARGEMENT DE LA COMMANDE + LIGNES ========= */
 $sql = "SELECT COM_ID, COM_DATE
         FROM COMMANDE
         WHERE PER_ID = :per AND COM_STATUT = 'en préparation'
         ORDER BY COM_ID DESC
         LIMIT 1";
 $st  = $pdo->prepare($sql);
-$st->execute([':per' => $perId]);
+$st->execute([':per'=>$perId]);
 $com = $st->fetch(PDO::FETCH_ASSOC);
 
 $lines = [];
@@ -54,34 +63,75 @@ $comId = 0;
 
 if ($com) {
     $comId = (int)$com['COM_ID'];
-    $sql = "SELECT cp.PRO_ID, cp.CP_QTE_COMMANDEE, cp.CP_TYPE_PRODUIT,
-                   p.PRO_NOM, p.PRO_PRIX
-            FROM COMMANDE_PRODUIT cp
-            JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
-            WHERE cp.COM_ID = :com
-            ORDER BY p.PRO_NOM";
+
+    // IMPORTANT: utiliser :com1, :com2, :com3 (pas le même nom 3x)
+    $sql = "
+        /* Produits (bouquet/fleur/coffret) */
+        SELECT
+            'produit'           AS KIND,
+            p.PRO_ID            AS ITEM_ID,
+            p.PRO_NOM           AS NAME,
+            p.PRO_PRIX          AS UNIT_PRICE,
+            cp.CP_QTE_COMMANDEE AS QTE,
+            cp.CP_TYPE_PRODUIT  AS SUBTYPE
+        FROM COMMANDE_PRODUIT cp
+        JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
+        WHERE cp.COM_ID = :com1
+
+        UNION ALL
+
+        /* Suppléments */
+        SELECT
+            'supplement'        AS KIND,
+            s.SUP_ID            AS ITEM_ID,
+            s.SUP_NOM           AS NAME,
+            s.SUP_PRIX_UNITAIRE AS UNIT_PRICE,
+            cs.CS_QTE_COMMANDEE AS QTE,
+            'supplement'        AS SUBTYPE
+        FROM COMMANDE_SUPP cs
+        JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
+        WHERE cs.COM_ID = :com2
+
+        UNION ALL
+
+        /* Emballages (offerts) */
+        SELECT
+            'emballage'         AS KIND,
+            e.EMB_ID            AS ITEM_ID,
+            e.EMB_NOM           AS NAME,
+            0.00                AS UNIT_PRICE,
+            ce.CE_QTE           AS QTE,
+            'emballage'         AS SUBTYPE
+        FROM COMMANDE_EMBALLAGE ce
+        JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
+        WHERE ce.COM_ID = :com3
+
+        ORDER BY NAME
+    ";
     $st = $pdo->prepare($sql);
-    $st->execute([':com' => $comId]);
+    $st->execute([':com1'=>$comId, ':com2'=>$comId, ':com3'=>$comId]); // <-- FIX
+
     $lines = $st->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($lines as $L) {
-        $subtotal += (float)$L['PRO_PRIX'] * (int)$L['CP_QTE_COMMANDEE'];
+        $subtotal += (float)$L['UNIT_PRICE'] * (int)$L['QTE']; // utiliser QTE normalisé
     }
 }
 
-$hasOrder  = (bool)$com;
-$hasItems  = $hasOrder && !empty($lines);
+$hasOrder = (bool)$com;
+$hasItems = $hasOrder && !empty($lines);
 
-// 2) Frais de livraison (placeholder)
+// Frais livraison (placeholder)
 $shipping = 0.00;
 $total = $subtotal + $shipping;
 
-// Helper image
-function productImg(string $base, int $id): string {
-    $rel = "img/produits/{$id}.jpg";
-    $fs  = __DIR__ . "/{$rel}";
-    if (is_file($fs)) return $base . $rel;
-    return $base . "img/placeholder.jpg";
+/* Helpers images */
+function imagePath(string $base, string $kind, int $id): string {
+    if ($kind === 'produit')      $rel = "img/produits/{$id}.jpg";
+    elseif ($kind === 'supplement') $rel = "img/supplements/{$id}.jpg";
+    else                          $rel = "img/emballages/{$id}.jpg";
+    $fs = __DIR__ . "/{$rel}";
+    return is_file($fs) ? $base.$rel : $base."img/placeholder.jpg";
 }
 ?>
 <!DOCTYPE html>
@@ -91,14 +141,10 @@ function productImg(string $base, int $id): string {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>DK Bloom — Ma commande</title>
 
-    <!-- CSS global -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
-
-    <!-- CSS spécifique commande -->
     <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
     <style>
-        /* Mise en page + états */
         .grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
         @media (max-width:980px){.grid{grid-template-columns:1fr}}
         .card{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);overflow:hidden}
@@ -131,7 +177,7 @@ function productImg(string $base, int $id): string {
     <?php endif; ?>
 
     <div class="grid">
-        <!-- Colonne gauche : Panier -->
+        <!-- Panier -->
         <section class="card">
             <div style="padding:16px 16px 0">
                 <h2 class="sr-only">Articles</h2>
@@ -151,25 +197,28 @@ function productImg(string $base, int $id): string {
                 </p>
             <?php else: ?>
                 <?php foreach ($lines as $L):
-                    $id = (int)$L['PRO_ID'];
-                    $q  = (int)$L['CP_QTE_COMMANDEE'];
-                    $pu = (float)$L['PRO_PRIX'];
-                    $lt = $pu * $q;
-                    $img = productImg($BASE, $id);
+                    $kind = $L['KIND'];
+                    $id   = (int)$L['ITEM_ID'];
+                    $q    = (int)$L['QTE'];
+                    $pu   = (float)$L['UNIT_PRICE'];
+                    $lt   = $pu * $q;
+                    $sub  = $L['SUBTYPE'];
+                    $img  = imagePath($BASE, $kind, $id);
                     ?>
                     <div class="cart-row">
                         <img class="cart-img" src="<?= htmlspecialchars($img) ?>" alt="">
                         <div class="cart-name">
-                            <?= htmlspecialchars($L['PRO_NOM']) ?><br>
-                            <span class="item-sub"><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?> · Qté <?= $q ?></span>
+                            <?= htmlspecialchars($L['NAME']) ?><br>
+                            <span class="item-sub"><?= htmlspecialchars($sub) ?> · Qté <?= $q ?></span>
                         </div>
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
                         <div class="cart-total"><?= number_format($lt, 2, '.', ' ') ?> CHF</div>
 
                         <form class="trash-form" method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Supprimer cet article ?');">
                             <input type="hidden" name="action" value="del">
-                            <input type="hidden" name="com_id" value="<?= $comId ?>">
-                            <input type="hidden" name="pro_id" value="<?= $id ?>">
+                            <input type="hidden" name="com_id"  value="<?= $comId ?>">
+                            <input type="hidden" name="item_id" value="<?= $id ?>">
+                            <input type="hidden" name="kind"    value="<?= htmlspecialchars($kind, ENT_QUOTES) ?>">
                             <button class="trash-btn" aria-label="Supprimer cet article">🗑️</button>
                         </form>
                     </div>
@@ -177,7 +226,7 @@ function productImg(string $base, int $id): string {
             <?php endif; ?>
         </section>
 
-        <!-- Colonne droite : Récap -->
+        <!-- Récap -->
         <aside class="card summary">
             <h2 class="sr-only">Récapitulatif</h2>
 
@@ -216,10 +265,10 @@ function productImg(string $base, int $id): string {
         </aside>
     </div>
 
-    <!-- ===== Bloc LIVRAISON séparé (sous panier + récap) ===== -->
+    <!-- Bloc LIVRAISON séparé -->
     <?php
-    $disableShipping = ($subtotal <= 0); // griser + désactiver si panier vide
-    $disabledAttr = $disableShipping ? 'disabled' : '';
+    $disableShipping = ($subtotal <= 0);
+    $disabledAttr  = $disableShipping ? 'disabled' : '';
     $disabledClass = $disableShipping ? ' disabled' : '';
     ?>
     <section class="card shipping-block<?= $disabledClass ?>">
