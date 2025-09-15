@@ -1,5 +1,5 @@
 <?php
-session_start();
+
 $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /2526_grep/t25_6_v21/site/pages/
 ?>
 <!doctype html>
