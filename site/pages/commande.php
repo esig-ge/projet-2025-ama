@@ -209,9 +209,8 @@ function productImg(string $base, int $id): string {
 
             <div class="help">
                 <ul>
-                    <li>Expédition en 24–48h</li>
-                    <li>Frais de port offerts dès 50 CHF</li>
-                    <li>Paiement sécurisé</li>
+                    <li>Expédition en 1 semaine</li>
+                    <li>Paiement sécurisé via Stripe</li>
                 </ul>
             </div>
         </aside>
