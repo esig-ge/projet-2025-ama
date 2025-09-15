@@ -93,7 +93,6 @@ function productImg(string $base, int $id): string {
             <a class="btn-primary" href="<?= $BASE ?>interface_catalogue_bouquet.php">Parcourir le catalogue</a>
         </p>
     <?php else: ?>
-<<<<<<< HEAD
         <div class="grid">
             <!-- Colonne gauche : liste des articles -->
             <section class="card">
@@ -218,12 +217,12 @@ function productImg(string $base, int $id): string {
                 <p>Type de livraison <span class="req">*</span></p>
 
                 <div class="options-row">
-                   <p>* par défaut le mode de livraison est en retrait.</p>
+                   <p>* par défaut le type de livraison est en retrait boutique.</p>
                     <label class="opt">
                         <input type="radio" name="livraison" value="standard" required>
                         <span>Standard (48h)</span>
                     </label>
->>>>>>> bc951d2a9ca68592345093e76508a5d13f713c34
+
                 </div>
             </aside>
         </div>
