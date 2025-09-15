@@ -27,56 +27,28 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
     <!-- Hook pour empêcher la soumission et appeler addSupplement() -->
     <script>
-        function addSupplementForm(form){
-            event?.preventDefault();
+        function addSupplementForm(form, evt){
+            (evt || window.event)?.preventDefault();
             const supInput = form.querySelector('input[name="sup_id"]');
             const btn      = form.querySelector('button.add-to-cart');
             if(!supInput) return false;
-            // getQtyFromButton() (dans commande.js) récupère la .qty du même bloc
+            // Dans commande.js: getQtyFromButton() lit la .qty dans le même bloc
             window.addSupplement?.(supInput.value, btn);
             return false;
         }
     </script>
 
-    <!-- Garde-fou visuel au cas où -->
     <style>
-        /* Grille catalogue : 4 ou 5 colonnes selon largeur */
-        .catalogue {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        /* Grille compacte et responsive */
+        #supp-grid{
+            display: grid !important;
             gap: 20px;
             justify-items: center;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
         }
-
-        .catalogue .card.product {
-            background: #fff;
-            padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,.1);
-            text-align: center;
-            max-width: 240px;
-        }
-
-        .catalogue .card.product img {
-            max-width: 180px;
-            height: auto;
-            display: block;
-            margin: 0 auto 8px;
-            border-radius: 8px;
-        }
-             /* === Grille SUPPLÉMENTS — scoppée et prioritaire === */
-         #supp-grid{
-             display: grid !important;
-             gap: 20px;
-             justify-items: center;
-             grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-         }
-        /* Cap à 5 colonnes max sur très grand écran */
         @media (min-width: 1500px){
             #supp-grid{ grid-template-columns: repeat(5, minmax(0, 1fr)); }
         }
-
-        /* Cartes compactes et cohérentes */
         #supp-grid .card.product{
             background:#fff; padding:12px; border-radius:12px;
             box-shadow:0 4px 12px rgba(0,0,0,.1);
@@ -89,7 +61,6 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             max-width: 180px;
             height: auto;
         }
-
     </style>
 </head>
 <body>
@@ -105,8 +76,8 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
     <div id="supp-grid" class="catalogue" aria-label="Liste de suppléments">
 
-    <!-- Mini ourson -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <!-- Mini ourson -->
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="1">
             <img src="<?= $BASE ?>img/ours_blanc.PNG" alt="Mini ourson" loading="lazy">
             <h3>Mini ourson</h3><p class="price">2 CHF</p>
@@ -118,7 +89,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Décoration anniversaire -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="2">
             <img src="<?= $BASE ?>img/happybirthday.PNG" alt="Décoration anniversaire" loading="lazy">
             <h3>Déco anniv</h3><p class="price">2 CHF</p>
@@ -130,7 +101,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Papillons -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="3">
             <img src="<?= $BASE ?>img/papillon_doree.PNG" alt="Papillons dorés" loading="lazy">
             <h3>Papillons</h3><p class="price">2 CHF</p>
@@ -142,7 +113,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Bâton cœur -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="4">
             <img src="<?= $BASE ?>img/baton_coeur.PNG" alt="Bâton cœur" loading="lazy">
             <h3>Bâton cœur</h3><p class="price">2 CHF</p>
@@ -154,7 +125,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Diamant -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="5">
             <img src="<?= $BASE ?>img/diamant.PNG" alt="Diamant décoratif" loading="lazy">
             <h3>Diamant</h3><p class="price">5 CHF</p>
@@ -166,7 +137,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Couronne -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="6">
             <img src="<?= $BASE ?>img/couronne.PNG" alt="Couronne décorative" loading="lazy">
             <h3>Couronne</h3><p class="price">5 CHF</p>
@@ -178,7 +149,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Paillettes -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="7">
             <img src="<?= $BASE ?>img/paillette_argent.PNG" alt="Paillettes argentées" loading="lazy">
             <h3>Paillettes</h3><p class="price">9 CHF</p>
@@ -190,7 +161,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Lettre -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="8">
             <img src="<?= $BASE ?>img/lettre.png" alt="Carte lettre" loading="lazy">
             <h3>Lettre</h3> <p class="price">10 CHF</p>
@@ -202,7 +173,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Carte pour mot -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this)">
+        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addSupplementForm(this, event)">
             <input type="hidden" name="sup_id" value="9">
             <img src="<?= $BASE ?>img/carte.PNG" alt="Carte pour mot" loading="lazy">
             <h3>Carte pour mot</h3><p class="price">3 CHF</p>
@@ -214,8 +185,16 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
     </div>
 
+    <?php
+    // ===== Boutons navigation : Retour dynamique =====
+    $previousPath = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '';
+    $retour = $BASE . 'interface_catalogue_bouquet.php'; // défaut
+    if (stripos($previousPath, 'fleur.php') !== false) {
+        $retour = $BASE . 'fleur.php';
+    }
+    ?>
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
-        <a href="<?= $BASE ?>interface_catalogue_bouquet.php" class="button">Retour</a>
+        <a href="<?= htmlspecialchars($retour) ?>" class="button">Retour</a>
         <a href="<?= $BASE ?>interface_emballage.php" class="button">Suivant</a>
     </div>
 </main>
