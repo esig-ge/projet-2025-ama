@@ -110,3 +110,50 @@ a.button:hover, a.add-to-cart:hover{
     padding: 5px;
     border-radius: 20px;
 }
+
+/* Carte produit compacte */
+ .catalogue-page .product.single { max-width: 880px; margin-inline:auto; display:grid; gap:20px; grid-template-columns: minmax(280px, 480px) 1fr; align-items:start; }
+@media (max-width:900px){ .catalogue-page .product.single { grid-template-columns: 1fr; } }
+
+/* Zone image superposée */
+.rose { position:relative; width:100%; aspect-ratio:1/1; }
+.rose .img-rose { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity .28s ease; }
+.img-rose.rouge{ opacity:1; } /* fallback */
+
+/* Afficher l'image liée à la radio sélectionnée (via :has()) */
+.product:has(#c-rose:checked)   .img-rose{ opacity:0; } .product:has(#c-rose:checked)   .img-rose.rose{ opacity:1; }
+.product:has(#c-roseC:checked)  .img-rose{ opacity:0; } .product:has(#c-roseC:checked)  .img-rose.roseC{ opacity:1; }
+.product:has(#c-blanc:checked)  .img-rose{ opacity:0; } .product:has(#c-blanc:checked)  .img-rose.blanche{ opacity:1; }
+.product:has(#c-noir:checked)   .img-rose{ opacity:0; } .product:has(#c-noir:checked)   .img-rose.noire{ opacity:1; }
+.product:has(#c-bleu:checked)   .img-rose{ opacity:0; } .product:has(#c-bleu:checked)   .img-rose.bleue{ opacity:1; }
+.product:has(#c-rouge:checked)  .img-rose{ opacity:0; } .product:has(#c-rouge:checked)  .img-rose.rouge{ opacity:1; }
+
+/* Pastilles couleur */
+.swatches { display:flex; gap:.75rem; flex-wrap:wrap; margin:.75rem 0 1rem; }
+.swatches label { display:inline-flex; cursor:pointer; }
+.swatch { width:28px; height:28px; border-radius:999px; display:inline-block; background:var(--c); box-shadow:0 0 0 1px rgba(0,0,0,.08) inset; outline:1px solid transparent; }
+
+/* Radios cachées */
+.color-radio { position:absolute; left:-9999px; }
+
+/* Liseré noir fin quand sélectionné */
+#c-rouge:checked  ~ .right .swatches label[for="c-rouge"]  .swatch,
+#c-rose:checked   ~ .right .swatches label[for="c-rose"]   .swatch,
+#c-roseC:checked  ~ .right .swatches label[for="c-roseC"]  .swatch,
+#c-blanc:checked  ~ .right .swatches label[for="c-blanc"]  .swatch,
+#c-noir:checked   ~ .right .swatches label[for="c-noir"]   .swatch,
+#c-bleu:checked   ~ .right .swatches label[for="c-bleu"]   .swatch {
+    outline-color:#000; outline-width:1px; outline-style:solid;
+}
+
+/* Inputs */
+.qty { width:120px; padding:.55rem .75rem; border:1px solid #e2e2e2; border-radius:.6rem; font:inherit; }
+
+/* Boutons */
+.add-to-cart { display:inline-flex; align-items:center; justify-content:center; padding:.7rem 1.1rem; border-radius:.7rem; border:1px solid transparent; background:var(--accent, #e0112b); color:#fff; cursor:pointer; }
+.button { display:inline-flex; align-items:center; justify-content:center; padding:.6rem 1rem; border-radius:.7rem; border:1px solid #e2e2e2; background:#fff; color:#111; text-decoration:none; }
+.actions { display:flex; gap:.75rem; flex-wrap:wrap; }
+
+.right h3{ margin:0 0 .25rem; }
+.right p.desc{ margin:0 0 .75rem; color:#555; }
+.right .price{ margin:.25rem 0 1rem; font-weight:600; }

@@ -15,6 +15,45 @@ $perId = (int)($_SESSION['per_id'] ?? 0);
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
+/* ============================================================
+   A) SUPPRESSION D’UN ARTICLE (corbeille)
+   - supprime la ligne COMMANDE_PRODUIT (pas juste -1 en quantité)
+   - sécurisé: on vérifie que la commande appartient bien au client
+   ============================================================ */
+if (($_POST['action'] ?? '') === 'del') {
+    $delCom = (int)($_POST['com_id'] ?? 0);
+    $delPro = (int)($_POST['pro_id'] ?? 0);
+
+    if ($delCom > 0 && $delPro > 0) {
+        // 1) la commande appartient-elle à ce client et est-elle en préparation ?
+        $chk = $pdo->prepare("SELECT 1
+                              FROM COMMANDE
+                              WHERE COM_ID = :c AND PER_ID = :p AND COM_STATUT = 'en préparation'
+                              LIMIT 1");
+        $chk->execute([':c' => $delCom, ':p' => $perId]);
+        if ($chk->fetchColumn()) {
+            // 2) suppression de la ligne
+            $del = $pdo->prepare("DELETE FROM COMMANDE_PRODUIT
+                                  WHERE COM_ID = :c AND PRO_ID = :p
+                                  LIMIT 1");
+            $del->execute([':c' => $delCom, ':p' => $delPro]);
+
+            $_SESSION['message'] = "Article supprimé de votre commande.";
+        } else {
+            $_SESSION['message'] = "Action non autorisée.";
+        }
+    } else {
+        $_SESSION['message'] = "Requête invalide.";
+    }
+
+    header("Location: ".$BASE."commande.php");
+    exit;
+}
+
+/* ============================================================
+   B) CHARGEMENT DE LA COMMANDE + LIGNES
+   ============================================================ */
+
 // 1) Dernière commande "en préparation"
 $sql = "SELECT COM_ID, COM_DATE
         FROM COMMANDE
@@ -27,6 +66,7 @@ $com = $st->fetch(PDO::FETCH_ASSOC);
 
 $lines = [];
 $subtotal = 0.0;
+$comId = 0;
 
 if ($com) {
     $comId = (int)$com['COM_ID'];
@@ -48,11 +88,11 @@ if ($com) {
     }
 }
 
-// 2) Frais de livraison (placeholder — ajuste selon ta logique)
-$shipping = 0.00; // p.ex. 4.90 si Standard, 9.90 si Express — à relier au choix radio + POST
+// 2) Frais de livraison (placeholder)
+$shipping = 0.00;
 $total = $subtotal + $shipping;
 
-// Helper image (cherche /pages/img/produits/ID.jpg sinon fallback)
+// Helper image
 function productImg(string $base, int $id): string {
     $rel = "img/produits/{$id}.jpg";
     $fs  = __DIR__ . "/{$rel}";
@@ -73,6 +113,21 @@ function productImg(string $base, int $id): string {
 
     <!-- CSS spécifique commande -->
     <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
+    <style>
+        /* mini-ajouts pour la corbeille */
+        .cart-row{ display:grid; grid-template-columns:64px 1fr auto auto auto; gap:12px; align-items:center; padding:12px 16px; border-top:1px solid #eee; }
+        .cart-img{ width:64px; height:64px; object-fit:cover; border-radius:8px; }
+        .cart-name{ font-weight:600; }
+        .item-sub{ font-weight:400; font-size:12px; color:#777; }
+        .trash-form{ margin:0; }
+        .trash-btn{
+            background:transparent; border:0; cursor:pointer; font-size:18px; line-height:1;
+            color:#b70f0f; padding:6px; border-radius:8px;
+        }
+        .trash-btn:hover{ background:#b70f0f10; }
+        .flash{ margin:12px auto; max-width:920px; background:#f6fff6; color:#0a6b0a; border:1px solid #bfe6bf; padding:10px 12px; border-radius:10px; }
+        .card.empty{ text-align:center; padding:24px; }
+    </style>
 </head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
@@ -93,7 +148,6 @@ function productImg(string $base, int $id): string {
             <a class="btn-primary" href="<?= $BASE ?>interface_catalogue_bouquet.php">Parcourir le catalogue</a>
         </p>
     <?php else: ?>
-<<<<<<< HEAD
         <div class="grid">
             <!-- Colonne gauche : liste des articles -->
             <section class="card">
@@ -115,10 +169,18 @@ function productImg(string $base, int $id): string {
                         <img class="cart-img" src="<?= htmlspecialchars($img) ?>" alt="">
                         <div class="cart-name">
                             <?= htmlspecialchars($L['PRO_NOM']) ?><br>
-                            <span class="item-sub"><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?> &middot; Qté <?= $q ?></span>
+                            <span class="item-sub"><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?> · Qté <?= $q ?></span>
                         </div>
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
                         <div class="cart-total"><?= number_format($lt, 2, '.', ' ') ?> CHF</div>
+
+                        <!-- Corbeille -->
+                        <form class="trash-form" method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Supprimer cet article ?');">
+                            <input type="hidden" name="action" value="del">
+                            <input type="hidden" name="com_id" value="<?= $comId ?>">
+                            <input type="hidden" name="pro_id" value="<?= $id ?>">
+                            <button class="trash-btn" aria-label="Supprimer cet article">🗑️</button>
+                        </form>
                     </div>
                 <?php endforeach; ?>
 
@@ -176,54 +238,6 @@ function productImg(string $base, int $id): string {
                         <li>Frais de port offerts dès 50 CHF</li>
                         <li>Paiement sécurisé</li>
                     </ul>
-=======
-        <div class="card">
-            <h2>Commande #<?= (int)$com['COM_ID'] ?> du <?= htmlspecialchars($com['COM_DATE']) ?></h2>
-            <div class="table-responsive">
-                <table class="table-panier">
-                    <thead>
-                    <tr>
-                        <th>Produit</th>
-                        <th>Type</th>
-                        <th>Prix unité</th>
-                        <th>Qté</th>
-                        <th>Sous-total</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($lines as $L):
-                        $pu = (float)$L['PRO_PRIX'];
-                        $q  = (int)$L['CP_QTE_COMMANDEE'];
-                        $st = $pu * $q;
-                        ?>
-                        <tr>
-                            <td><?= htmlspecialchars($L['PRO_NOM']) ?></td>
-                            <td><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?></td>
-                            <td><?= number_format($pu, 2, '.', ' ') ?> CHF</td>
-                            <td><?= $q ?></td>
-                            <td><?= number_format($st, 2, '.', ' ') ?> CHF</td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th colspan="4" style="text-align:right">Total</th>
-                        <th><?= number_format($total, 2, '.', ' ') ?> CHF</th>
-                    </tr>
-                    </tfoot>
-                </table>
-
-            </div>
-            <fieldset class="full group">
-                <p>Type de livraison <span class="req">*</span></p>
-
-                <div class="options-row">
-                   <p>* par défaut le mode de livraison est en retrait.</p>
-                    <label class="opt">
-                        <input type="radio" name="livraison" value="standard" required>
-                        <span>Standard (48h)</span>
-                    </label>
->>>>>>> bc951d2a9ca68592345093e76508a5d13f713c34
                 </div>
             </aside>
         </div>
