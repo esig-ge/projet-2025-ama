@@ -286,11 +286,33 @@ $total = $subtotal + $shipping;
         .card{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);overflow:hidden}
         .card.disabled{opacity:.6;filter:grayscale(.5)}
         .muted{color:#777}
-        .cart-row{display:grid;grid-template-columns:64px 1fr auto auto auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #eee}
+        .cart-row {
+            display: grid;
+            grid-template-columns: 32px 64px 1fr 80px 80px 40px;
+            /* ↑ largeur fixe pour prix et total (80px) et poubelle (40px) */
+            gap: 12px;
+            align-items: center;
+            padding: 12px 16px;
+            border-top: 1px solid #eee;
+        }
         .cart-img{width:64px;height:64px;object-fit:cover;border-radius:8px}
-        .cart-name{font-weight:600}
-        .item-sub{font-weight:400;font-size:12px;color:#777}
-        .trash-form{margin:0}
+        .cart-name {
+            font-weight: 600;
+            display: flex;
+            flex-direction: column; /* pour garder le sous-texte en dessous */
+            justify-content: center;
+        }
+        .item-sub {
+            font-weight: 400;
+            font-size: 12px;
+            color: #777;
+        }
+        .cart-unit, .cart-total {
+            text-align: right; /* aligne les chiffres à droite */
+        }
+        .trash-form {
+            justify-self: end; /* poubelle collée à droite */
+        }
         .trash-btn{background:transparent;border:0;cursor:pointer;font-size:18px;line-height:1;color:#b70f0f;padding:6px;border-radius:8px;}
         .trash-btn:hover{background:#b70f0f10}
         .flash{margin:12px auto;max-width:920px;background:#f6fff6;color:#0a6b0a;border:1px solid #bfe6bf;padding:10px 12px;border-radius:10px}
