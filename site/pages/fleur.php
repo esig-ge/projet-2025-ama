@@ -22,79 +22,8 @@ if (!isset($BASE)) {
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
 
-    <!-- JS panier (doit exposer window.addToCart) -->
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
-
-    <!-- Pont fleur -> addToCart -->
-    <script>
-        // Appelé au clic sur "Sélectionner"
-        function selectRose(btn){
-            const box = btn.closest('.produit-info');
-            if(!box){ return; }
-
-            // Couleur (radio)
-            const selected = box.querySelector('input.color-radio:checked');
-            if(!selected){
-                alert("Choisis une couleur de rose.");
-                return;
-            }
-            const proId = selected.dataset.proId;
-            if(!proId){
-                alert("Produit introuvable pour cette couleur.");
-                return;
-            }
-
-            // Quantité
-            const qtyInput = box.querySelector('.qty');
-            const qty = parseInt((qtyInput && qtyInput.value) ? qtyInput.value : "1", 10);
-            if(!qty || qty < 1){
-                alert("Quantité invalide.");
-                return;
-            }
-
-            // (1) pro_id (hidden)
-            let hidPro = box.querySelector('input[name="pro_id"]');
-            if(!hidPro){
-                hidPro = document.createElement('input');
-                hidPro.type = 'hidden';
-                hidPro.name = 'pro_id';
-                box.appendChild(hidPro);
-            }
-            hidPro.value = proId;
-
-            // (2) type=fleur (hidden)
-            let hidType = box.querySelector('input[name="type"]');
-            if(!hidType){
-                hidType = document.createElement('input');
-                hidType.type = 'hidden';
-                hidType.name = 'type';
-                box.appendChild(hidType);
-            }
-            hidType.value = 'fleur';
-
-            // (3) couleur (hidden) — utile pour log/affichage
-            let hidColor = box.querySelector('input[name="couleur"]');
-            if(!hidColor){
-                hidColor = document.createElement('input');
-                hidColor.type = 'hidden';
-                hidColor.name = 'couleur';
-                box.appendChild(hidColor);
-            }
-            // valeurs possibles: rouge, roseC, rose, blanc, bleu, noir (selon tes IDs)
-            hidColor.value = (selected.id || '').replace('c-','');
-
-            // (4) transmettre la quantité via data-* si commande.js l'utilise
-            btn.dataset.qty = String(qty);
-
-            // Ajout au panier
-            if (typeof window.addToCart === 'function') {
-                window.addToCart(proId, btn);
-            } else {
-                console.error('addToCart() introuvable. Vérifie js/commande.js');
-                alert('Impossible d’ajouter au panier (script panier manquant).');
-            }
-        }
-    </script>
+    <!-- JS panier (contient selectRose & addToCart) -->
+    <script src="<?= $BASE ?>js/commande.js?v=qty4" defer></script>
 </head>
 
 <body>
@@ -160,7 +89,7 @@ if (!isset($BASE)) {
                     </label>
                 </fieldset>
 
-                <input type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric">
+                <input type="number" class="qty" name="qty" min="1" max="101" step="1" value="1" inputmode="numeric">
 
                 <!-- Sélectionner = ajoute au panier la radio cochée -->
                 <button class="btn" type="button" onclick="selectRose(this)">Sélectionner</button>

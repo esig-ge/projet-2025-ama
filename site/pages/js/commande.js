@@ -129,11 +129,16 @@ async function renderCart() {
 }
 
 /* =============== 6) Ajouter au panier =============== */
-async function addToCart(proId, btn){
+async function addToCart(proId, btn, qtyFromBtn){
     const pid = Number(proId); if(!pid) return;
+
+    // quantité: priorité à l'argument, puis au data-*, sinon 1
+    let qty = Number(qtyFromBtn ?? btn?.dataset?.qty ?? 1);
+    if (!Number.isFinite(qty) || qty < 1) qty = 1;
+
     if (btn) btn.disabled = true;
     try {
-        await callApi('add', { pro_id: pid, qty: 1 });
+        await callApi('add', { pro_id: pid, qty });
         if (document.getElementById('cart-list')) await renderCart();
         toastAdded(btn, `Produit #${pid}`);
         if (btn){ const old=btn.textContent; btn.textContent='Ajouté ✓'; setTimeout(()=>btn.textContent=old||'Ajouter', 900); }
@@ -154,7 +159,17 @@ async function selectRose(btn){
     const r = selectedRoseRadio();
     if (!r) { alert('Choisis une couleur de rose.'); return; }
     const proId = r.dataset.proId;
-    await addToCart(proId, btn);
+
+    // lecture de la quantité dans le bloc du produit
+    const box = btn.closest('.produit-info');
+    const qtyInput = box?.querySelector('.qty');
+    let qty = parseInt(qtyInput?.value ?? '1', 10);
+    if (!qty || qty < 1) qty = 1;
+
+    // pour compat éventuelle avec d'autres scripts / toasts
+    btn.dataset.qty = String(qty);
+
+    await addToCart(proId, btn, qty);
 }
 
 /* === Emballage === */
@@ -385,3 +400,57 @@ window.selectRose     = selectRose;
 window.addSupplement  = addSupplement;
 window.addEmballage   = addEmballage;
 window.removeFromCart = removeFromCart;
+
+/* ======= PATCH quantité — forcer qty à partir du champ .qty ======= */
+(function(){
+    // utilitaire log (désactive en prod si tu veux)
+    const log = (...a) => console.debug('[DKBloom:addToCart]', ...a);
+
+    // remplace addToCart pour accepter une quantité
+    window.addToCart = async function addToCart(proId, btn, qtyFromBtn){
+        const pid = Number(proId);
+        if (!pid) { log('proId invalide:', proId); return; }
+
+        // 1) quantité: priorité à l’argument, puis au data-*, puis lecture dans le DOM, sinon 1
+        let qty = Number(
+            qtyFromBtn
+            ?? btn?.dataset?.qty
+            ?? btn?.closest('.produit-info')?.querySelector('.qty')?.value
+            ?? 1
+        );
+        if (!Number.isFinite(qty) || qty < 1) qty = 1;
+
+        log('POST add', { pro_id: pid, qty });
+        if (btn) btn.disabled = true;
+
+        try {
+            const data = await callApi('add', { pro_id: pid, qty });
+            log('API ok → items:', data?.items);
+            if (document.getElementById('cart-list')) await renderCart();
+            toastAdded(btn, `Produit #${pid}`);
+            if (btn){ const old=btn.textContent; btn.textContent='Ajouté ✓'; setTimeout(()=>btn.textContent=old||'Ajouter', 900); }
+        } catch (e) {
+            console.error('API add error', e);
+            toastError(btn, `Produit #${pid}`, e);
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    };
+
+    // remplace selectRose pour lire la quantité et la passer à addToCart
+    window.selectRose = async function selectRose(btn){
+        const r = document.querySelector('input[name="rose-color"]:checked');
+        if (!r) { alert('Choisis une couleur de rose.'); return; }
+        const proId = r.dataset.proId;
+
+        // lire la quantité dans le bloc
+        const box = btn.closest('.produit-info');
+        let qty = parseInt(box?.querySelector('.qty')?.value ?? '1', 10);
+        if (!qty || qty < 1) qty = 1;
+
+        // pour compat éventuelle avec d’autres scripts
+        btn.dataset.qty = String(qty);
+
+        return window.addToCart(proId, btn, qty);
+    };
+})();
