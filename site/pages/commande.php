@@ -90,7 +90,7 @@ function productImg(string $base, int $id): string {
             <p><strong>Votre panier est vide</strong><br>Ajoutez des bouquets pour commencer.</p>
         </div>
         <p style="text-align:center">
-            <a class="btn-primary" href="<?= $BASE ?>interface_catalogue_bouquet.php">Parcourir le catalogue</a>
+            <a class="btn-primary" href="interface_selection_produit.php">Parcourir le catalogue</a>
         </p>
     <?php else: ?>
         <div class="grid">
@@ -215,12 +215,12 @@ function productImg(string $base, int $id): string {
             </div>
             <fieldset class="full group">
                 <p>Type de livraison <span class="req">*</span></p>
-
                 <div class="options-row">
                    <p>* par défaut le type de livraison est en retrait boutique.</p>
                     <label class="opt">
                         <input type="radio" name="livraison" value="standard" required>
                         <span>Standard (48h)</span>
+                        <span> hey </span>
                     </label>
 
                 </div>

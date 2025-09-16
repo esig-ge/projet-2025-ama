@@ -24,7 +24,7 @@ if (!isset($BASE)) {
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <main class="container">
-    <h1 class="section-title" style="text-align:center; margin:0 0 16px; color:darkred;">Nous contacter</h1>
+    <h1 style="text-align:center; margin:0 0 16px; color:darkred;">Nous contacter</h1>
 
     <div class="grid">
         <!-- Formulaire -->
