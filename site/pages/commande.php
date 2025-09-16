@@ -96,10 +96,7 @@ function getProductImage(string $name): string {
     return 'placeholder.png';
 }
 
-
-
-
-/* ========= A) SUPPRESSION D’UN ARTICLE ========= */
+/* ========= A1) SUPPRESSION D’UN ARTICLE ========= */
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
     $itemId = (int)($_POST['item_id'] ?? 0);   // PRO_ID | SUP_ID | EMB_ID
@@ -127,6 +124,69 @@ if (($_POST['action'] ?? '') === 'del') {
         }
     } else {
         $_SESSION['message'] = "Requête invalide.";
+    }
+    header("Location: ".$BASE."commande.php"); exit;
+}
+
+/* ========= A2) SUPPRESSION MULTIPLE (NOUVEAU) ========= */
+if (($_POST['action'] ?? '') === 'bulk_del') {
+    $delCom = (int)($_POST['com_id'] ?? 0);
+    $selected = $_POST['sel'] ?? []; // tableau de "kind:id"
+    if ($delCom > 0 && is_array($selected) && count($selected)) {
+        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en préparation' LIMIT 1");
+        $chk->execute([':c'=>$delCom, ':p'=>$perId]);
+        if ($chk->fetchColumn()) {
+            $pdo->beginTransaction();
+            try {
+                $stmtP = $pdo->prepare("DELETE FROM COMMANDE_PRODUIT   WHERE COM_ID=:c AND PRO_ID=:id");
+                $stmtS = $pdo->prepare("DELETE FROM COMMANDE_SUPP     WHERE COM_ID=:c AND SUP_ID=:id");
+                $stmtE = $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id");
+                foreach ($selected as $token) {
+                    if (!preg_match('/^(produit|supplement|emballage):(\d+)$/', $token, $m)) continue;
+                    [$all,$k,$id] = $m;
+                    $id = (int)$id;
+                    if ($id <= 0) continue;
+                    if ($k === 'produit')   $stmtP->execute([':c'=>$delCom, ':id'=>$id]);
+                    elseif ($k === 'supplement') $stmtS->execute([':c'=>$delCom, ':id'=>$id]);
+                    else $stmtE->execute([':c'=>$delCom, ':id'=>$id]);
+                }
+                $pdo->commit();
+                $_SESSION['message'] = "Sélection supprimée.";
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                $_SESSION['message'] = "Erreur lors de la suppression multiple.";
+            }
+        } else {
+            $_SESSION['message'] = "Action non autorisée.";
+        }
+    } else {
+        $_SESSION['message'] = "Aucun article sélectionné.";
+    }
+    header("Location: ".$BASE."commande.php"); exit;
+}
+
+
+/* ========= A3) VIDER TOUT LE PANIER (NOUVEAU) ========= */
+if (($_POST['action'] ?? '') === 'clear_all') {
+    $delCom = (int)($_POST['com_id'] ?? 0);
+    if ($delCom > 0) {
+        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en préparation' LIMIT 1");
+        $chk->execute([':c'=>$delCom, ':p'=>$perId]);
+        if ($chk->fetchColumn()) {
+            $pdo->beginTransaction();
+            try {
+                $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c")->execute([':c'=>$delCom]);
+                $pdo->prepare("DELETE FROM COMMANDE_SUPP      WHERE COM_ID=:c")->execute([':c'=>$delCom]);
+                $pdo->prepare("DELETE FROM COMMANDE_PRODUIT   WHERE COM_ID=:c")->execute([':c'=>$delCom]);
+                $pdo->commit();
+                $_SESSION['message'] = "Panier vidé.";
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                $_SESSION['message'] = "Erreur lors du vidage du panier.";
+            }
+        } else {
+            $_SESSION['message'] = "Action non autorisée.";
+        }
     }
     header("Location: ".$BASE."commande.php"); exit;
 }

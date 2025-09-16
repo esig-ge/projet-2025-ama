@@ -144,10 +144,10 @@ if (!isset($BASE)) {
                         <span style="--swatch:red"></span>
                     </label>
                     <label class="swatch" for="c-roseC" title="Rose claire">
-                        <span style="--swatch:#ffa0c4"></span>
+                        <span style="--swatch:pink"></span>
                     </label>
                     <label class="swatch" for="c-rose" title="Rose">
-                        <span style="--swatch:pink"></span>
+                        <span style="--swatch:#ffa0c4"></span>
                     </label>
                     <label class="swatch" for="c-blanc" title="Blanc">
                         <span style="--swatch:#e9e9e9"></span>
