@@ -13,14 +13,14 @@ $isLogged = !empty($_SESSION['per_id']);
     <title>DK Bloom — À propos</title>
 
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <link rel="stylesheet" href="<?= $BASE ?>css/style_connexion_inscription.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_apropos.css">
 </head>
 <body>
 
 <?php include __DIR__ . '/includes/header.php'; ?>
-<h1 class="section-title">Notre histoire</h1>
 
-<main class="container">
+<main class="container apropos">
+    <h1 class="section-title">Notre histoire</h1>
     <div class="texte_propos">
         <p>
             Recevoir des fleurs fait toujours plaisir. Elles apportent de la joie, de la couleur et un instant d’émotion…
