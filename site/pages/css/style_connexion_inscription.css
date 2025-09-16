@@ -115,6 +115,10 @@
     text-align: center;
     line-height: 1.6;
     padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    background-color: #ffa0c4;
 }
 
 

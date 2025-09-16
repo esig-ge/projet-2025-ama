@@ -18,9 +18,9 @@ $isLogged = !empty($_SESSION['per_id']);
 <body>
 
 <?php include __DIR__ . '/includes/header.php'; ?>
+<h1 class="section-title">Notre histoire</h1>
 
 <main class="container">
-    <h1 class="section-title">Notre histoire</h1>
     <div class="texte_propos">
         <p>
             Recevoir des fleurs fait toujours plaisir. Elles apportent de la joie, de la couleur et un instant d’émotion…
