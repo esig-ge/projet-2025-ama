@@ -20,10 +20,12 @@ $isLogged = !empty($_SESSION['per_id']); // on teste la clé correcte
             <a href="<?= $BASE ?>contact.php">Contact</a>
 
             <?php if ($isLogged): ?>
-                <a href="<?= $BASE ?>deconnexion.php">Se déconnecter</a>
+                <a href>Mon espace</a>
+                <a href="<?= $BASE ?>commande.php">Mon panier</a>
+                <a href="<?= $BASE ?>deconnexion.php">Me déconnecter</a>
             <?php else: ?>
-                <a href="<?= $BASE ?>inscription.php">S'inscrire</a>
-                <a href="<?= $BASE ?>interface_connexion.php">Se connecter</a>
+                <a href="<?= $BASE ?>inscription.php">M'inscrire</a>
+                <a href="<?= $BASE ?>interface_connexion.php">Me connecter</a>
             <?php endif; ?>
         </nav>
     </div>

@@ -33,7 +33,6 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
     });
 </script>
 
-
 <body class="corps">
 
 <?php include __DIR__ . '/includes/header.php'; ?>
