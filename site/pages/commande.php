@@ -178,7 +178,7 @@ if ($com) {
     $comId = (int)$com['COM_ID'];
     $sql = "
         SELECT 'produit' AS KIND, p.PRO_ID AS ITEM_ID, p.PRO_NOM AS NAME,
-               p.PRO_PRIX AS UNIT_PRICE, cp.CP_QTE_COMMANDEE AS QTE, cp.CP_TYPE_PRODUIT AS SUBTYPE, 
+               p.PRO_PRIX AS UNIT_PRICE, cp.CP_QTE_COMMANDEE AS QTE, cp.CP_TYPE_PRODUIT AS SUBTYPE
         FROM COMMANDE_PRODUIT cp
         JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
         WHERE cp.COM_ID = :com1
