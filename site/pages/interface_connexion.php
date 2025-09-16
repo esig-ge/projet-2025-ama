@@ -46,7 +46,7 @@ if (empty($_SESSION['csrf'])) {
             <input type="password" id="password" name="password" required>
 
             <input type="submit" value="Connexion">
-            <p><a href="<?= $BASE ?>interface_modification_mdp.php">Mot de passe oublié ?</a></p>
+<!--            <p><a href="--><?php //= $BASE ?><!--interface_modification_mdp.php">Mot de passe oublié ?</a></p>-->
         </form>
     </div>
 </main>

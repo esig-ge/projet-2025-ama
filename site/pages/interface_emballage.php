@@ -1,5 +1,6 @@
 <?php
 // /site/pages/interface_emballage.php
+
 session_start();
 
 // Base URL avec slash final (ex: "/…/site/pages/")
