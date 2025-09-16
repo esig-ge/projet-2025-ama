@@ -1,5 +1,6 @@
 <?php
 // /site/pages/interface_supplement.php
+
 session_start();
 
 // Base URL avec slash final (ex: "/…/site/pages/")
@@ -186,17 +187,40 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
     </div>
 
     <?php
-    // ===== Boutons navigation : Retour dynamique =====
-    $previousPath = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '';
-    $retour = $BASE . 'interface_catalogue_bouquet.php'; // défaut
-    if (stripos($previousPath, 'fleur.php') !== false) {
-        $retour = $BASE . 'fleur.php';
+    // ===== Navigation : origine (fleur | bouquet) + liens =====
+    // 1) ?from=... explicite
+    $origin = $_GET['from'] ?? '';
+
+    // 2) sinon, récupère ?from du referer (si on vient d'emballage)
+    if ($origin === '') {
+        $refQuery = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_QUERY);
+        if ($refQuery) {
+            parse_str($refQuery, $qs);
+            if (!empty($qs['from'])) $origin = $qs['from'];
+        }
     }
+
+    // 3) sinon, heuristique sur le chemin du referer
+    if ($origin === '') {
+        $refPath = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '';
+        if (stripos($refPath, 'fleur') !== false)      $origin = 'fleur';
+        elseif (stripos($refPath, 'bouquet') !== false) $origin = 'bouquet';
+    }
+
+    // 4) défaut
+    if ($origin === '') $origin = 'bouquet';
+
+    // Liens
+    $retour  = ($origin === 'fleur')
+        ? $BASE . 'fleur.php'
+        : $BASE . 'interface_catalogue_bouquet.php';
+    $suivant = $BASE . 'interface_emballage.php?from=' . urlencode($origin);
     ?>
     <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
         <a href="<?= htmlspecialchars($retour) ?>" class="button">Retour</a>
-        <a href="<?= $BASE ?>interface_emballage.php" class="button">Suivant</a>
+        <a href="<?= htmlspecialchars($suivant) ?>" class="button">Suivant</a>
     </div>
+
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
