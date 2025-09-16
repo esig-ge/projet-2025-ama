@@ -291,7 +291,7 @@ $total = $subtotal + $shipping;
         .cart-name{font-weight:600}
         .item-sub{font-weight:400;font-size:12px;color:#777}
         .trash-form{margin:0}
-        .trash-btn{background:transparent;border:0;cursor:pointer;font-size:18px;line-height:1;color:#b70f0f;padding:6px;border-radius:8px}
+        .trash-btn{background:transparent;border:0;cursor:pointer;font-size:18px;line-height:1;color:#b70f0f;padding:6px;border-radius:8px;}
         .trash-btn:hover{background:#b70f0f10}
         .flash{margin:12px auto;max-width:920px;background:#f6fff6;color:#0a6b0a;border:1px solid #bfe6bf;padding:10px 12px;border-radius:10px}
         .card.empty{text-align:center;padding:24px}
@@ -299,6 +299,27 @@ $total = $subtotal + $shipping;
         .shipping-block{margin-top:20px}
         .shipping-block .inner{padding:16px}
         .btn-primary[aria-disabled="true"]{pointer-events:none;opacity:.6}
+
+        .bulk-bar{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:12px 16px;
+            border-bottom:1px solid #eee;
+            flex-wrap:wrap;               /* passe en ligne suivante si l’écran est étroit */
+        }
+        .bulk-bar .checkall{display:flex; align-items:center; gap:8px}
+        .bulk-bar .bulk-actions{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin-left:auto;             /* pousse les boutons à droite de la barre */
+        }
+        .bulk-bar .bulk-actions form{display:inline-flex}
+        .btn-ghost.small{white-space:nowrap}
+        @media (max-width:560px){
+            .bulk-bar .bulk-actions{flex-wrap:wrap; margin-left:0}
+        }
     </style>
 </head>
 <body>
@@ -332,6 +353,30 @@ $total = $subtotal + $shipping;
                     <a class="btn-primary" href="<?= $BASE ?>interface_catalogue_bouquet.php">Parcourir le catalogue</a>
                 </p>
             <?php else: ?>
+
+                <!-- Barre de sélection multiple (NOUVEAU) -->
+                <div class="bulk-bar">
+                    <label class="checkall">
+                        <input id="checkAll" type="checkbox"> <span>Tout sélectionner</span>
+                    </label>
+
+                    <div class="bulk-actions">
+                        <form method="post" action="<?= $BASE ?>commande.php" id="bulkDeleteForm"
+                              onsubmit="return confirm('Supprimer tous les articles sélectionnés ?');">
+                            <input type="hidden" name="action" value="bulk_del">
+                            <input type="hidden" name="com_id" value="<?= (int)$com['COM_ID'] ?>">
+                            <button class="btn-ghost small" type="submit">Supprimer la sélection</button>
+                        </form>
+
+                        <form method="post" action="<?= $BASE ?>commande.php"
+                              onsubmit="return confirm('Vider tout le panier ?');">
+                            <input type="hidden" name="action" value="clear_all">
+                            <input type="hidden" name="com_id" value="<?= (int)$com['COM_ID'] ?>">
+                            <button class="btn-ghost small" type="submit">Vider tout le panier</button>
+                        </form>
+                    </div>
+                </div>
+
                 <?php foreach ($lines as $L):
                     $kind = $L['KIND'];
                     $id   = (int)$L['ITEM_ID'];
@@ -339,9 +384,11 @@ $total = $subtotal + $shipping;
                     $pu   = (float)$L['UNIT_PRICE'];
                     $lt   = $pu * $q;
                     $sub  = $L['SUBTYPE'];
-                    $img = $BASE . 'img/' . getProductImage($L['NAME']);
+                    $img  = $BASE . 'img/' . getProductImage($L['NAME']);
                     ?>
                     <div class="cart-row">
+                        <!-- Case à cocher liée au formulaire bulk (NOUVEAU) -->
+                        <input form="bulkDeleteForm" type="checkbox" name="sel[]" value="<?= htmlspecialchars($kind) . ':' . $id ?>">
                         <img class="cart-img" src="<?= htmlspecialchars($img) ?>" alt="">
                         <div class="cart-name">
                             <?= htmlspecialchars($L['NAME']) ?><br>
@@ -350,6 +397,7 @@ $total = $subtotal + $shipping;
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
                         <div class="cart-total"><?= number_format($lt, 2, '.', ' ') ?> CHF</div>
 
+                        <!-- Suppression unitaire (existant) -->
                         <form class="trash-form" method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Supprimer cet article ?');">
                             <input type="hidden" name="action" value="del">
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
@@ -401,7 +449,6 @@ $total = $subtotal + $shipping;
         </aside>
     </div>
 
-    <!-- Bloc LIVRAISON séparé -->
     <?php
     $disableShipping = ($subtotal <= 0);
     $disabledAttr  = $disableShipping ? 'disabled' : '';
@@ -419,7 +466,7 @@ $total = $subtotal + $shipping;
             </fieldset>
 
             <div class="actions" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:10px;">
-                <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
+                <a class="btn-ghost" href="<?= $BASE ?>interface_catalogue_bouquet.php">Continuer mes achats</a>
                 <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
             </div>
 
@@ -431,5 +478,16 @@ $total = $subtotal + $shipping;
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+
+<!-- Petit JS pour cocher/décocher tout (facultatif, pas nécessaire au « Vider tout ») -->
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        var checkAll = document.getElementById('checkAll');
+        if (!checkAll) return;
+        checkAll.addEventListener('change', function(){
+            document.querySelectorAll('input[name="sel[]"]').forEach(function(cb){ cb.checked = checkAll.checked; });
+        });
+    });
+</script>
 </body>
 </html>
