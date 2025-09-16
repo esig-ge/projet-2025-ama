@@ -353,27 +353,36 @@ $total = $subtotal + $shipping;
     $disabledAttr  = $disableShipping ? 'disabled' : '';
     $disabledClass = $disableShipping ? ' disabled' : '';
     ?>
+    <br>
     <section class="card shipping-block<?= $disabledClass ?>">
         <div class="inner">
             <div class="section-title">Type de livraison</div>
-            <fieldset class="full group">
-                <div class="options-row" style="display:flex; gap:16px; flex-wrap:wrap; margin-top:6px;">
-                    <label class="opt"><input type="radio" name="livraison" value="standard" <?= $disabledAttr ?> checked> <span>Standard (48h)</span></label>
-                    <label class="opt"><input type="radio" name="livraison" value="express"  <?= $disabledAttr ?>> <span>Express (24h)</span></label>
-                    <label class="opt"><input type="radio" name="livraison" value="retrait"  <?= $disabledAttr ?>> <span>Retrait en boutique</span></label>
-                </div>
+            <fieldset class="full group shipping-options">
+                <label class="opt">
+                    <input type="radio" name="livraison" value="standard" <?= $disabledAttr ?> checked>
+                    <span>🚚 Standard (48h)</span>
+                </label>
+                <label class="opt">
+                    <input type="radio" name="livraison" value="express" <?= $disabledAttr ?>>
+                    <span>⚡ Express (24h)</span>
+                </label>
+                <label class="opt">
+                    <input type="radio" name="livraison" value="retrait" <?= $disabledAttr ?>>
+                    <span>🏬 Retrait en boutique</span>
+                </label>
             </fieldset>
-
-            <div class="actions" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:10px;">
+            <br>
+            <div class="actions">
                 <a class="btn-ghost" href="<?= $BASE ?>interface_catalogue_bouquet.php">Continuer mes achats</a>
                 <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
             </div>
-
+            <br>
             <?php if ($disableShipping): ?>
-                <p class="muted" style="margin-top:10px">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
+                <p class="muted">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
             <?php endif; ?>
         </div>
     </section>
+
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
