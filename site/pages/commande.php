@@ -33,10 +33,13 @@ function getProductImage(string $name): string {
     static $map = [
         '12 roses'=>'12Roses.png','bouquet 12'=>'12Roses.png',
         '20 roses'=>'20Roses.png','bouquet 20'=>'20Roses.png',
+        '24 roses'=>'20Roses.png','bouquet 24'=>'20Roses.png',
         '36 roses'=>'36Roses.png','bouquet 36'=>'36Roses.png',
         '50 roses'=>'50Roses.png','bouquet 50'=>'50Roses.png',
         '66 roses'=>'66Roses.png','bouquet 66'=>'66Roses.png',
+        '99 roses'=>'100Roses.png','bouquet 99'=>'100Roses.png',
         '100 roses'=>'100Roses.png','bouquet 100'=>'100Roses.png',
+        '101 roses'=>'100Roses.png','bouquet 101'=>'100Roses.png',
         'rose rouge'=>'rouge.png','rose rose'=>'rose.png','rose blanche'=>'rosesBlanche.png',
         'rose bleue'=>'bleu.png','rose noire'=>'noir.png',
         'mini ourson'=>'ours_blanc.PNG','deco anniv'=>'happybirthday.PNG','decoration anniversaire'=>'happybirthday.PNG',
