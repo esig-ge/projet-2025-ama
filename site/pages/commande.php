@@ -385,10 +385,6 @@ $total = $subtotal + $shipping;
                     <span>🚚 Standard (48h)</span>
                 </label>
                 <label class="opt">
-                    <input type="radio" name="livraison" value="express" <?= $disabledAttr ?>>
-                    <span>⚡ Express (24h)</span>
-                </label>
-                <label class="opt">
                     <input type="radio" name="livraison" value="retrait" <?= $disabledAttr ?>>
                     <span>🏬 Retrait en boutique</span>
                 </label>

@@ -19,7 +19,7 @@ $isLogged = !empty($_SESSION['per_id']);
 
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="container">
+<main class="container apropos">
     <h1 class="section-title">Notre histoire</h1>
     <div class="texte_propos">
         <p>
