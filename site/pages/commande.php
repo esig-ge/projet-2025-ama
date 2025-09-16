@@ -419,7 +419,7 @@ $total = $subtotal + $shipping;
             </fieldset>
 
             <div class="actions" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:10px;">
-                <a class="btn-ghost" href="<?= $BASE ?>interface_catalogue_bouquet.php">Continuer mes achats</a>
+                <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
                 <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
             </div>
 
