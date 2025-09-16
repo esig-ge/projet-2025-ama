@@ -29,6 +29,49 @@ function normImgPath(p) {
     return SITE_BASE + p;
 }
 
+/** Récupère une quantité valide (>=1 entier) depuis toutes les sources possibles. */
+function resolveQty(btn, optsOrQty) {
+    // 0) si 3e arg est un nombre
+    if (typeof optsOrQty === 'number') {
+        const n = Math.max(1, optsOrQty | 0);
+        if (n) return n;
+    }
+    // 1) si 3e arg est un objet avec qty
+    if (optsOrQty && typeof optsOrQty === 'object') {
+        const q = parseInt(optsOrQty.qty, 10);
+        if (Number.isFinite(q) && q > 0) return q;
+    }
+    // 2) data-qty (attribut) sur le bouton
+    const fromAttr = parseInt(btn?.getAttribute?.('data-qty'), 10);
+    if (Number.isFinite(fromAttr) && fromAttr > 0) return fromAttr;
+
+    // 3) dataset.qty
+    const fromDataset = parseInt(btn?.dataset?.qty, 10);
+    if (Number.isFinite(fromDataset) && fromDataset > 0) return fromDataset;
+
+    // 4) input .qty dans le même form / carte
+    const form = btn?.closest?.('form, .product, .card, .produit-info');
+    const input = form?.querySelector?.('.qty');
+    const fromInput = parseInt(input?.value, 10);
+    if (Number.isFinite(fromInput) && fromInput > 0) return fromInput;
+
+    // 5) défaut
+    return 1;
+}
+
+/** Récupère une couleur (si utilisée) ; supporte name="couleur_ID" ou "couleur". */
+function resolveColor(btn, optsOrQty) {
+    if (optsOrQty && typeof optsOrQty === 'object' && optsOrQty.color) {
+        return String(optsOrQty.color);
+    }
+    const form = btn?.closest?.('form, .product, .card, .produit-info');
+    return (
+        form?.querySelector?.('input[name^="couleur_"]:checked')?.value ||
+        form?.querySelector?.('input[name="couleur"]:checked')?.value ||
+        null
+    );
+}
+
 /* =============== 3) Appels API =============== */
 async function callApi(action, params = {}) {
     const url  = `${API_URL}?action=${encodeURIComponent(action)}`;
@@ -65,7 +108,7 @@ function updateSummary(subtotal) {
     const btn = document.getElementById('btn-checkout');
     if (btn) {
         const enabled = subtotal > 0;
-        btn.toggleAttribute('tabindex', !enabled); // tabindex="-1" quand désactivé
+        btn.toggleAttribute('tabindex', !enabled);
         btn.style.pointerEvents = enabled ? '' : 'none';
         btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
         btn.style.opacity = enabled ? '' : '0.6';
@@ -110,7 +153,6 @@ async function renderCart() {
         </div>`;
         }).join('');
 
-        // Utilise le subtotal serveur si présent, sinon recalcule
         const subtotal = typeof resp.subtotal === 'number'
             ? resp.subtotal
             : items.reduce((s, it) => {
@@ -129,26 +171,40 @@ async function renderCart() {
 }
 
 /* =============== 6) Ajouter au panier =============== */
-async function addToCart(proId, btn, qtyFromBtn){
-    const pid = Number(proId); if(!pid) return;
+/**
+ * Signature tolérante :
+ *   addToCart(proId, btn, 3eArg)
+ * - 3eArg peut être un nombre (qty) OU un objet { qty, color, ... }
+ * - si absent, la quantité est résolue via data-qty / input .qty proches.
+ */
+async function addToCart(proId, btn, thirdArg) {
+    const pid = Number(proId);
+    if (!pid) { console.debug('[DKBloom:addToCart] proId invalide:', proId); return; }
 
-    // quantité: priorité à l'argument, puis au data-*, sinon 1
-    let qty = Number(qtyFromBtn ?? btn?.dataset?.qty ?? 1);
-    if (!Number.isFinite(qty) || qty < 1) qty = 1;
+    const qty   = resolveQty(btn, thirdArg);
+    const color = resolveColor(btn, thirdArg); // utilisé seulement si ton API gère la couleur
+
+    // Prépare payload pour l’API
+    const payload = { pro_id: pid, qty };
+    if (color) payload.color = color; // garde ou retire selon ton PHP
 
     if (btn) btn.disabled = true;
     try {
-        await callApi('add', { pro_id: pid, qty });
+        await callApi('add', payload);
         if (document.getElementById('cart-list')) await renderCart();
         toastAdded(btn, `Produit #${pid}`);
-        if (btn){ const old=btn.textContent; btn.textContent='Ajouté ✓'; setTimeout(()=>btn.textContent=old||'Ajouter', 900); }
+        if (btn){
+            const old = btn.textContent;
+            btn.textContent = 'Ajouté ✓';
+            setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
+        }
     } catch (e) {
+        console.error('API add error', e);
         toastError(btn, `Produit #${pid}`, e);
     } finally {
         if (btn) btn.disabled = false;
     }
 }
-
 
 /* === Sélection de rose (fleurs) === */
 function selectedRoseRadio(){
@@ -160,16 +216,11 @@ async function selectRose(btn){
     if (!r) { alert('Choisis une couleur de rose.'); return; }
     const proId = r.dataset.proId;
 
-    // lecture de la quantité dans le bloc du produit
-    const box = btn.closest('.produit-info');
-    const qtyInput = box?.querySelector('.qty');
-    let qty = parseInt(qtyInput?.value ?? '1', 10);
-    if (!qty || qty < 1) qty = 1;
-
-    // pour compat éventuelle avec d'autres scripts / toasts
+    // pour compat avec d’autres scripts/toasts
+    const qty = resolveQty(btn);
     btn.dataset.qty = String(qty);
 
-    await addToCart(proId, btn, qty);
+    return addToCart(proId, btn, qty);
 }
 
 /* === Emballage === */
@@ -179,14 +230,9 @@ async function addEmballage(embId, btn){
 
     if (btn) btn.disabled = true;
     try {
-        // API accepte 'add' avec emb_id (ou alias add_emballage)
         await callApi('add', { emb_id: id, qty: 1 });
+        if (document.getElementById('cart-list')) await renderCart();
 
-        if (document.getElementById('cart-list')) {
-            await renderCart();
-        }
-
-        // Toast : emballage ajouté
         const name = btn?.dataset?.embName || `Emballage #${id}`;
         showToast(`${name} a bien été ajouté au panier !`, 'success');
 
@@ -208,19 +254,16 @@ async function addSupplement(supId, btn){
     const id = Number(supId);
     if (!id) return;
 
+    // ← NOUVEAU : on lit la quantité comme sur fleurs/bouquets
+    const qty = resolveQty(btn) || 1;
+
     if (btn) btn.disabled = true;
     try {
-        // IMPORTANT: on utilise l'action 'add' avec sup_id (compatible avec ton API PHP)
-        await callApi('add', { sup_id: id, qty: 1 });
+        await callApi('add', { sup_id: id, qty }); // ← qty dynamique
+        if (document.getElementById('cart-list')) await renderCart();
 
-        if (document.getElementById('cart-list')) {
-            await renderCart();
-        }
-
-        // Toast : supplément ajouté
         const name = btn?.dataset?.supName || `Supplément #${id}`;
         showToast(`${name} a bien été ajouté au panier !`, 'success');
-
 
         if (btn){
             const old = btn.textContent;
@@ -242,7 +285,7 @@ async function removeFromCart(itemType, id) {
         if (!id) return;
 
         const params = {};
-        if (itemType === 'produit')    params.pro_id = id;
+        if (itemType === 'produit')       params.pro_id = id;
         else if (itemType === 'emballage') params.emb_id = id;
         else if (itemType === 'supplement') params.sup_id = id;
 
@@ -284,17 +327,14 @@ function toastError(btn, fallback, err){
     console.error(err);
 }
 
-
 /**
  * Affiche un toast.
- * @param {string} message  - Texte principal
- * @param {('success'|'info'|'error')} [type='success']
- * @param {number} [timeout=2600] Durée avant auto-fermeture (ms). Mettre 0 pour désactiver.
- * @param {string} [title]  - Petit titre gras optionnel
+ * @param {string} message
+ * @param {'success'|'info'|'error'} [type='success']
+ * @param {number} [timeout=2600]
+ * @param {string} [title]
  */
 function showToast(message, type = 'success', timeout = 2600, title){
-    // root
-    let root = document.getElementById('dkb-toasts');
     if(!document.getElementById('dkb-toast-css')){
         const s = document.createElement('style');
         s.id = 'dkb-toast-css';
@@ -304,11 +344,10 @@ function showToast(message, type = 'success', timeout = 2600, title){
     display:flex; flex-direction:column; gap:10px; z-index:2147483647; pointer-events:none;
   }
   .dkb-toast{
-    --t-border:#CFEAD8;                 /* vert pastel par défaut */
+    --t-border:#CFEAD8;
     display:flex; align-items:center; gap:10px;
     min-width:260px; max-width:min(92vw,520px);
-    background:#fff !important;         /* fond blanc */
-    color:#111 !important;              /* texte sombre */
+    background:#fff !important; color:#111 !important;
     padding:12px 14px; border-radius:12px;
     border:2px solid var(--t-border);
     box-shadow:0 10px 25px rgba(0,0,0,.12);
@@ -317,21 +356,14 @@ function showToast(message, type = 'success', timeout = 2600, title){
     transition:opacity .2s ease, transform .2s ease; pointer-events:auto;
   }
   .dkb-toast.show{ opacity:1; transform:translateY(0); }
-
-  /* variantes (pastel) : bordure seulement */
-  .dkb-toast.success{ --t-border:#B9E4C8; }  /* vert pastel */
-  .dkb-toast.info   { --t-border:#C9DAFF; }  /* bleu pastel */
-  .dkb-toast.error  { --t-border:#F6C6C6; }  /* rouge pastel */
-
-  /* petite barre colorée à gauche (option esthétique) */
+  .dkb-toast.success{ --t-border:#B9E4C8; }
+  .dkb-toast.info   { --t-border:#C9DAFF; }
+  .dkb-toast.error  { --t-border:#F6C6C6; }
   .dkb-toast::before{
     content:""; width:6px; align-self:stretch;
     background:var(--t-border); border-radius:8px 0 0 8px;
   }
-
   .dkb-toast .title{ font-weight:700; margin-right:4px; }
-
-  /* bouton close — neutre, sans styles globaux */
   .dkb-toast .dkb-close{
     all:unset; margin-left:auto; cursor:pointer; opacity:.6;
     font-size:18px; line-height:1; padding:2px 4px; color:#111;
@@ -340,16 +372,8 @@ function showToast(message, type = 'success', timeout = 2600, title){
 `;
         document.head.appendChild(s);
     }
-    if(!root){
-        root = document.createElement('div');
-        root.id = 'dkb-toasts';
-        root.className = 'dkb-toasts';
-        root.setAttribute('aria-live','polite');
-        root.setAttribute('aria-atomic','true');
-        document.body.appendChild(root);
-    }
 
-    // toast
+    const root = getToastRoot();
     const toast = document.createElement('div');
     toast.className = `dkb-toast ${type}`;
     toast.role = 'status';
@@ -373,7 +397,6 @@ function showToast(message, type = 'success', timeout = 2600, title){
     toast.append(content, closeBtn);
     root.prepend(toast);
 
-    // force reflow + animation (anti-couac)
     void toast.offsetHeight;
     toast.classList.add('show');
     setTimeout(()=>toast.classList.add('show'), 50);
@@ -392,65 +415,10 @@ function removeToast(toast){
     setTimeout(()=>toast.remove(), 200);
 }
 
-
-/* Expose au global pour onload/onclick inline */
+/* =============== 9) Expose global =============== */
 window.renderCart     = renderCart;
 window.addToCart      = addToCart;
 window.selectRose     = selectRose;
 window.addSupplement  = addSupplement;
 window.addEmballage   = addEmballage;
 window.removeFromCart = removeFromCart;
-
-/* ======= PATCH quantité — forcer qty à partir du champ .qty ======= */
-(function(){
-    // utilitaire log (désactive en prod si tu veux)
-    const log = (...a) => console.debug('[DKBloom:addToCart]', ...a);
-
-    // remplace addToCart pour accepter une quantité
-    window.addToCart = async function addToCart(proId, btn, qtyFromBtn){
-        const pid = Number(proId);
-        if (!pid) { log('proId invalide:', proId); return; }
-
-        // 1) quantité: priorité à l’argument, puis au data-*, puis lecture dans le DOM, sinon 1
-        let qty = Number(
-            qtyFromBtn
-            ?? btn?.dataset?.qty
-            ?? btn?.closest('.produit-info')?.querySelector('.qty')?.value
-            ?? 1
-        );
-        if (!Number.isFinite(qty) || qty < 1) qty = 1;
-
-        log('POST add', { pro_id: pid, qty });
-        if (btn) btn.disabled = true;
-
-        try {
-            const data = await callApi('add', { pro_id: pid, qty });
-            log('API ok → items:', data?.items);
-            if (document.getElementById('cart-list')) await renderCart();
-            toastAdded(btn, `Produit #${pid}`);
-            if (btn){ const old=btn.textContent; btn.textContent='Ajouté ✓'; setTimeout(()=>btn.textContent=old||'Ajouter', 900); }
-        } catch (e) {
-            console.error('API add error', e);
-            toastError(btn, `Produit #${pid}`, e);
-        } finally {
-            if (btn) btn.disabled = false;
-        }
-    };
-
-    // remplace selectRose pour lire la quantité et la passer à addToCart
-    window.selectRose = async function selectRose(btn){
-        const r = document.querySelector('input[name="rose-color"]:checked');
-        if (!r) { alert('Choisis une couleur de rose.'); return; }
-        const proId = r.dataset.proId;
-
-        // lire la quantité dans le bloc
-        const box = btn.closest('.produit-info');
-        let qty = parseInt(box?.querySelector('.qty')?.value ?? '1', 10);
-        if (!qty || qty < 1) qty = 1;
-
-        // pour compat éventuelle avec d’autres scripts
-        btn.dataset.qty = String(qty);
-
-        return window.addToCart(proId, btn, qty);
-    };
-})();
