@@ -79,6 +79,51 @@
 .conteneur_form a:hover {
     color: #fff;
 }
+<<<<<<< HEAD
+/*------------------------------------------- page a propos-------------------------------------------*/
+
+.slider {
+    width: 100%;
+    overflow: hidden;
+}
+
+.slide-track {
+    display: flex;
+    gap: 10px;
+    animation: scroll 40s linear infinite;
+}
+
+
+.slide-track img {
+    width: 250px;         /* fixe la largeur */
+    height: 180px;
+    object-fit: cover;
+    margin-right: 5px;
+    border-radius: 12px;  /* optionnel : arrondi élégant */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* petit effet */
+}
+
+
+@keyframes scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+
+.texte_propos {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    text-align: center;
+    line-height: 1.6;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-items: center;
+    background-color: #ffa0c4;
+}
+
+=======
+>>>>>>> f2ead96d57c58a17ae80d92e00ab1f3ce1cd431d
 
 /*------------------------------------------- contact-------------------------------------------*/
 
