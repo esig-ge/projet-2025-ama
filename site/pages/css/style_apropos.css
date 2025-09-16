@@ -1,0 +1,64 @@
+:root{
+    --brand:#7a0000;      /* même couleur que header/footer */
+    --header-h:64px;      /* adapte à ton header réel */
+    --footer-h:120px;     /* hauteur approx. de ton footer */
+}
+
+/* Mise en page de la page À propos */
+body .container.apropos{
+    /* laisse la place au header fixe + footer */
+    min-height: calc(100vh - var(--header-h) - var(--footer-h));
+    display: grid;
+    grid-template-rows: auto 1fr auto; /* titre / texte centré / slider en bas */
+    align-items: center;
+    justify-items: center;
+    padding: 24px 16px;
+    text-align: center;
+}
+
+/* Titre en haut, centré, même couleur que header/footer */
+body .container.apropos .section-title{
+    margin: 0 0 12px;
+    color: var(--brand);
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+}
+
+/* Texte centré au milieu */
+body .container.apropos .texte_propos{
+    max-width: 900px;
+    display: flex;
+    align-items: center;    /* centrage vertical du paragraphe */
+    justify-content: center;
+    margin: 0 auto;
+    line-height: 1.6;
+    font-size: 1.1rem;
+    color: #111;
+}
+
+/* Slider (ou galerie) collé en bas de la zone main */
+body .container.apropos .slider{
+    align-self: end;        /* force la ligne tout en bas */
+    width: 100%;
+    margin-top: 24px;
+}
+
+/* si tes images ne sont pas dans .slider, sécurités : */
+body .container.apropos .galerie,
+body .container.apropos .images,
+body .container.apropos .carrousel{
+    align-self: end;
+    width: 100%;
+}
+
+.apropos .slider {
+    margin-top: 40px;
+    width:100%; overflow:hidden;
+}
+
+.slide-track{ display:flex; gap:10px; animation:scroll 40s linear infinite; }
+.slide-track img{
+    width:250px; height:180px; object-fit:cover; margin-right:5px;
+    border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+@keyframes scroll{ 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }

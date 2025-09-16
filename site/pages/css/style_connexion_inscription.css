@@ -79,38 +79,7 @@
 .conteneur_form a:hover {
     color: #fff;
 }
-/*------------------------------------------- page a propos-------------------------------------------*/
-.apropos{
-    padding-top: calc(var(--header-h, 64px) + 24px);
-}
 
-.apropos .section-title{
-    display:block;
-    width:100%;
-    color: var(--brand, #7a0000);
-    text-align: center;
-    font-size: clamp(2.4rem, 3.5vw, 3rem);
-    font-weight: 700;
-    line-height: 1.15;
-    margin: 0 auto 32px;
-}
-
-.apropos .texte_propos{
-    max-width: 900px;
-    margin: 40px auto 40px;
-    text-align: center;
-    line-height: 1.8;
-    padding: 0 20px;
-}
-
-/* Slider (inchangé, juste rappel pour contexte) */
-.slider{ width:100%; overflow:hidden; }
-.slide-track{ display:flex; gap:10px; animation:scroll 40s linear infinite; }
-.slide-track img{
-    width:250px; height:180px; object-fit:cover; margin-right:5px;
-    border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.15);
-}
-@keyframes scroll{ 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 /*------------------------------------------- contact-------------------------------------------*/
 
 /* Style global du formulaire */
