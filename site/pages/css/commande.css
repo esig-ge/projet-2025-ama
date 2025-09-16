@@ -349,3 +349,93 @@ a:focus,button:focus,input:focus{
     color: #e00;
 }
 
+.bulk-bar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px;
+    border-bottom:1px solid #eee;
+    flex-wrap:wrap;               /* passe en ligne suivante si l’écran est étroit */
+}
+.bulk-bar .checkall{display:flex; align-items:center; gap:8px}
+.bulk-bar .bulk-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-left:auto;             /* pousse les boutons à droite de la barre */
+}
+.bulk-bar .bulk-actions form{display:inline-flex}
+.btn-ghost.small{white-space:nowrap}
+@media (max-width:560px){
+    .bulk-bar .bulk-actions{flex-wrap:wrap; margin-left:0}
+}
+/* --- Bloc livraison propre et aéré --- */
+.shipping-block .section-title{
+    margin-bottom: 10px;
+}
+
+.shipping-options{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px,1fr));
+    gap: 18px;
+    border: 0;
+    padding: 0;
+    margin: 14px 0 0;
+}
+
+/* cache VRAIMENT les radios (toutes plateformes) */
+.shipping-options .opt input[type="radio"]{
+    position: absolute;
+    inset: 0;
+    width: 0; height: 0;
+    opacity: 0;
+    pointer-events: none;
+    appearance: none;
+}
+
+/* bouton "tuile" */
+.shipping-options .opt{
+    display: block;
+}
+
+.shipping-options .opt > span{
+    display: block;
+    padding: 14px 18px;              /* + d’air */
+    border: 2px solid #e1e1e1;
+    border-radius: 14px;
+    background: #fafafa;
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.25;
+    color: #222;
+    transition: transform .08s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+/* hover / focus */
+.shipping-options .opt > span:hover{
+    background: #f2f2f2;
+    border-color: #d5d5d5;
+}
+
+.shipping-options .opt input[type="radio"]:focus-visible + span{
+    outline: 3px solid rgba(122,0,0,.25);
+    outline-offset: 2px;
+}
+
+/* sélectionné */
+.shipping-options .opt input[type="radio"]:checked + span{
+    border-color: var(--brand, #7a0000);
+    background: #fff6f6;
+    color: var(--brand, #7a0000);
+    box-shadow: 0 4px 12px rgba(0,0,0,.10);
+    transform: translateY(-1px);
+}
+
+/* espace net avec les boutons d’action */
+.shipping-actions{
+    margin-top: 20px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+

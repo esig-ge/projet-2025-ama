@@ -1,5 +1,4 @@
 <?php
-// /site/pages/otp_forgot.php
 session_start();
 
 /* ---------- Base URL (avec slash final) ---------- */

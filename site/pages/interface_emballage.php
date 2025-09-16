@@ -1,10 +1,38 @@
 <?php
 // /site/pages/interface_emballage.php
+
 session_start();
 
 // Base URL avec slash final (ex: "/…/site/pages/")
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+
+/**
+ * Déterminer l'origine de navigation (fleur | bouquet) pour la propager.
+ * Ordre de priorité:
+ *  1) Paramètre explicite ?from=... dans l'URL
+ *  2) Paramètre ?from=... présent dans le referer (si l'on vient de Suppléments)
+ *  3) Heuristique sur le path du referer (contient "fleur.php" ou "bouquet")
+ *  4) Défaut: "bouquet"
+ */
+$origin = $_GET['from'] ?? '';
+if ($origin === '') {
+    $refQuery = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_QUERY);
+    if ($refQuery) {
+        parse_str($refQuery, $qs);
+        if (!empty($qs['from'])) $origin = $qs['from'];
+    }
+}
+if ($origin === '') {
+    $refPath = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '';
+    if (stripos($refPath, 'fleur.php') !== false)   $origin = 'fleur';
+    elseif (stripos($refPath, 'bouquet') !== false) $origin = 'bouquet';
+}
+if ($origin === '') $origin = 'bouquet';
+
+// URLs nav
+$retourSupp = $BASE . 'interface_supplement.php?from=' . urlencode($origin);
+$suivantCmd = $BASE . 'commande.php';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -26,8 +54,8 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
     <script src="<?= $BASE ?>js/commande.js" defer></script>
 
     <script>
-        function addEmballageForm(form){
-            event?.preventDefault();
+        function addEmballageForm(form, evt){
+            (evt || window.event)?.preventDefault();
             const embInput = form.querySelector('input[name="emb_id"]');
             const btn      = form.querySelector('button.add-to-cart');
             if(!embInput) return false;
@@ -63,15 +91,14 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         } /* vert pour “offert” */
 
         /* ===== Emballages = grille comme Suppléments ===== */
-         #emb-page .catalogue{
-             display:grid !important;
-             grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
-             gap:24px !important;
-             max-width:1200px;
-             margin:0 auto;
-             align-items:stretch;
-         }
-
+        #emb-page .catalogue{
+            display:grid !important;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+            gap:24px !important;
+            max-width:1200px;
+            margin:0 auto;
+            align-items:stretch;
+        }
         #emb-page .card.product{
             width:100% !important;
             max-width:none !important;
@@ -83,26 +110,22 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             flex-direction:column;
             justify-content:flex-start;
         }
-
         #emb-page .card.product img{
             width:100%;
-            height:200px;              /* même gabarit visuel que Suppléments */
+            height:200px; /* même gabarit visuel que Suppléments */
             object-fit:cover;
             border-radius:10px;
             margin-bottom:10px;
         }
-
         #emb-page .card.product h3{
             margin:6px 0 2px;
             font-size:1.05rem;
         }
-
         #emb-page .price{
             font-weight:600;
             color:#2c7a2c;
             margin-bottom:10px;
         }
-
         #emb-page .add-to-cart{
             align-self:center;
             padding:.5rem 1.1rem;
@@ -122,6 +145,22 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
                 grid-template-columns: repeat(2, minmax(0,1fr)) !important;
             }
         }
+
+        /* Barre nav */
+        .nav-actions{
+            text-align:center;
+            margin:16px 0 24px;
+        }
+        .nav-actions .button{
+            display:inline-block;
+            margin:0 6px;
+            padding:.55rem 1.1rem;
+            border-radius:999px;
+            background:var(--accent, #7b0d15);
+            color:#fff;
+            text-decoration:none;
+        }
+        .nav-actions .button:hover{ filter:brightness(1.05); }
     </style>
 
 </head>
@@ -130,7 +169,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
 <main id="emb-page" class="container catalogue-page" role="main">
     <h1 class="section-title">Emballages</h1>
-<br>
+    <br>
     <p class="muted" style="text-align:center;margin:-6px 0 16px;">
         Choisissez un emballage pour votre/vos fleur(s) ou votre/vos bouquet(s).<br>
         <strong class="price">Emballage offert</strong> — un seul emballage possible par fleur/bouquet.
@@ -138,7 +177,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
     <div class="catalogue" aria-label="Liste d'emballages">
         <!-- Blanc -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
             <input type="hidden" name="emb_id" value="1">
             <img src="<?= $BASE ?>img/emballage_blanc.PNG" alt="Emballage blanc" loading="lazy">
             <h3>Emballage blanc</h3>
@@ -149,7 +188,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Gris -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
             <input type="hidden" name="emb_id" value="2">
             <img src="<?= $BASE ?>img/emballage_gris.PNG" alt="Emballage gris" loading="lazy">
             <h3>Emballage gris</h3>
@@ -160,7 +199,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Noir -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
             <input type="hidden" name="emb_id" value="3">
             <img src="<?= $BASE ?>img/emballage_noir.PNG" alt="Emballage noir" loading="lazy">
             <h3>Emballage noir</h3>
@@ -171,7 +210,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Rose -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
             <input type="hidden" name="emb_id" value="4">
             <img src="<?= $BASE ?>img/emballage_rose.PNG" alt="Emballage rose" loading="lazy">
             <h3>Emballage rose</h3>
@@ -182,7 +221,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
 
         <!-- Violet -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this)">
+        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
             <input type="hidden" name="emb_id" value="5">
             <img src="<?= $BASE ?>img/emballage_violet.PNG" alt="Emballage violet" loading="lazy">
             <h3>Emballage violet</h3>
@@ -193,9 +232,11 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         </form>
     </div>
 
-    <div class="nav-actions" style="text-align:center; margin:16px 0 24px;">
-        <a href="<?= $BASE ?>interface_supplement.php" class="button">Retour</a>
-        <a href="<?= $BASE ?>commande.php" class="button">Suivant</a>
+    <div class="nav-actions">
+        <!-- Toujours RETOUR → Suppléments, en propageant l'origine -->
+        <a href="<?= htmlspecialchars($retourSupp) ?>" class="button">Retour</a>
+        <!-- Suivant → Commande (pas besoin d'origine ici) -->
+        <a href="<?= htmlspecialchars($suivantCmd) ?>" class="button">Suivant</a>
     </div>
 </main>
 

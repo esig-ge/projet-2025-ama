@@ -1,5 +1,5 @@
 <?php
-// Base URL (slash final)
+// Base URL (avec slash final)
 if (!isset($BASE)) {
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
     $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
@@ -21,37 +21,10 @@ if (!isset($BASE)) {
         window.DKBASE  = <?= json_encode($BASE) ?>;
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
+
+    <!-- JS panier (contient selectRose & addToCart) -->
+    <script src="<?= $BASE ?>js/commande.js?v=qty4" defer></script>
 </head>
-<script>
-    (function () {
-        // On poste directement au bon script PHP (on n’utilise pas API_URL ici)
-        const ACTION_URL = '<?= $BASE ?>traitement_commande_add.php';
-
-        // Appelée par ton bouton: <button class="btn" onclick="selectRose(this)">Sélectionner</button>
-        window.selectRose = function (btn) {
-            const root   = btn.closest('.produit-info');
-            const picked = root.querySelector('input.color-radio:checked');
-            const qtyEl  = root.querySelector('input.qty');
-
-            const proId = parseInt(picked?.dataset.proId || '0', 10);
-            const qty   = Math.max(parseInt(qtyEl?.value || '1', 10), 1);
-
-            if (!proId) { alert('Choisis une couleur de rose.'); return; }
-
-            const form = new FormData();
-            form.append('kind', 'produit');     // attendu par traitement_commande_add.php
-            form.append('type', 'fleur');
-            form.append('pro_id', proId);
-            form.append('qty', qty);
-            form.append('redirect', 'commande.php'); // revenir au panier
-
-            fetch(ACTION_URL, { method: 'POST', body: form })
-                .then(() => { window.location.href = '<?= $BASE ?>commande.php'; })
-                .catch(() => { window.location.href = '<?= $BASE ?>commande.php'; });
-        };
-    })();
-</script>
 
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
@@ -62,46 +35,64 @@ if (!isset($BASE)) {
             <div class="produit-info">
                 <h3 class="product-title">La rose</h3>
                 <p class="product-desc">
-                    Elle est le symbole d’un amour né au premier regard. Et incarne l’unicité.
+                    Elle est le symbole d’un amour né au premier regard et incarne l’unicité.
                 </p>
 
                 <!-- Radios (portent l'ID produit + nom + image) -->
                 <input type="radio" id="c-rouge"  name="rose-color" class="color-radio"
-                       data-pro-id="1" data-name="Rose rouge"  data-img="<?= $BASE ?>img/rouge.png" checked>
-                <input type="radio" id="c-rose"   name="rose-color" class="color-radio"
-                       data-pro-id="2" data-name="Rose rose"   data-img="<?= $BASE ?>img/rose.png">
-                <input type="radio" id="c-roseC"  name="rose-color" class="color-radio"
-                       data-pro-id="3" data-name="Rose claire" data-img="<?= $BASE ?>img/rose_claire.png">
-                <input type="radio" id="c-blanc"  name="rose-color" class="color-radio"
-                       data-pro-id="4" data-name="Rose blanche" data-img="<?= $BASE ?>img/rosesBlanche.png">
-                <input type="radio" id="c-noir"   name="rose-color" class="color-radio"
-                       data-pro-id="5" data-name="Rose noire"   data-img="<?= $BASE ?>img/noir.png">
-                <input type="radio" id="c-bleu"   name="rose-color" class="color-radio"
-                       data-pro-id="6" data-name="Rose bleue"   data-img="<?= $BASE ?>img/bleu.png">
+                       data-pro-id="1" data-name="Rose rouge"       data-img="<?= $BASE ?>img/rouge.png" checked>
 
-                <!-- Zone image (tes 6 images superposées comme avant) -->
+                <input type="radio" id="c-roseC" name="rose-color" class="color-radio"
+                       data-pro-id="2" data-name="Rose claire"      data-img="<?= $BASE ?>img/rose_claire.png">
+
+                <input type="radio" id="c-rose"  name="rose-color" class="color-radio"
+                       data-pro-id="3" data-name="Rose rose"        data-img="<?= $BASE ?>img/rose.png">
+
+                <input type="radio" id="c-blanc" name="rose-color" class="color-radio"
+                       data-pro-id="4" data-name="Rose blanche"     data-img="<?= $BASE ?>img/rosesBlanche.png">
+
+                <input type="radio" id="c-bleu"  name="rose-color" class="color-radio"
+                       data-pro-id="5" data-name="Rose bleue"       data-img="<?= $BASE ?>img/bleu.png">
+
+                <input type="radio" id="c-noir"  name="rose-color" class="color-radio"
+                       data-pro-id="6" data-name="Rose noire"       data-img="<?= $BASE ?>img/noir.png">
+
+                <!-- Zone image -->
                 <div class="rose">
-                    <img src="<?= $BASE ?>img/rouge.png"        class="img-rose rouge"   alt="Rose rouge"   width="500">
-                    <img src="<?= $BASE ?>img/rose.png"         class="img-rose rose"    alt="Rose"         width="500">
-                    <img src="<?= $BASE ?>img/rose_claire.png"  class="img-rose roseC"   alt="Rose claire"  width="500">
-                    <img src="<?= $BASE ?>img/rosesBlanche.png" class="img-rose blanche" alt="Rose blanche" width="500">
-                    <img src="<?= $BASE ?>img/noir.png"         class="img-rose noire"   alt="Rose noire"   width="500">
-                    <img src="<?= $BASE ?>img/bleu.png"         class="img-rose bleue"   alt="Rose bleue"   width="500">
+                    <img src="<?= $BASE ?>img/rouge.png"        class="img-rose rouge"    alt="Rose rouge"    width="500">
+                    <img src="<?= $BASE ?>img/rose_claire.png"  class="img-rose roseC"    alt="Rose claire"   width="500">
+                    <img src="<?= $BASE ?>img/rose.png"         class="img-rose rose"     alt="Rose rose"     width="500">
+                    <img src="<?= $BASE ?>img/rosesBlanche.png" class="img-rose blanche"  alt="Rose blanche"  width="500">
+                    <img src="<?= $BASE ?>img/bleu.png"         class="img-rose bleue"    alt="Rose bleue"    width="500">
+                    <img src="<?= $BASE ?>img/noir.png"         class="img-rose noire"    alt="Rose noire"    width="500">
                 </div>
 
                 <!-- Pastilles (labels) -->
                 <fieldset class="swatches" aria-label="Couleur de la rose">
-                    <label class="swatch" for="c-rouge"  title="Rouge"><span style="--swatch:red"></span></label>
-                    <label class="swatch" for="c-rose"   title="Rose"><span style="--swatch:#ffa0c4"></span></label>
-                    <label class="swatch" for="c-roseC"  title="Rose claire"><span style="--swatch:pink"></span></label>
-                    <label class="swatch" for="c-blanc"  title="Blanc"><span style="--swatch:#e9e9e9"></span></label>
-                    <label class="swatch" for="c-noir"   title="Noir"><span style="--swatch:#111"></span></label>
-                    <label class="swatch" for="c-bleu"   title="Bleu"><span style="--swatch:#0418a5"></span></label>
+                    <label class="swatch" for="c-rouge" title="Rouge">
+                        <span style="--swatch:red"></span>
+                    </label>
+                    <label class="swatch" for="c-roseC" title="Rose claire">
+                        <span style="--swatch:pink"></span>
+                    </label>
+                    <label class="swatch" for="c-rose" title="Rose">
+                        <span style="--swatch:#ffa0c4"></span>
+                    </label>
+                    <label class="swatch" for="c-blanc" title="Blanc">
+                        <span style="--swatch:#e9e9e9"></span>
+                    </label>
+                    <label class="swatch" for="c-bleu" title="Bleu">
+                        <span style="--swatch:#0418a5"></span>
+                    </label>
+                    <label class="swatch" for="c-noir" title="Noir">
+                        <span style="--swatch:#111"></span>
+                    </label>
                 </fieldset>
-                <input type="number" class="qty" name="qty" min="1" max="10" step="1" value="1" inputmode="numeric">
+
+                <input type="number" class="qty" name="qty" min="1" max="101" step="1" value="1" inputmode="numeric">
 
                 <!-- Sélectionner = ajoute au panier la radio cochée -->
-                <button class="btn" onclick="selectRose(this)">Sélectionner</button>
+                <button class="btn" type="button" onclick="selectRose(this)">Sélectionner</button>
             </div>
         </div>
 

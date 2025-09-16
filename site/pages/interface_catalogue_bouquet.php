@@ -22,26 +22,33 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
 
-    <!-- JS panier (contient callApi, addToCart, animations, toast, etc.) -->
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
+    <!-- JS panier (contient callApi, addToCart, resolveQty/Color, toasts, etc.) -->
+    <script src="<?= $BASE ?>js/commande.js?v=bouquet-qty1" defer></script>
 
-    <!-- Hook léger pour empêcher la soumission et appeler addToCart() -->
+    <!-- Hook léger pour intercepter le submit et appeler addToCart avec qty + color -->
     <script>
-        function addBouquetForm(form){
-            // Empêche le submit classique
-            event?.preventDefault();
+        function addBouquetForm(e, form){
+            e.preventDefault();
 
-            // Récupère pro_id et le bouton "Ajouter" du form
             const proInput = form.querySelector('input[name="pro_id"]');
             const btn      = form.querySelector('button.add-to-cart');
+            const qtyInput = form.querySelector('.qty');
 
-            if(!proInput) return false;
+            const qty = Math.max(1, parseInt(qtyInput?.value ?? '1', 10) || 1);
 
-            // Appelle ta fonction globale (dans commande.js) qui gère qty + animations + toast
-            // (getQtyFromButton() va récupérer le .qty du même bloc)
-            window.addToCart?.(proInput.value, btn);
+            // Rendre la qty dispo à tous les scripts (et à resolveQty si besoin)
+            btn.dataset.qty = String(qty);
+            btn.setAttribute('data-qty', String(qty));
 
-            // Ne pas soumettre le formulaire
+            // couleur : on suit le pattern "couleur_<PRO_ID>" (géré par resolveColor)
+            const pid   = proInput?.value;
+            const color =
+                form.querySelector(`input[name="couleur_${pid}"]:checked`)?.value
+                || form.querySelector('input[name^="couleur_"]:checked')?.value
+                || form.querySelector('input[name="couleur"]:checked')?.value
+                || null;
+
+            addToCart(pid, btn, { qty, color });
             return false;
         }
     </script>
@@ -59,292 +66,155 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
     <div id="produit_bouquet" class="catalogue" aria-label="Liste de bouquets">
         <!-- 12 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="7">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/12Roses.png" alt="Bouquet 12 roses" loading="lazy">
             <h3>12 roses</h3><p class="price">30 CHF</p>
             <label class="sr-only" for="qty-7">Quantité</label>
             <input id="qty-7" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_7" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_7" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_7" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_7" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_7" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 12 roses">Ajouter</button>
-            <input type="radio" id="c-rouge"  name="rose-color" class="color-radio"
-                   data-pro-id="1" data-name="Rose rouge"  data-img="<?= $BASE ?>img/rouge.png" checked>
         </form>
 
         <!-- 20 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="8">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/20Roses.png" alt="Bouquet de 20 roses" loading="lazy">
             <h3>20 roses</h3><p class="price">40 CHF</p>
             <label class="sr-only" for="qty-8">Quantité</label>
             <input id="qty-8" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_8" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_8" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_8" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_8" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_8" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 20 roses">Ajouter</button>
         </form>
 
         <!-- 24 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="9">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/20Roses.png" alt="Bouquet de 24 roses" loading="lazy">
             <h3>24 roses</h3><p class="price">45 CHF</p>
             <label class="sr-only" for="qty-9">Quantité</label>
             <input id="qty-9" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_9" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_9" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_9" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_9" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_9" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 24 roses">Ajouter</button>
         </form>
 
         <!-- 36 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="10">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/36Roses.png" alt="Bouquet de 36 roses" loading="lazy">
             <h3>36 roses</h3><p class="price">60 CHF</p>
             <label class="sr-only" for="qty-10">Quantité</label>
             <input id="qty-10" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_10" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_10" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_10" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_10" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_10" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 36 roses">Ajouter</button>
         </form>
 
         <!-- 50 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="11">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/50Roses.png" alt="Bouquet de 50 roses" loading="lazy">
             <h3>50 roses</h3><p class="price">70 CHF</p>
             <label class="sr-only" for="qty-11">Quantité</label>
             <input id="qty-11" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_11" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_11" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_11" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_11" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_11" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 50 roses">Ajouter</button>
         </form>
 
         <!-- 66 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="12">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/66Roses.png" alt="Bouquet de 66 roses" loading="lazy">
             <h3>66 roses</h3><p class="price">85 CHF</p>
             <label class="sr-only" for="qty-12">Quantité</label>
             <input id="qty-12" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_12" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_12" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_12" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_12" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_12" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 66 roses">Ajouter</button>
         </form>
 
         <!-- 99 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="13">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/100Roses.png" alt="Bouquet de 99 roses" loading="lazy">
             <h3>99 roses</h3><p class="price">110 CHF</p>
             <label class="sr-only" for="qty-13">Quantité</label>
             <input id="qty-13" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_13" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_13" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_13" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_13" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_13" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 99 roses">Ajouter</button>
         </form>
 
         <!-- 100 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="14">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/100Roses.png" alt="Bouquet de 100 roses" loading="lazy">
             <h3>100 roses</h3><p class="price">112 CHF</p>
             <label class="sr-only" for="qty-14">Quantité</label>
             <input id="qty-14" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_14" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_14" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_14" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_14" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_14" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 100 roses">Ajouter</button>
         </form>
 
         <!-- 101 roses -->
-        <form class="card product" action="<?= $BASE ?>traitement_commande_add.php" method="POST" onsubmit="return addBouquetForm(this)">
+        <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
             <input type="hidden" name="pro_id" value="15">
-            <input type="hidden" name="type" value="bouquet">
             <img src="<?= $BASE ?>img/100Roses.png" alt="Bouquet de 101 roses" loading="lazy">
             <h3>101 roses</h3><p class="price">115 CHF</p>
             <label class="sr-only" for="qty-15">Quantité</label>
             <input id="qty-15" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
-            <div class="swatches">
-                <label>
-                    <input type="radio" name="couleur" value="rouge" required>
-                    <span class="swatch" style="--c:red"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="rose">
-                    <span class="swatch" style="--c:pink"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="blanc">
-                    <span class="swatch" style="--c:light grey" ></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="bleu">
-                    <span class="swatch" style="--c:blue"></span>
-                </label>
-                <label>
-                    <input type="radio" name="couleur" value="noir">
-                    <span class="swatch" style="--c:black"></span>
-                </label></div>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_15" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_15" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_15" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_15" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_15" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <button type="submit" class="add-to-cart" data-pro-name="Bouquet 101 roses">Ajouter</button>
         </form>
     </div>

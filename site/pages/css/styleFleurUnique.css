@@ -1,11 +1,10 @@
-/* ====== Mise en page de la fiche produit UNIQUEMENT ====== */
+/* ====== Fiche produit : mise en page ====== */
 .catalogue .produit{
     display:flex;
-    justify-content:space-evenly;
+    justify-content:center;
     gap:32px;
     align-items:flex-start;
 }
-
 .catalogue .produit-info{
     background:#fff;
     display:flex;
@@ -14,25 +13,39 @@
     color:darkred;
 }
 
-/* Titres/paragraphes – scoped pour ne pas impacter le reste du site */
-.catalogue .section-title{           /* ton <h1> principal */
+/* Titres/paragraphes */
+.catalogue .section-title{
     color:darkred;
-    margin:0 0 8px 0;
+    margin:0 0 8px;
     text-align:center;
 }
-.catalogue .produit-info h3{         /* sous-titre produit */
-    font-size:2rem;       /* ≈ 32px */
+.catalogue .produit-info h3{
+    font-size:2rem;
     margin:8px 0;
 }
-.catalogue .produit-info p{          /* texte descriptif */
-    font-size:1.125rem;   /* ≈ 18px */
+.catalogue .produit-info p{
+    font-size:1.125rem;
     line-height:1.5;
     text-align:center;
-    margin:0 0 16px 0;
+    margin:0 0 16px;
 }
 
-/* Image de la rose */
-.rose{ display:flex; justify-content:center; margin:24px 0; }
+/* ====== Image de la rose ====== */
+.rose{
+    display:flex;
+    justify-content:center;
+    margin:24px 0;
+}
+
+/* Reset de sécu contre d’anciens styles (opacity/position) */
+.rose .img-rose{
+    opacity:1 !important;
+    position:static !important;
+    inset:auto !important;
+    object-fit:contain;
+}
+
+/* Cachées par défaut, on affiche la bonne via les radios */
 .img-rose{
     display:none;
     width:min(520px, 90vw);
@@ -40,37 +53,61 @@
     height:auto;
 }
 
-/* Radios cachés mais présents (accessibles) */
+/* Radios cachées mais présentes */
 .color-radio{
     position:absolute;
     left:-9999px;
 }
 
-/* Pastilles couleur */
+/* Affichage conditionnel selon la radio cochée */
+#c-rouge:checked  ~ .rose .rouge   { display:block; }
+#c-roseC:checked  ~ .rose .roseC   { display:block; }
+#c-rose:checked   ~ .rose .rose    { display:block; }
+#c-blanc:checked  ~ .rose .blanche { display:block; }
+#c-bleu:checked   ~ .rose .bleue   { display:block; }
+#c-noir:checked   ~ .rose .noire   { display:block; }
+
+/* ====== Pastilles couleur ====== */
 .swatches{
-    display:flex; gap:12px; margin:12px 0; border:0; padding:0;
+    display:flex;
+    gap:12px;
+    margin:12px 0;
+    border:0;
+    padding:0;
 }
 .swatch span{
     --size:28px;
     display:inline-block;
-    width:var(--size); height:var(--size);
+    width:var(--size);
+    height:var(--size);
     border-radius:50%;
-    background:var(--swatch);
+    background:var(--swatch); /* défini en inline style */
     border:2px solid #ccc;
     cursor:pointer;
     transition:transform .15s ease;
 }
 .swatch span:hover{ transform:scale(1.1); }
 
-/* Affichage conditionnel des images selon la radio cochée */
-#c-rouge:checked  ~ .rose .rouge   { display:block; }
-#c-rose:checked   ~ .rose .rose    { display:block; }
-#c-roseC:checked  ~ .rose .roseC   { display:block; }
-#c-blanc:checked  ~ .rose .blanche { display:block; }
-#c-noir:checked   ~ .rose .noire   { display:block; }
-#c-bleu:checked   ~ .rose .bleue   { display:block; }
+/* Liseré noir sur la pastille sélectionnée (viser le SPAN !) */
+#c-rouge:checked  ~ .swatches label[for="c-rouge"]  span,
+#c-roseC:checked  ~ .swatches label[for="c-roseC"] span,
+#c-rose:checked   ~ .swatches label[for="c-rose"]   span,
+#c-blanc:checked  ~ .swatches label[for="c-blanc"]  span,
+#c-bleu:checked   ~ .swatches label[for="c-bleu"]   span,
+#c-noir:checked   ~ .swatches label[for="c-noir"]   span{
+    outline:1px solid #000;
+    outline-offset:2px;
+}
 
-/* Boutons */
+/* ====== Inputs & boutons ====== */
+.qty{
+    width:120px;
+    margin:10px;
+    padding:.55rem .75rem;
+    border:1px solid #e2e2e2;
+    border-radius:.6rem;
+    font:inherit;
+}
 .btn{
     background:darkred; color:#fff; border:none;
     padding:8px 14px; border-radius:15px; cursor:pointer;
@@ -89,24 +126,22 @@ a.button:hover, a.add-to-cart:hover{
     background:indianred; color:#fff; transform:scale(1.05);
 }
 
-/* Navigation bas de page */
-.btn_accueil{ display:flex; justify-content:center; gap:8px; margin:12px 0 24px; }
+.btn_accueil{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin:12px 0 24px;
+}
 
-/* ====== Protections pour le footer ====== */
+/* ====== Footer & responsive ====== */
 .site-footer p{
-    font-size:0.9rem !important;
+    font-size:.9rem !important;
     font-weight:normal !important;
     margin:0 !important;
     color:#fff !important;
 }
-.site-footer small{ font-size:0.85rem !important; }
+.site-footer small{ font-size:.85rem !important; }
 
-/* ====== Responsive ====== */
 @media (max-width:900px){
     .catalogue .produit{ flex-direction:column; align-items:center; }
-}
-.qty{
-    margin: 10px;
-    padding: 5px;
-    border-radius: 20px;
 }

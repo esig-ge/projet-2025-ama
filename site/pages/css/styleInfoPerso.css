@@ -1,0 +1,15 @@
+.page-profile .grid{display:grid;gap:20px;grid-template-columns:1fr}
+@media(min-width:900px){.page-profile .grid{grid-template-columns:1.1fr .9fr}}
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr .5fr .6fr;gap:12px}
+.field label{display:block;font-size:.9rem;margin:4px 0 6px;color:#7a0000}
+.field input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:1rem}
+.section-title{color:#7a0000;margin:4px 0 12px}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.btn-primary{background:#7a0000;color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
+.btn-secondary{background:#f3f3f3;color:#333;border:1px solid #e7e7e7;padding:10px 14px;border-radius:10px;cursor:pointer}
+table.orders{width:100%;border-collapse:collapse}
+table.orders th,table.orders td{padding:10px 8px;border-bottom:1px solid #eee;text-align:left}
+table.orders th{color:#7a0000;font-weight:600}
+.flash{background:#eaf7ea;color:#205520;padding:10px 12px;border-radius:10px;margin:0 0 12px}
