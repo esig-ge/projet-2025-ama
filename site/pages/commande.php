@@ -52,6 +52,25 @@ function getProductImage(string $name): string {
     return 'placeholder.png';
 }
 
+/* ====== Couleurs (clé -> hex) ====== */
+function color_hex(?string $c): ?string {
+    if (!$c) return null;
+    $k = strtolower(trim($c));
+    // Adapte les clés à celles que tu envoies depuis le produit (ex: rouge, rose, blanc, bleu, noir)
+    $map = [
+        'rouge' => '#b70f0f',
+        'rose'  => '#f29fb5',
+        'blanc' => '#e7e7e7',
+        'bleu'  => '#3b6bd6',
+        'noir'  => '#222222',
+        'gris'  => '#9aa0a6',
+        // tu peux ajouter d’autres couleurs ici
+    ];
+    // si on reçoit déjà un hex (#xxxxxx), le laisser passer
+    if (preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6})$/i', $k)) return $k;
+    return $map[$k] ?? null;
+}
+
 /* ========= A) SUPPRESSION D’UN ARTICLE (existant) ========= */
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
@@ -129,7 +148,7 @@ if (($_POST['action'] ?? '') === 'clear_all') {
                 $pdo->prepare("DELETE FROM COMMANDE_SUPP      WHERE COM_ID=:c")->execute([':c'=>$delCom]);
                 $pdo->prepare("DELETE FROM COMMANDE_PRODUIT   WHERE COM_ID=:c")->execute([':c'=>$delCom]);
                 $pdo->commit();
-                $_SESSION['message'] = "Panier vidé.";
+                $_SESSION['message'] = "Panier vide";
             } catch (Throwable $e) {
                 $pdo->rollBack();
                 $_SESSION['message'] = "Erreur lors du vidage du panier.";
@@ -159,7 +178,7 @@ if ($com) {
     $comId = (int)$com['COM_ID'];
     $sql = "
         SELECT 'produit' AS KIND, p.PRO_ID AS ITEM_ID, p.PRO_NOM AS NAME,
-               p.PRO_PRIX AS UNIT_PRICE, cp.CP_QTE_COMMANDEE AS QTE, cp.CP_TYPE_PRODUIT AS SUBTYPE
+               p.PRO_PRIX AS UNIT_PRICE, cp.CP_QTE_COMMANDEE AS QTE, cp.CP_TYPE_PRODUIT AS SUBTYPE, 
         FROM COMMANDE_PRODUIT cp
         JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
         WHERE cp.COM_ID = :com1
