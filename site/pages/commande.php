@@ -17,22 +17,46 @@ $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
 // Fonction pour récupérer l'image selon le produit
 // Normalise un libellé (minuscule, accents retirés, espaces compactés, tolère pluriel)
+// --- Normalisation simple (PAS de suppression du 's')
 function norm_name(string $s): string {
     $s = strtolower(trim($s));
-    $s = iconv('UTF-8', 'ASCII//TRANSLIT', $s);        // accents -> ASCII
-    $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s);        // enlève ponctuation
-    $s = preg_replace('/\s+/', ' ', $s);                // espaces multiples -> 1
-    $s = preg_replace('/(.)\1{2,}/', '$1', $s);         // tolère répétitions "pailllettes" -> "pailletes"
-    $s = rtrim($s, 's');                                // tolère pluriels basiques
+    $s = iconv('UTF-8', 'ASCII//TRANSLIT', $s); // accents -> ascii
+    $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s); // retire ponctuation
+    $s = preg_replace('/\s+/', ' ', $s);         // espaces multiples -> 1
     return trim($s);
 }
 
-function getProductImage($name) {
+function getProductImage(string $name): string {
     $k = norm_name($name);
 
-    // Correspondances exactes
+    // 1) Emballages : accepte "papier"/"emballage" + couleur (singulier/pluriel)
+    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) {
+        return 'emballage_' . $m[2] . '.PNG';
+    }
+    // "rose pâle / rose pale" => fichier existant sans suffixe "_pale"
+    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k)) {
+        return 'emballage_rose.PNG';
+    }
+
+    // 2) Paillettes (tolère fautes/pluriels)
+    if (preg_match('/paillet+e?s?/', $k)) {
+        return 'paillette_argent.PNG';
+    }
+
+    // 3) Papillon(s) (avec/sans "doré(e)s")
+    if (preg_match('/papillon/', $k)) {
+        return 'papillon_doree.PNG';
+    }
+
+    // 4) Cas particuliers roses
+    // "rose rose clair/rose clair/rose très clair..." -> rose_claire.png
+    if (preg_match('/^rose.*clair$/', $k)) {
+        return 'rose_claire.png';
+    }
+
+    // 5) Table de correspondance standard
     static $map = [
-        // --- Bouquets
+        // Bouquets
         '12 roses'    => '12Roses.png',   'bouquet 12'  => '12Roses.png',
         '20 roses'    => '20Roses.png',   'bouquet 20'  => '20Roses.png',
         '36 roses'    => '36Roses.png',   'bouquet 36'  => '36Roses.png',
@@ -40,50 +64,38 @@ function getProductImage($name) {
         '66 roses'    => '66Roses.png',   'bouquet 66'  => '66Roses.png',
         '100 roses'   => '100Roses.png',  'bouquet 100' => '100Roses.png',
 
-        // --- Roses à l’unité
+        // Roses à l’unité (simples)
         'rose rouge'   => 'rouge.png',
         'rose rose'    => 'rose.png',
-        'rose claire'  => 'rose_claire.png',
         'rose blanche' => 'rosesBlanche.png',
         'rose bleue'   => 'bleu.png',
         'rose noire'   => 'noir.png',
 
-        // --- Suppléments
-        'mini ourson'          => 'ours_blanc.PNG',
-        'deco anniv'           => 'happybirthday.PNG',
+        // Suppléments
+        'mini ourson'             => 'ours_blanc.PNG',
+        'deco anniv'              => 'happybirthday.PNG',
         'decoration anniversaire' => 'happybirthday.PNG',
-        'papillon'              => 'papillon_doree.PNG',
-        'papillon dore'         => 'papillon_doree.PNG',
-        'papillon doree'        => 'papillon_doree.PNG',
-        'baton coeur'          => 'baton_coeur.PNG',
-        'diamant'              => 'diamant.PNG',
-        'couronne'             => 'couronne.PNG',
-        'paillettes'     => 'paillette_argent.PNG',
-        'initiale'               => 'lettre.png',
-        'carte pour mot'       => 'carte.PNG',
-        'carte'                => 'carte.PNG',
+        'baton coeur'             => 'baton_coeur.PNG',
+        'diamant'                 => 'diamant.PNG',
+        'couronne'                => 'couronne.PNG',
+        'lettre'                  => 'lettre.png',
+        'initiale'                => 'lettre.png',
+        'carte pour mot'          => 'carte.PNG',
+        'carte'                   => 'carte.PNG',
 
-        // --- Emballages (d’après ta page)
-        'emballage blanc'   => 'emballage_blanc.PNG',
-        'emballage gris'    => 'emballage_gris.PNG',
-        'emballage noir'    => 'emballage_noir.PNG',
-        'emballage rose'    => 'emballage_rose.PNG',
-        'emballage violet'  => 'emballage_violet.PNG',
-
-        // --- Paniers (s'ils apparaissent)
-        'panier vide'       => 'panier_vide.png',
-        'panier rempli'     => 'panier_rempli.png',
+        // Paniers
+        'panier vide'             => 'panier_vide.png',
+        'panier rempli'           => 'panier_rempli.png',
     ];
 
     if (isset($map[$k])) return $map[$k];
 
-    // Coffrets : n'importe quel libellé qui commence par "coffret …"
-    if (strpos($k, 'coffret') === 0) {
-        return 'coffret.png';
-    }
+    // 6) Coffrets: tout libellé commençant par "coffret"
+    if (strpos($k, 'coffret') === 0) return 'coffret.png';
 
     return 'placeholder.png';
 }
+
 
 
 
