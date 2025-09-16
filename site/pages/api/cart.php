@@ -23,7 +23,7 @@ try {
 /* =========================
    DEV / PROD SWITCH
    ========================= */
-const DEV_FORCE_LOGIN = true;
+const DEV_FORCE_LOGIN = false;
 const DEV_EMAIL       = 'dev.panier@dkbloom.local';
 
 $IS_DEV = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) || isset($_GET['dev']);

@@ -37,6 +37,7 @@ if (!isset($BASE)) {
                 <h3>Anniversaire</h3>
                 <p>90 CHF</p>
                 <label class="sr-only" for="qty-15">Quantité</label>
+                <br>
                 <button class="add-to-cart"
                         data-pro-id="16"
                         data-pro-name="Coffret Anniversaire"
@@ -177,6 +178,7 @@ if (!isset($BASE)) {
         <a href="<?= $BASE ?>commande.php" class="button">Suivant</a>
     </div>
 </main>
+
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
