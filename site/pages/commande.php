@@ -58,8 +58,8 @@ function getProductImage($name) {
         'baton coeur'          => 'baton_coeur.PNG',
         'diamant'              => 'diamant.PNG',
         'couronne'             => 'couronne.PNG',
-        'paillette argent'     => 'paillette_argent.PNG',
-        'lettre'               => 'lettre.png',
+        'paillettes'     => 'paillette_argent.PNG',
+        'initiale'               => 'lettre.png',
         'carte pour mot'       => 'carte.PNG',
         'carte'                => 'carte.PNG',
 
