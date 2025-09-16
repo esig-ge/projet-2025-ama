@@ -15,108 +15,56 @@ $perId = (int)($_SESSION['per_id'] ?? 0);
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
-// Fonction pour récupérer l'image selon le produit
-// Normalise un libellé (minuscule, accents retirés, espaces compactés, tolère pluriel)
-// --- Normalisation simple (PAS de suppression du 's')
+/* ====== Utils: normalisation + image ====== */
 function norm_name(string $s): string {
     $s = strtolower(trim($s));
-    $s = iconv('UTF-8', 'ASCII//TRANSLIT', $s); // accents -> ascii
-    $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s); // retire ponctuation
-    $s = preg_replace('/\s+/', ' ', $s);         // espaces multiples -> 1
+    $s = iconv('UTF-8', 'ASCII//TRANSLIT', $s);
+    $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s);
+    $s = preg_replace('/\s+/', ' ', $s);
     return trim($s);
 }
-
 function getProductImage(string $name): string {
     $k = norm_name($name);
-
-    // 1) Emballages : accepte "papier"/"emballage" + couleur (singulier/pluriel)
-    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) {
-        return 'emballage_' . $m[2] . '.PNG';
-    }
-    // "rose pâle / rose pale" => fichier existant sans suffixe "_pale"
-    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k)) {
-        return 'emballage_rose.PNG';
-    }
-
-    // 2) Paillettes (tolère fautes/pluriels)
-    if (preg_match('/paillet+e?s?/', $k)) {
-        return 'paillette_argent.PNG';
-    }
-
-    // 3) Papillon(s) (avec/sans "doré(e)s")
-    if (preg_match('/papillon/', $k)) {
-        return 'papillon_doree.PNG';
-    }
-
-    // 4) Cas particuliers roses
-    // "rose rose clair/rose clair/rose très clair..." -> rose_claire.png
-    if (preg_match('/^rose.*clair$/', $k)) {
-        return 'rose_claire.png';
-    }
-
-    // 5) Table de correspondance standard
+    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) return 'emballage_'.$m[2].'.PNG';
+    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pâle)?$/', $k)) return 'emballage_rose.PNG';
+    if (preg_match('/paillet+e?s?/', $k)) return 'paillette_argent.PNG';
+    if (preg_match('/papillon/', $k)) return 'papillon_doree.PNG';
+    if (preg_match('/^rose.*clair$/', $k)) return 'rose_claire.png';
     static $map = [
-        // Bouquets
-        '12 roses'    => '12Roses.png',   'bouquet 12'  => '12Roses.png',
-        '20 roses'    => '20Roses.png',   'bouquet 20'  => '20Roses.png',
-        '36 roses'    => '36Roses.png',   'bouquet 36'  => '36Roses.png',
-        '50 roses'    => '50Roses.png',   'bouquet 50'  => '50Roses.png',
-        '66 roses'    => '66Roses.png',   'bouquet 66'  => '66Roses.png',
-        '100 roses'   => '100Roses.png',  'bouquet 100' => '100Roses.png',
-
-        // Roses à l’unité (simples)
-        'rose rouge'   => 'rouge.png',
-        'rose rose'    => 'rose.png',
-        'rose blanche' => 'rosesBlanche.png',
-        'rose bleue'   => 'bleu.png',
-        'rose noire'   => 'noir.png',
-
-        // Suppléments
-        'mini ourson'             => 'ours_blanc.PNG',
-        'deco anniv'              => 'happybirthday.PNG',
-        'decoration anniversaire' => 'happybirthday.PNG',
-        'baton coeur'             => 'baton_coeur.PNG',
-        'diamant'                 => 'diamant.PNG',
-        'couronne'                => 'couronne.PNG',
-        'lettre'                  => 'lettre.png',
-        'initiale'                => 'lettre.png',
-        'carte pour mot'          => 'carte.PNG',
-        'carte'                   => 'carte.PNG',
-
-        // Paniers
-        'panier vide'             => 'panier_vide.png',
-        'panier rempli'           => 'panier_rempli.png',
+        '12 roses'=>'12Roses.png','bouquet 12'=>'12Roses.png',
+        '20 roses'=>'20Roses.png','bouquet 20'=>'20Roses.png',
+        '36 roses'=>'36Roses.png','bouquet 36'=>'36Roses.png',
+        '50 roses'=>'50Roses.png','bouquet 50'=>'50Roses.png',
+        '66 roses'=>'66Roses.png','bouquet 66'=>'66Roses.png',
+        '100 roses'=>'100Roses.png','bouquet 100'=>'100Roses.png',
+        'rose rouge'=>'rouge.png','rose rose'=>'rose.png','rose blanche'=>'rosesBlanche.png',
+        'rose bleue'=>'bleu.png','rose noire'=>'noir.png',
+        'mini ourson'=>'ours_blanc.PNG','deco anniv'=>'happybirthday.PNG','decoration anniversaire'=>'happybirthday.PNG',
+        'baton coeur'=>'baton_coeur.PNG','diamant'=>'diamant.PNG','couronne'=>'couronne.PNG',
+        'lettre'=>'lettre.png','initiale'=>'lettre.png','carte pour mot'=>'carte.PNG','carte'=>'carte.PNG',
+        'panier vide'=>'panier_vide.png','panier rempli'=>'panier_rempli.png',
     ];
-
     if (isset($map[$k])) return $map[$k];
-
-    // 6) Coffrets: tout libellé commençant par "coffret"
     if (strpos($k, 'coffret') === 0) return 'coffret.png';
-
     return 'placeholder.png';
 }
 
-/* ========= A1) SUPPRESSION D’UN ARTICLE ========= */
+/* ========= A) SUPPRESSION D’UN ARTICLE (existant) ========= */
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
-    $itemId = (int)($_POST['item_id'] ?? 0);   // PRO_ID | SUP_ID | EMB_ID
-    $kind   = $_POST['kind'] ?? 'produit';     // produit | supplement | emballage
+    $itemId = (int)($_POST['item_id'] ?? 0);
+    $kind   = $_POST['kind'] ?? 'produit';
 
     if ($delCom > 0 && $itemId > 0) {
-        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE
-                              WHERE COM_ID = :c AND PER_ID = :p AND COM_STATUT = 'en préparation' LIMIT 1");
+        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en préparation' LIMIT 1");
         $chk->execute([':c'=>$delCom, ':p'=>$perId]);
-
         if ($chk->fetchColumn()) {
             if ($kind === 'produit') {
-                $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id LIMIT 1")
-                    ->execute([':c'=>$delCom, ':id'=>$itemId]);
+                $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
             } elseif ($kind === 'supplement') {
-                $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id LIMIT 1")
-                    ->execute([':c'=>$delCom, ':id'=>$itemId]);
-            } else { // emballage
-                $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id LIMIT 1")
-                    ->execute([':c'=>$delCom, ':id'=>$itemId]);
+                $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
+            } else {
+                $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
             }
             $_SESSION['message'] = "Article supprimé de votre commande.";
         } else {
@@ -165,7 +113,6 @@ if (($_POST['action'] ?? '') === 'bulk_del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
-
 /* ========= A3) VIDER TOUT LE PANIER (NOUVEAU) ========= */
 if (($_POST['action'] ?? '') === 'clear_all') {
     $delCom = (int)($_POST['com_id'] ?? 0);
@@ -207,45 +154,21 @@ $comId = 0;
 
 if ($com) {
     $comId = (int)$com['COM_ID'];
-
-    // IMPORTANT: utiliser :com1, :com2, :com3 (pas le même nom 3x)
     $sql = "
-        /* Produits (bouquet/fleur/coffret) */
-        SELECT
-            'produit'           AS KIND,
-            p.PRO_ID            AS ITEM_ID,
-            p.PRO_NOM           AS NAME,
-            p.PRO_PRIX          AS UNIT_PRICE,
-            cp.CP_QTE_COMMANDEE AS QTE,
-            cp.CP_TYPE_PRODUIT  AS SUBTYPE
+        SELECT 'produit' AS KIND, p.PRO_ID AS ITEM_ID, p.PRO_NOM AS NAME,
+               p.PRO_PRIX AS UNIT_PRICE, cp.CP_QTE_COMMANDEE AS QTE, cp.CP_TYPE_PRODUIT AS SUBTYPE
         FROM COMMANDE_PRODUIT cp
         JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
         WHERE cp.COM_ID = :com1
 
         UNION ALL
-
-        /* Suppléments */
-        SELECT
-            'supplement'        AS KIND,
-            s.SUP_ID            AS ITEM_ID,
-            s.SUP_NOM           AS NAME,
-            s.SUP_PRIX_UNITAIRE AS UNIT_PRICE,
-            cs.CS_QTE_COMMANDEE AS QTE,
-            'supplement'        AS SUBTYPE
+        SELECT 'supplement', s.SUP_ID, s.SUP_NOM, s.SUP_PRIX_UNITAIRE, cs.CS_QTE_COMMANDEE, 'supplement'
         FROM COMMANDE_SUPP cs
         JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
         WHERE cs.COM_ID = :com2
 
         UNION ALL
-
-        /* Emballages (offerts) */
-        SELECT
-            'emballage'         AS KIND,
-            e.EMB_ID            AS ITEM_ID,
-            e.EMB_NOM           AS NAME,
-            0.00                AS UNIT_PRICE,
-            ce.CE_QTE           AS QTE,
-            'emballage'         AS SUBTYPE
+        SELECT 'emballage', e.EMB_ID, e.EMB_NOM, 0.00, ce.CE_QTE, 'emballage'
         FROM COMMANDE_EMBALLAGE ce
         JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
         WHERE ce.COM_ID = :com3
@@ -253,22 +176,19 @@ if ($com) {
         ORDER BY NAME
     ";
     $st = $pdo->prepare($sql);
-    $st->execute([':com1'=>$comId, ':com2'=>$comId, ':com3'=>$comId]); // <-- FIX
-
+    $st->execute([':com1'=>$comId, ':com2'=>$comId, ':com3'=>$comId]);
     $lines = $st->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($lines as $L) {
-        $subtotal += (float)$L['UNIT_PRICE'] * (int)$L['QTE']; // utiliser QTE normalisé
+        $subtotal += (float)$L['UNIT_PRICE'] * (int)$L['QTE'];
     }
 }
 
 $hasOrder = (bool)$com;
 $hasItems = $hasOrder && !empty($lines);
 
-// Frais livraison (placeholder)
 $shipping = 0.00;
 $total = $subtotal + $shipping;
-
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -286,62 +206,22 @@ $total = $subtotal + $shipping;
         .card{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);overflow:hidden}
         .card.disabled{opacity:.6;filter:grayscale(.5)}
         .muted{color:#777}
-        .cart-row {
-            display: grid;
-            grid-template-columns: 32px 64px 1fr 80px 80px 40px;
-            /* ↑ largeur fixe pour prix et total (80px) et poubelle (40px) */
-            gap: 12px;
-            align-items: center;
-            padding: 12px 16px;
-            border-top: 1px solid #eee;
-        }
+        /* Ajout d’une colonne checkbox (32px) */
+        .cart-row{display:grid;grid-template-columns:32px 64px 1fr auto auto auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #eee}
         .cart-img{width:64px;height:64px;object-fit:cover;border-radius:8px}
-        .cart-name {
-            font-weight: 600;
-            display: flex;
-            flex-direction: column; /* pour garder le sous-texte en dessous */
-            justify-content: center;
-        }
-        .item-sub {
-            font-weight: 400;
-            font-size: 12px;
-            color: #777;
-        }
-        .cart-unit, .cart-total {
-            text-align: right; /* aligne les chiffres à droite */
-        }
-        .trash-form {
-            justify-self: end; /* poubelle collée à droite */
-        }
-        .trash-btn{background:transparent;border:0;cursor:pointer;font-size:18px;line-height:1;color:#b70f0f;padding:6px;border-radius:8px;}
+        .cart-name{font-weight:600}
+        .item-sub{font-weight:400;font-size:12px;color:#777}
+        .trash-form{margin:0}
+        .trash-btn{background:transparent;border:0;cursor:pointer;font-size:18px;line-height:1;color:#b70f0f;padding:6px;border-radius:8px}
         .trash-btn:hover{background:#b70f0f10}
         .flash{margin:12px auto;max-width:920px;background:#f6fff6;color:#0a6b0a;border:1px solid #bfe6bf;padding:10px 12px;border-radius:10px}
         .card.empty{text-align:center;padding:24px}
         .section-title{margin:18px 0 10px 0;font-size:18px;font-weight:700}
-        .shipping-block{margin-top:20px}
-        .shipping-block .inner{padding:16px}
-        .btn-primary[aria-disabled="true"]{pointer-events:none;opacity:.6}
-
-        .bulk-bar{
-            display:flex;
-            align-items:center;
-            gap:12px;
-            padding:12px 16px;
-            border-bottom:1px solid #eee;
-            flex-wrap:wrap;               /* passe en ligne suivante si l’écran est étroit */
-        }
-        .bulk-bar .checkall{display:flex; align-items:center; gap:8px}
-        .bulk-bar .bulk-actions{
-            display:flex;
-            align-items:center;
-            gap:8px;
-            margin-left:auto;             /* pousse les boutons à droite de la barre */
-        }
-        .bulk-bar .bulk-actions form{display:inline-flex}
-        .btn-ghost.small{white-space:nowrap}
-        @media (max-width:560px){
-            .bulk-bar .bulk-actions{flex-wrap:wrap; margin-left:0}
-        }
+        .bulk-bar{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee}
+        .left-actions{display:flex;gap:10px;align-items:center}
+        .btn-ghost.small{font-size:.9rem;padding:.35rem .7rem}
+        .sum-row,.sum-total{display:flex;justify-content:space-between;padding:10px 16px}
+        .sum-total{font-weight:700;border-top:1px solid #eee}
     </style>
 </head>
 <body>
@@ -378,25 +258,22 @@ $total = $subtotal + $shipping;
 
                 <!-- Barre de sélection multiple (NOUVEAU) -->
                 <div class="bulk-bar">
-                    <label class="checkall">
-                        <input id="checkAll" type="checkbox"> <span>Tout sélectionner</span>
-                    </label>
-
-                    <div class="bulk-actions">
-                        <form method="post" action="<?= $BASE ?>commande.php" id="bulkDeleteForm"
-                              onsubmit="return confirm('Supprimer tous les articles sélectionnés ?');">
+                    <div class="left-actions">
+                        <label style="display:flex;gap:8px;align-items:center;">
+                            <input id="checkAll" type="checkbox"> <span>Tout sélectionner</span>
+                        </label>
+                        <form method="post" action="<?= $BASE ?>commande.php" id="bulkDeleteForm" onsubmit="return confirm('Supprimer tous les articles sélectionnés ?');">
                             <input type="hidden" name="action" value="bulk_del">
                             <input type="hidden" name="com_id" value="<?= (int)$com['COM_ID'] ?>">
+                            <!-- Les <input name="sel[]"> sont ajoutés par les lignes du panier -->
                             <button class="btn-ghost small" type="submit">Supprimer la sélection</button>
                         </form>
-
-                        <form method="post" action="<?= $BASE ?>commande.php"
-                              onsubmit="return confirm('Vider tout le panier ?');">
-                            <input type="hidden" name="action" value="clear_all">
-                            <input type="hidden" name="com_id" value="<?= (int)$com['COM_ID'] ?>">
-                            <button class="btn-ghost small" type="submit">Vider tout le panier</button>
-                        </form>
                     </div>
+                    <form method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Vider tout le panier ?');">
+                        <input type="hidden" name="action" value="clear_all">
+                        <input type="hidden" name="com_id" value="<?= (int)$com['COM_ID'] ?>">
+                        <button class="btn-ghost small" type="submit">Vider tout le panier</button>
+                    </form>
                 </div>
 
                 <?php foreach ($lines as $L):
