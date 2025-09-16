@@ -23,6 +23,35 @@ if (!isset($BASE)) {
     </script>
     <script src="<?= $BASE ?>js/commande.js" defer></script>
 </head>
+<script>
+    (function () {
+        // On poste directement au bon script PHP (on n’utilise pas API_URL ici)
+        const ACTION_URL = '<?= $BASE ?>traitement_commande_add.php';
+
+        // Appelée par ton bouton: <button class="btn" onclick="selectRose(this)">Sélectionner</button>
+        window.selectRose = function (btn) {
+            const root   = btn.closest('.produit-info');
+            const picked = root.querySelector('input.color-radio:checked');
+            const qtyEl  = root.querySelector('input.qty');
+
+            const proId = parseInt(picked?.dataset.proId || '0', 10);
+            const qty   = Math.max(parseInt(qtyEl?.value || '1', 10), 1);
+
+            if (!proId) { alert('Choisis une couleur de rose.'); return; }
+
+            const form = new FormData();
+            form.append('kind', 'produit');     // attendu par traitement_commande_add.php
+            form.append('type', 'fleur');
+            form.append('pro_id', proId);
+            form.append('qty', qty);
+            form.append('redirect', 'commande.php'); // revenir au panier
+
+            fetch(ACTION_URL, { method: 'POST', body: form })
+                .then(() => { window.location.href = '<?= $BASE ?>commande.php'; })
+                .catch(() => { window.location.href = '<?= $BASE ?>commande.php'; });
+        };
+    })();
+</script>
 
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>

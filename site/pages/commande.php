@@ -90,7 +90,7 @@ function productImg(string $base, int $id): string {
             <p><strong>Votre panier est vide</strong><br>Ajoutez des bouquets pour commencer.</p>
         </div>
         <p style="text-align:center">
-            <a class="btn-primary" href="interface_selection_produit.php">Parcourir le catalogue</a>
+            <a class="btn-primary" href="<?= $BASE ?>interface_selection_produit.php">Parcourir le catalogue</a>
         </p>
     <?php else: ?>
         <div class="grid">
@@ -133,7 +133,7 @@ function productImg(string $base, int $id): string {
                     </fieldset>
 
                     <div class="actions" style="display:flex; gap:12px; flex-wrap:wrap; margin-top:10px;">
-                        <a class="btn-ghost" href="<?= $BASE ?>interface_catalogue_bouquet.php">Continuer mes achats</a>
+                        <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
                         <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
                     </div>
                 </div>
@@ -175,54 +175,6 @@ function productImg(string $base, int $id): string {
                         <li>Frais de port offerts dès 50 CHF</li>
                         <li>Paiement sécurisé</li>
                     </ul>
-=======
-        <div class="card">
-            <h2>Commande #<?= (int)$com['COM_ID'] ?> du <?= htmlspecialchars($com['COM_DATE']) ?></h2>
-            <div class="table-responsive">
-                <table class="table-panier">
-                    <thead>
-                    <tr>
-                        <th>Produit</th>
-                        <th>Type</th>
-                        <th>Prix unité</th>
-                        <th>Qté</th>
-                        <th>Sous-total</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($lines as $L):
-                        $pu = (float)$L['PRO_PRIX'];
-                        $q  = (int)$L['CP_QTE_COMMANDEE'];
-                        $st = $pu * $q;
-                        ?>
-                        <tr>
-                            <td><?= htmlspecialchars($L['PRO_NOM']) ?></td>
-                            <td><?= htmlspecialchars($L['CP_TYPE_PRODUIT']) ?></td>
-                            <td><?= number_format($pu, 2, '.', ' ') ?> CHF</td>
-                            <td><?= $q ?></td>
-                            <td><?= number_format($st, 2, '.', ' ') ?> CHF</td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <th colspan="4" style="text-align:right">Total</th>
-                        <th><?= number_format($total, 2, '.', ' ') ?> CHF</th>
-                    </tr>
-                    </tfoot>
-                </table>
-
-            </div>
-            <fieldset class="full group">
-                <p>Type de livraison <span class="req">*</span></p>
-                <div class="options-row">
-                   <p>* par défaut le type de livraison est en retrait boutique.</p>
-                    <label class="opt">
-                        <input type="radio" name="livraison" value="standard" required>
-                        <span>Standard (48h)</span>
-                        <span> hey </span>
-                    </label>
-
                 </div>
             </aside>
         </div>
