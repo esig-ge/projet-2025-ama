@@ -1,6 +1,6 @@
 <?php
 // /site/includes/admin_layout_start.php
-require __DIR__ . '/../includes/admin_auth.php';
+require __DIR__ . '/includes/admin_auth.php';
 
 // 1) Base URL de la page courante (avec slash final)
 if (!isset($BASE)) {
