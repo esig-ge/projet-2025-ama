@@ -163,7 +163,6 @@ CREATE TABLE `BOUQUET` (
                            `BOU_DESCRIPTION` VARCHAR(600) NOT NULL,
                            `BOU_TYPE` ENUM('standard','personnalise','mariage','anniversaire','naissance','deuil','romantique','saisonnier','luxe') NOT NULL,
                            `BOU_COULEUR` ENUM('rouge','blanc','rose','jaune','orange','violet','bleu','vert','noir','multicolore') NOT NULL DEFAULT 'rouge',
-                           `BOU_COULEUR_CODE` CHAR(7) NULL,
                            `BOU_QTE_STOCK` INT NOT NULL DEFAULT 0,
                            CONSTRAINT `CK_BOUQUET_DESC_MIN10`
                                CHECK (CHAR_LENGTH(`BOU_DESCRIPTION`) >= 10),
@@ -243,13 +242,22 @@ CREATE TABLE `LIVRAISON` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- COMMANDE & LIGNES -----------------------------------
+CREATE TABLE `PAIEMENT` (
+                            `PAI_ID` BIGINT PRIMARY KEY AUTO_INCREMENT,
+                            `PAI_MODE` ENUM('Twint','Carte','Revolut') NOT NULL,
+                            `PAI_MONTANT` DECIMAL(12,2) NOT NULL,
+                            `PAI_DATE` DATE NOT NULL,
+                            CONSTRAINT `CK_PAI_MONTANT_POS` CHECK (`PAI_MONTANT` > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- COMMANDE & LIGNES -----------------------------------
 CREATE TABLE `COMMANDE` (
                             `COM_ID` BIGINT PRIMARY KEY AUTO_INCREMENT,
                             `PER_ID` BIGINT NOT NULL,
                             `LIV_ID` BIGINT NULL,
                             `RAB_ID` BIGINT NULL,
-                            `COM_STATUT` ENUM('en préparation','expédiée','livrée','en attente d''expédition','annulée')
-      NOT NULL DEFAULT 'en préparation',
+                            `PAI_ID` BIGINT NULL,  -- nouvelle FK directe vers PAIEMENT
+                            `COM_STATUT` ENUM('en préparation','expédiée','livrée','en attente d''expédition','annulée') NOT NULL DEFAULT 'en préparation',
                             `COM_DATE` DATE NOT NULL,
                             `COM_DESCRIPTION` TEXT NULL,
                             `COM_PTS_CUMULE` INT NOT NULL DEFAULT 0,
@@ -262,8 +270,12 @@ CREATE TABLE `COMMANDE` (
                                     ON UPDATE CASCADE ON DELETE SET NULL,
                             CONSTRAINT `FK_COM_RABAIS`
                                 FOREIGN KEY (`RAB_ID`) REFERENCES `RABAIS`(`RAB_ID`)
+                                    ON UPDATE CASCADE ON DELETE SET NULL,
+                            CONSTRAINT `FK_COM_PAIEMENT`
+                                FOREIGN KEY (`PAI_ID`) REFERENCES `PAIEMENT`(`PAI_ID`)
                                     ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- association commande <-> emballage avec quantité
 CREATE TABLE `COMMANDE_EMBALLAGE` (
@@ -310,27 +322,6 @@ CREATE TABLE `COMMANDE_SUPP` (
                                          ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- PAIEMENT & LIAISON ---------------------------------
-CREATE TABLE `PAIEMENT` (
-                            `PAI_ID` BIGINT PRIMARY KEY AUTO_INCREMENT,
-                            `PAI_MODE` ENUM('Twint','Carte','Revolut') NOT NULL,
-                            `PAI_MONTANT` DECIMAL(12,2) NOT NULL,
-                            `PAI_DATE` DATE NOT NULL,
-                            CONSTRAINT `CK_PAI_MONTANT_POS` CHECK (`PAI_MONTANT` > 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE `COMMANDE_PAIEMENT` (
-                                     `COM_ID` BIGINT NOT NULL,
-                                     `PAI_ID` BIGINT NOT NULL,
-                                     PRIMARY KEY (`COM_ID`,`PAI_ID`),
-                                     CONSTRAINT `FK_CPAI_COM`
-                                         FOREIGN KEY (`COM_ID`) REFERENCES `COMMANDE`(`COM_ID`)
-                                             ON UPDATE CASCADE ON DELETE CASCADE,
-                                     CONSTRAINT `FK_CPAI_PAI`
-                                         FOREIGN KEY (`PAI_ID`) REFERENCES `PAIEMENT`(`PAI_ID`)
-                                             ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- AVIS PRODUITS --------------------------------------
 CREATE TABLE `AVIS` (
                         `AVI_ID` BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -365,3 +356,5 @@ CREATE TABLE `CLIENT_RABAIS` (
 CREATE INDEX `IX_CE_EMB_ID` ON `COMMANDE_EMBALLAGE`(`EMB_ID`);
 CREATE INDEX `IX_CP_PRO_ID` ON `COMMANDE_PRODUIT`(`PRO_ID`);
 CREATE INDEX `IX_CS_SUP_ID` ON `COMMANDE_SUPP`(`SUP_ID`);
+
+

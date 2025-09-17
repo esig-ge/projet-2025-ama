@@ -34,5 +34,13 @@ $_SESSION['per_id']     = (int)$user['PER_ID'];
 $_SESSION['per_email']  = $user['PER_EMAIL'];
 $_SESSION['per_nom']    = $user['PER_NOM'];
 $_SESSION['per_prenom'] = $user['PER_PRENOM'];
+$_SESSION['is_admin']   = false; // flag par défaut
 
+// Vérifie l'email si admin
+if (strcasecmp($user['PER_EMAIL'], 'dk.bloom@gmail.com') === 0) {
+    $_SESSION['is_admin'] = true;
+    header('Location: adminAccueil.php');
+    exit;
+}
+// Sinon client normal
 header('Location: index.php'); exit;

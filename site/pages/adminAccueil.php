@@ -1,201 +1,239 @@
+<?php
+// /site/pages/adminAccueil.php
+session_start();
+
+/* ===== 0) Accès (simple) =====
+   Adapte selon ta logique: adm_id, is_admin, rôle, etc.
+*/
+$isAdmin = !empty($_SESSION['is_admin']) || !empty($_SESSION['adm_id']);
+if (!$isAdmin) {
+    http_response_code(403);
+    echo "<h1 style='font-family:Arial,sans-serif;margin:48px;text-align:center'>Accès réservé à l’administrateur</h1>";
+    exit;
+}
+
+/* ===== 1) Bases de chemins ===== */
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+
+/* ===== 2) Connexion BDD ===== */
+$pdo = null;
+try {
+    /** @var PDO $pdo */
+    $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
+    if ($pdo instanceof PDO) {
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    }
+} catch (Throwable $e) { /* silencieux: on affiche des tirets si indispo */ }
+
+/* ===== 3) KPIs (tentatives souples + fallback) ===== */
+function kpi_try(PDO $pdo = null, string $sql = null, array $p = []) {
+    if (!$pdo || !$sql) return null;
+    try { $st=$pdo->prepare($sql); $st->execute($p); $v=$st->fetchColumn(); return $v; }
+    catch(Throwable $e){ return null; }
+}
+$today = (new DateTimeImmutable('today'))->format('Y-m-d');
+$weekAgo = (new DateTimeImmutable('-7 days'))->format('Y-m-d');
+
+$kpi = [
+    'orders_week'   => '–',
+    'revenue_week'  => '–',
+    'avg_basket'    => '–',
+    'products'      => '–',
+    'clients'       => '–',
+    'stock_alerts'  => '–'
+];
+
+/* ===== 3.a) Essaie des noms de colonnes "habituels"
+   -> Si ta table/colonne diffère, remplace l’SQL dessous
+*/
+if ($pdo) {
+    // commandes 7 jours
+    $v = kpi_try($pdo, "SELECT COUNT(*) FROM COMMANDE WHERE com_date >= :d", [':d'=>$weekAgo]);
+    if ($v !== null) $kpi['orders_week'] = (int)$v;
+
+    // chiffre d'affaires 7 jours (essaie com_total ou com_montant ou total)
+    $v = kpi_try($pdo, "SELECT SUM(com_total) FROM COMMANDE WHERE com_date >= :d", [':d'=>$weekAgo])
+        ?? kpi_try($pdo, "SELECT SUM(com_montant) FROM COMMANDE WHERE com_date >= :d", [':d'=>$weekAgo])
+        ?? kpi_try($pdo, "SELECT SUM(total) FROM COMMANDE WHERE com_date >= :d", [':d'=>$weekAgo]);
+    if ($v !== null) $kpi['revenue_week'] = number_format((float)$v, 2, '.', ' ') . " CHF";
+
+    // panier moyen (même logique de colonnes)
+    $v = kpi_try($pdo, "SELECT AVG(com_total) FROM COMMANDE WHERE com_date >= :d", [':d'=>$weekAgo])
+        ?? kpi_try($pdo, "SELECT AVG(com_montant) FROM COMMANDE WHERE com_date >= :d", [':d'=>$weekAgo])
+        ?? kpi_try($pdo, "SELECT AVG(total) FROM COMMANDE WHERE com_date >= :d", [':d'=>$weekAgo]);
+    if ($v !== null) $kpi['avg_basket'] = number_format((float)$v, 2, '.', ' ') . " CHF";
+
+    // nb produits (essaie PRODUIT)
+    $v = kpi_try($pdo, "SELECT COUNT(*) FROM PRODUIT");
+    if ($v !== null) $kpi['products'] = (int)$v;
+
+    // nb clients (essaie CLIENT)
+    $v = kpi_try($pdo, "SELECT COUNT(*) FROM CLIENT");
+    if ($v !== null) $kpi['clients'] = (int)$v;
+
+    // alertes stock (essaie stock <= 5) en supposant colonnes *_qte_stock
+    $v = kpi_try($pdo, "
+        SELECT SUM(x.c) FROM (
+            SELECT COUNT(*) c FROM PRODUIT WHERE (pro_qte_stock <= 5) OR (pro_qte_stock IS NULL)
+            UNION ALL
+            SELECT COUNT(*) c FROM FLEUR   WHERE (fle_qte_stock <= 5) OR (fle_qte_stock IS NULL)
+            UNION ALL
+            SELECT COUNT(*) c FROM BOUQUET WHERE (bou_qte_stock <= 5) OR (bou_qte_stock IS NULL)
+        ) t
+    ");
+    if ($v !== null) $kpi['stock_alerts'] = (int)$v;
+}
+
+$adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'UTF-8');
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="css/styleCatalogue.css">
-    <title>Catalogue bouquet</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>DK Bloom — Tableau de bord Admin</title>
 
-    <!-- charge le JS panier (API) -->
-    <script src="js/commande.js" defer></script>
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_admin.css">
+    <link rel="icon" href="<?= $BASE ?>img/favicon.ico">
 </head>
-
-<body>
-<?php include 'includes/header.php'; ?>
-</body>
-</html>
-
-<?php
-session_start();
-// ---- Sécurité & en-tête
-include 'includes/header.php';
-
-
-if (session_status() === PHP_SESSION_NONE) session_start();
-// Vérifie le rôle (adapte selon ta structure de session)
-if (empty($_SESSION['user']) || (($_SESSION['user']['role'] ?? '') !== 'admin')) {
-    header('Location: login.php'); exit;
-}
-
-// CSRF (token simple)
-if (empty($_SESSION['csrf'])) {
-    $_SESSION['csrf'] = bin2hex(random_bytes(32));
-}
-
-// --- Données démo (remplace par des SELECT SQL)
-$stats = [
-    'orders_today'   => 7,
-    'orders_pending' => 12,
-    'deliveries_today' => 5,
-    'revenue_month'  => 3420.50
-];
-
-$recent_orders = [
-    ['id' => 1024, 'client' => 'L. Martin', 'total' => 129.90, 'status' => 'en préparation', 'date' => '2025-09-01 10:12'],
-    ['id' => 1023, 'client' => 'S. Bakker', 'total' => 59.00,  'status' => 'validée',        'date' => '2025-09-01 09:48'],
-    ['id' => 1022, 'client' => 'A. Costa',  'total' => 210.00, 'status' => 'expédiée',       'date' => '2025-08-31 17:22'],
-    ['id' => 1021, 'client' => 'D. Nguyen', 'total' => 89.90,  'status' => 'livrée',         'date' => '2025-08-31 16:05'],
-];
-
-// Aide simple pour badge de statut
-function badge_class($status) {
-    $status = mb_strtolower($status);
-    if (str_contains($status, 'livr'))   return 'badge badge-success';
-    if (str_contains($status, 'expéd'))  return 'badge badge-info';
-    if (str_contains($status, 'prépa'))  return 'badge badge-warn';
-    if (str_contains($status, 'valid'))  return 'badge badge-neutral';
-    if (str_contains($status, 'annul'))  return 'badge badge-danger';
-    return 'badge';
-}
-?>
-
-<main class="container" style="padding:28px 0 56px">
-    <h1 style="margin:0 0 12px">Tableau de bord <span class="accent">administrateur</span></h1>
-    <p class="muted">Bienvenue <?php echo htmlspecialchars($_SESSION['user']['firstname'] ?? ''); ?> — gérez vos commandes, livraisons, promotions et produits.</p>
-
-    <!-- Cartes statistiques -->
-    <section class="admin-stats">
-        <article class="stat-card card">
-            <h3>Commandes du jour</h3>
-            <div class="stat-value"><?= (int)$stats['orders_today'] ?></div>
-            <a class="btn btn-ghost" href="admin/commandes.php">Voir</a>
-        </article>
-        <article class="stat-card card">
-            <h3>En attente</h3>
-            <div class="stat-value"><?= (int)$stats['orders_pending'] ?></div>
-            <a class="btn btn-ghost" href="admin/commandes.php?filtre=en_attente">Traiter</a>
-        </article>
-        <article class="stat-card card">
-            <h3>Livraisons aujourd’hui</h3>
-            <div class="stat-value"><?= (int)$stats['deliveries_today'] ?></div>
-            <a class="btn btn-ghost" href="admin/livraisons.php?date=today">Planifier</a>
-        </article>
-        <article class="stat-card card">
-            <h3>CA (mois)</h3>
-            <div class="stat-value">CHF <?= number_format($stats['revenue_month'], 2, '.', '\'') ?></div>
-            <a class="btn btn-ghost" href="admin/rapport.php">Rapports</a>
-        </article>
-    </section>
-
-    <!-- Actions rapides -->
-    <section class="quick-actions">
-        <a class="btn btn-primary" href="#form-promo">Créer une promotion</a>
-        <a class="btn btn-secondary" href="admin/commandes.php">Gérer les commandes</a>
-        <a class="btn btn-secondary" href="admin/livraisons.php">Gérer les livraisons</a>
-        <a class="btn btn-secondary" href="admin/produits.php">Gérer les produits</a>
-        <a class="btn btn-secondary" href="admin/clients.php">Clients</a>
-    </section>
-
-    <div class="admin-grid">
-        <!-- Formulaire création promotion -->
-        <section class="card" id="form-promo" aria-labelledby="promo-title">
-            <h2 id="promo-title" style="margin-top:0">Créer une promotion</h2>
-            <form action="app/controllers/promotions_create.php" method="post" class="grid-form">
-                <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
-                <div>
-                    <label for="promo_nom">Nom de la promo</label>
-                    <input type="text" id="promo_nom" name="nom" required placeholder="Anniversaire -25%">
-                </div>
-                <div>
-                    <label for="promo_type">Type</label>
-                    <select id="promo_type" name="type" required>
-                        <option value="pourcentage">Pourcentage</option>
-                        <option value="montant">Montant fixe</option>
-                        <option value="frais_livraison_offerts">Frais de livraison offerts</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="promo_valeur">Valeur</label>
-                    <input type="number" id="promo_valeur" name="valeur" step="0.01" min="0" required placeholder="ex: 25">
-                </div>
-                <div>
-                    <label for="promo_code">Code (optionnel)</label>
-                    <input type="text" id="promo_code" name="code" placeholder="HAPPY25">
-                </div>
-                <div>
-                    <label for="promo_debut">Début</label>
-                    <input type="date" id="promo_debut" name="date_debut" required>
-                </div>
-                <div>
-                    <label for="promo_fin">Fin</label>
-                    <input type="date" id="promo_fin" name="date_fin" required>
-                </div>
-                <div>
-                    <label for="promo_ciblage">Ciblage (facultatif)</label>
-                    <input type="text" id="promo_ciblage" name="ciblage" placeholder="catégorie:roses; min_panier:50">
-                </div>
-                <div class="full">
-                    <label for="promo_desc">Description</label>
-                    <textarea id="promo_desc" name="description" rows="3" placeholder="Conditions, exclusions, etc."></textarea>
-                </div>
-                <div class="full" style="display:flex; gap:.5rem; flex-wrap:wrap">
-                    <button class="btn btn-primary" type="submit">Enregistrer</button>
-                    <button class="btn btn-ghost" type="reset">Réinitialiser</button>
-                    <a class="btn btn-secondary" href="admin/promotions.php">Gérer les promotions</a>
-                </div>
-            </form>
-        </section>
-
-        <!-- Dernières commandes -->
-        <section class="card" aria-labelledby="orders-title">
-            <h2 id="orders-title" style="margin-top:0">Dernières commandes</h2>
-            <div class="table-wrap">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>#</th><th>Client</th><th>Total</th><th>Statut</th><th>Date</th><th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($recent_orders as $o): ?>
-                        <tr>
-                            <td><?= (int)$o['id'] ?></td>
-                            <td><?= htmlspecialchars($o['client']) ?></td>
-                            <td>CHF <?= number_format($o['total'], 2, '.', '\'') ?></td>
-                            <td><span class="<?= badge_class($o['status']) ?>"><?= htmlspecialchars($o['status']) ?></span></td>
-                            <td><?= htmlspecialchars($o['date']) ?></td>
-                            <td class="actions">
-                                <a class="btn btn-ghost" href="admin/commande.php?id=<?= (int)$o['id'] ?>">Ouvrir</a>
-                                <a class="btn btn-secondary" href="admin/commande_edit.php?id=<?= (int)$o['id'] ?>">Modifier</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <div style="margin-top:.75rem">
-                <a class="btn btn-ghost" href="admin/commandes.php">Voir toutes les commandes</a>
-            </div>
-        </section>
+<body class="adm">
+<aside class="adm-sidebar">
+    <div class="brand">
+        <img src="<?= $BASE ?>img/logo.jpg" alt="DK Bloom" class="brand-logo">
+        <span class="brand-name">DK Bloom</span>
     </div>
+    <nav class="adm-nav">
+        <a class="nav-item active" href="<?= $BASE ?>adminAccueil.php">
+            <span class="ico">🏠</span> <span>Dashboard</span>
+        </a>
+        <a class="nav-item" href="<?= $BASE ?>adminProduits.php"><span class="ico">💐</span> <span>Produits</span></a>
+        <a class="nav-item" href="<?= $BASE ?>adminCommandes.php"><span class="ico">🧾</span> <span>Commandes</span></a>
+        <a class="nav-item" href="<?= $BASE ?>adminClients.php"><span class="ico">👤</span> <span>Clients</span></a>
+        <a class="nav-item" href="<?= $BASE ?>adminPromos.php"><span class="ico">🏷️</span> <span>Promotions</span></a>
+        <a class="nav-item" href="<?= $BASE ?>adminAvis.php"><span class="ico">⭐</span> <span>Avis</span></a>
+        <a class="nav-item" href="<?= $BASE ?>adminParametres.php"><span class="ico">⚙️</span> <span>Paramètres</span></a>
+    </nav>
+    <div class="adm-footer">© <?= date('Y') ?> DK Bloom</div>
+</aside>
 
-    <!-- Tuiles de gestion -->
-    <section class="features" style="margin-top:18px">
-        <article class="card">
-            <h3>Promotions</h3>
-            <p class="muted">Créez, activez/désactivez, ciblez par catégorie ou code, export CSV.</p>
-            <a class="btn btn-secondary" href="admin/promotions.php">Ouvrir</a>
+<main class="adm-main">
+    <header class="adm-topbar">
+        <button class="burger" id="burger" aria-label="Menu">☰</button>
+        <div class="welcome">
+            <h1>Tableau de bord</h1>
+            <p>Bienvenue, <?= $adminName ?></p>
+        </div>
+        <div class="top-actions">
+            <a class="btn ghost" href="<?= $BASE ?>index.php">Voir le site</a>
+            <a class="btn" href="<?= $BASE ?>logout.php">Se déconnecter</a>
+        </div>
+    </header>
+
+    <section class="kpi-grid">
+        <article class="kpi-card">
+            <div class="kpi-label">Commandes (7 jours)</div>
+            <div class="kpi-value"><?= htmlspecialchars((string)$kpi['orders_week']) ?></div>
+            <div class="kpi-trend spark" aria-hidden="true"></div>
         </article>
-        <article class="card">
-            <h3>Livraisons</h3>
-            <p class="muted">Planifiez les tournées, créneaux, coûts, statuts et preuves de livraison.</p>
-            <a class="btn btn-secondary" href="admin/livraisons.php">Ouvrir</a>
+        <article class="kpi-card">
+            <div class="kpi-label">Revenu (7 jours)</div>
+            <div class="kpi-value"><?= htmlspecialchars((string)$kpi['revenue_week']) ?></div>
+            <div class="kpi-trend spark" aria-hidden="true"></div>
         </article>
-        <article class="card">
-            <h3>Produits</h3>
-            <p class="muted">Bouquets/coffrets, variantes, stock, prix, images et catégories.</p>
-            <a class="btn btn-secondary" href="admin/produits.php">Ouvrir</a>
+        <article class="kpi-card">
+            <div class="kpi-label">Panier moyen</div>
+            <div class="kpi-value"><?= htmlspecialchars((string)$kpi['avg_basket']) ?></div>
+            <div class="kpi-trend spark" aria-hidden="true"></div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-label">Produits en catalogue</div>
+            <div class="kpi-value"><?= htmlspecialchars((string)$kpi['products']) ?></div>
+            <div class="kpi-trend bar" aria-hidden="true"></div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-label">Clients</div>
+            <div class="kpi-value"><?= htmlspecialchars((string)$kpi['clients']) ?></div>
+            <div class="kpi-trend bar" aria-hidden="true"></div>
+        </article>
+        <article class="kpi-card alert">
+            <div class="kpi-label">Alertes stock</div>
+            <div class="kpi-value"><?= htmlspecialchars((string)$kpi['stock_alerts']) ?></div>
+            <div class="kpi-badge">⚠️ À vérifier</div>
         </article>
     </section>
+
+    <section class="grid-2">
+        <article class="card">
+            <div class="card-head">
+                <h2>Commandes récentes</h2>
+                <a class="link" href="<?= $BASE ?>adminCommandes.php">Tout voir</a>
+            </div>
+            <div class="table like">
+                <div class="row head"><div>#</div><div>Date</div><div>Client</div><div>Total</div><div>Statut</div></div>
+                <?php if ($pdo): ?>
+                    <?php
+                    // essaie un SELECT générique; adapte les colonnes si besoin
+                    try {
+                        $q = $pdo->query("SELECT com_id, com_date, com_total, com_statut FROM COMMANDE ORDER BY com_date DESC LIMIT 6");
+                        $rows = $q->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($rows as $r) {
+                            $id = (int)($r['com_id'] ?? 0);
+                            $d  = htmlspecialchars(substr((string)($r['com_date'] ?? ''),0,16));
+                            $t  = number_format((float)($r['com_total'] ?? 0), 2,'.',' ') . ' CHF';
+                            $s  = htmlspecialchars((string)($r['com_statut'] ?? '—'));
+                            echo "<div class='row'><div>$id</div><div>$d</div><div>—</div><div>$t</div><div>$s</div></div>";
+                        }
+                        if (empty($rows)) echo "<div class='row empty'>Aucune commande pour le moment.</div>";
+                    } catch (Throwable $e) {
+                        echo "<div class='row empty'>Connecte la requête à ta BDD (colonnes com_id, com_date, com_total, com_statut).</div>";
+                    }
+                    ?>
+                <?php else: ?>
+                    <div class="row empty">BDD non disponible en environnement actuel.</div>
+                <?php endif; ?>
+            </div>
+        </article>
+
+        <article class="card">
+            <div class="card-head">
+                <h2>Raccourcis</h2>
+            </div>
+            <div class="quick-actions">
+                <a class="qa" href="<?= $BASE ?>adminProduits.php">+ Ajouter un produit</a>
+                <a class="qa" href="<?= $BASE ?>adminPromos.php">Créer un code promo</a>
+                <a class="qa" href="<?= $BASE ?>adminClients.php">Lister les clients</a>
+                <a class="qa" href="<?= $BASE ?>adminAvis.php">Modérer les avis</a>
+                <a class="qa" href="<?= $BASE ?>adminParametres.php">Paramètres</a>
+            </div>
+        </article>
+    </section>
+
+    <section class="grid-2">
+        <article class="card">
+            <div class="card-head">
+                <h2>Ventes du mois (placeholder)</h2>
+            </div>
+            <div class="chart-placeholder">Graphique à brancher (Chart.js / Recharts ou image SVG)</div>
+        </article>
+
+        <article class="card">
+            <div class="card-head">
+                <h2>Produits en alerte stock</h2>
+            </div>
+            <ul class="list">
+                <li>Les articles <em>≤ 5</em> unités seront listés ici lorsque branché à la BDD.</li>
+            </ul>
+        </article>
+    </section>
+
+    <footer class="adm-bottom">Dernière mise à jour: <?= date('d.m.Y H:i') ?></footer>
 </main>
 
-<?php include 'includes/footer.php'; ?>
+<script>
+    document.getElementById('burger')?.addEventListener('click', () => {
+        document.body.classList.toggle('aside-open');
+    });
+</script>
+</body>
+</html>
