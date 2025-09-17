@@ -43,6 +43,22 @@ body.adm{
 
 .adm-footer{margin-top:auto; padding:14px 16px; opacity:.85; font-size:12px}
 
+/* Sidebar masquée par défaut si aside-closed */
+body.aside-closed .adm-sidebar {
+    transform: translateX(-100%);
+    transition: .25s transform;
+    position: fixed;
+    top: 0; left: 0;
+    height: 100%;
+    z-index: 1000;
+}
+
+/* Quand fermée, le main prend toute la largeur */
+body.aside-closed .adm-main {
+    margin-left: 0;
+}
+
+
 /* ===== Main ===== */
 .adm-main{flex:1; display:flex; flex-direction:column}
 .adm-topbar{

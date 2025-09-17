@@ -232,8 +232,9 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'U
 
 <script>
     document.getElementById('burger')?.addEventListener('click', () => {
-        document.body.classList.toggle('aside-open');
+        document.body.classList.toggle('aside-closed');
     });
 </script>
+
 </body>
 </html>
