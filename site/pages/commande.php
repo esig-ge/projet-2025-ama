@@ -367,11 +367,6 @@ $total = $subtotal + $shipping;
                     <li>Paiement sécurisé via Stripe</li>
                 </ul>
             </div>
-            <br>
-            <div>
-                    <label for="msg">Message pour la commande :</label><br>
-                    <input type="text" id="msg" name="message_client" placeholder="Écrire plus de details..." style="width:300px height: 600px"><br><br>
-            </div>
         </aside>
     </div>
 
@@ -390,13 +385,17 @@ $total = $subtotal + $shipping;
                     <span>🚚 Standard (48h)</span>
                 </label>
                 <label class="opt">
+                    <input type="radio" name="livraison" value="express" <?= $disabledAttr ?>>
+                    <span>⚡ Express (24h)</span>
+                </label>
+                <label class="opt">
                     <input type="radio" name="livraison" value="retrait" <?= $disabledAttr ?>>
                     <span>🏬 Retrait en boutique</span>
                 </label>
             </fieldset>
             <br>
             <div class="actions">
-                <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
+                <a class="btn-ghost" href="<?= $BASE ?>interface_catalogue_bouquet.php">Continuer mes achats</a>
                 <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
             </div>
             <br>
