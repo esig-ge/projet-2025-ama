@@ -65,7 +65,7 @@ function norm_name(string $s): string {
 function getProductImage(string $name): string {
     $k = norm_name($name);
     if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) return 'emballage_' . $m[2] . '.PNG';
-    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k)) return 'emballage_rose.PNG';
+    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pâle)?$/', $k)) return 'emballage_rose.PNG';
     if (preg_match('/paillet+e?s?/', $k)) return 'paillette_argent.PNG';
     if (preg_match('/papillon/', $k)) return 'papillon_doree.PNG';
     if (preg_match('/^rose.*clair$/', $k)) return 'rose_claire.png';
@@ -283,7 +283,7 @@ $CSRF = $_SESSION['csrf_checkout'];
               action="<?= htmlspecialchars($CHECKOUT_URL) ?>"
               method="post"
               autocomplete="on"
-              novalidate>
+              novalidate accept-charset="UTF-8">
             <!-- Champs cachés pour fallback serveur -->
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($CSRF) ?>">
             <input type="hidden" name="action" value="create_checkout">

@@ -3,9 +3,7 @@
 declare(strict_types=1);
 session_start();
 
-/* Réponse JSON par défaut ; si navigation classique, on fera une redirection plus bas */
-header('Content-Type: application/json; charset=utf-8');
-
+/* On ne fixe le Content-Type JSON que si la requête le veut réellement */
 function want_json(): bool {
     $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
     $xrw    = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
@@ -15,14 +13,17 @@ function want_json(): bool {
 /* ==== Garde-fous ==== */
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        if (want_json()) header('Content-Type: application/json; charset=utf-8');
         http_response_code(405);
         echo json_encode(['ok'=>false,'error'=>'method_not_allowed']); exit;
     }
     if (empty($_SESSION['per_id'])) {
+        if (want_json()) header('Content-Type: application/json; charset=utf-8');
         http_response_code(401);
         echo json_encode(['ok'=>false,'error'=>'not_logged_in']); exit;
     }
     if (($_POST['csrf'] ?? '') !== ($_SESSION['csrf_checkout'] ?? '')) {
+        if (want_json()) header('Content-Type: application/json; charset=utf-8');
         http_response_code(400);
         echo json_encode(['ok'=>false,'error'=>'csrf_invalid']); exit;
     }
@@ -31,7 +32,12 @@ try {
     $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $sk = getenv('STRIPE_SECRET_KEY');                 // sk_test_...
+    // 🔑 LIRE LA CLÉ depuis stripe.php puis fallback env — NE PAS réécraser ensuite
+    $keysPath = __DIR__ . '/../database/config/stripe.php';
+    $keys = is_file($keysPath) ? require $keysPath : [];
+    $sk = $keys['STRIPE_SECRET_KEY']
+        ?? getenv('STRIPE_SECRET_KEY')
+        ?? ($_SERVER['STRIPE_SECRET_KEY'] ?? $_ENV['STRIPE_SECRET_KEY'] ?? null);
     if (!$sk) throw new RuntimeException('STRIPE_SECRET_KEY manquante');
 
     $perId = (int)$_SESSION['per_id'];
@@ -45,7 +51,7 @@ try {
     $comId = (int)$st->fetchColumn();
     if ($comId <= 0) throw new RuntimeException('no_order');
 
-    /* ==== 2) Construit les line_items à partir de TA BDD ==== */
+    /* ==== 2) Construit les line_items à partir de la BDD ==== */
     $lineItems = [];
 
     // Produits
@@ -96,13 +102,11 @@ try {
     $cancel_url  = "{$scheme}://{$host}{$BASE}adresse_paiement.php";
 
     /* ==== 4) Appel REST Stripe (cURL) ==== */
-    // Stripe attend des clefs bracketées : line_items[0][price_data][...]
     $params = [
         'mode' => 'payment',
         'success_url' => $success_url,
         'cancel_url'  => $cancel_url,
         'client_reference_id' => (string)$comId,
-        // tu peux activer d'autres PM si dispo sur ton compte
         'payment_method_types[]' => 'card',
     ];
 
@@ -115,13 +119,15 @@ try {
         $i++;
     }
 
-    // Requête HTTP
     $ch = curl_init('https://api.stripe.com/v1/checkout/sessions');
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => http_build_query($params),
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER     => ['Authorization: Bearer '.$sk],
+        CURLOPT_TIMEOUT        => 20,
+        CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+        // CURLOPT_SSL_VERIFYPEER => true, // (true par défaut) ; laisse activé en prod
     ]);
     $raw = curl_exec($ch);
     if ($raw === false) throw new RuntimeException('cURL: '.curl_error($ch));
@@ -134,23 +140,29 @@ try {
         throw new RuntimeException('stripe_error: '.$err);
     }
 
-    // Marque la commande "en attente" avant paiement
+    // Marquer la commande "en attente"
     $pdo->prepare("UPDATE COMMANDE
                       SET COM_STATUT='en attente', STRIPE_SESSION_ID=:sid
                     WHERE COM_ID=:cid")
         ->execute([':sid'=>$resp['id'], ':cid'=>$comId]);
 
-    // Navigation classique = redirection, sinon JSON pour le fetch
-    if (!want_json()) {
-        header('Location: '.$resp['url']); exit;
+    // Réponse
+    if (want_json()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok'=>true,'url'=>$resp['url']], JSON_UNESCAPED_SLASHES);
+    } else {
+        header('Location: '.$resp['url']); // 302 par défaut
     }
-    echo json_encode(['ok'=>true,'url'=>$resp['url']], JSON_UNESCAPED_SLASHES);
+    exit;
+
 } catch (Throwable $e) {
-    if (!want_json()) {
+    if (want_json()) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok'=>false,'error'=>$e->getMessage()]);
+    } else {
         header('Content-Type: text/plain; charset=utf-8');
         http_response_code(500);
         echo 'Erreur: '.$e->getMessage();
-        exit;
     }
-    echo json_encode(['ok'=>false,'error'=>$e->getMessage()]);
+    exit;
 }

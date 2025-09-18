@@ -3,8 +3,20 @@
 declare(strict_types=1);
 header('Content-Type: text/plain; charset=utf-8');
 
+/* ---- Méthode requise ---- */
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    http_response_code(405);
+    echo 'Method Not Allowed';
+    exit;
+}
+
 /* ======= Config ======= */
-$endpointSecret = getenv('STRIPE_WEBHOOK_SECRET'); // whsec_...
+$keysPath = __DIR__ . '/../../database/config/stripe.php';
+$keys = is_file($keysPath) ? require $keysPath : [];
+$endpointSecret = $keys['STRIPE_WEBHOOK_SECRET']
+    ?? getenv('STRIPE_WEBHOOK_SECRET')
+    ?? ($_SERVER['STRIPE_WEBHOOK_SECRET'] ?? $_ENV['STRIPE_WEBHOOK_SECRET'] ?? null);
+
 if (!$endpointSecret) { http_response_code(500); echo 'Webhook secret manquant'; exit; }
 
 /* ======= Lecture payload + signature ======= */
@@ -13,21 +25,32 @@ $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
 /* ======= Vérification signature (HMAC, tolérance 5 min) ======= */
 function verify_stripe_signature(string $payload, string $sigHeader, string $secret, int $tolerance = 300): bool {
-    // Header ex: t=169..., v1=abc, v0=def
-    $parts = [];
-    foreach (explode(',', $sigHeader) as $kv) {
-        [$k,$v] = array_map('trim', explode('=', $kv, 2) + ['', '']);
-        if ($k && $v) $parts[$k] = $v;
-    }
-    if (empty($parts['t']) || empty($parts['v1'])) return false;
-    if (abs(time() - (int)$parts['t']) > $tolerance) return false;
+    if ($sigHeader === '') return false;
 
-    $signed = $parts['t'].'.'.$payload;
+    // Parse header: t=..., v1=..., v1=... (potentiellement plusieurs v1)
+    $t = null;
+    $v1s = [];
+    foreach (explode(',', $sigHeader) as $kv) {
+        $kv = trim($kv);
+        if ($kv === '' || strpos($kv, '=') === false) continue;
+        [$k, $v] = array_map('trim', explode('=', $kv, 2));
+        if ($k === 't')  { $t = ctype_digit($v) ? (int)$v : null; }
+        if ($k === 'v1') { $v1s[] = $v; }
+    }
+    if ($t === null || !$v1s) return false;
+    if (abs(time() - $t) > $tolerance) return false;
+
+    $signed   = $t . '.' . $payload;
     $expected = hash_hmac('sha256', $signed, $secret);
-    // comparaison temps-constant
-    if (function_exists('hash_equals')) return hash_equals($expected, $parts['v1']);
-    return $expected === $parts['v1'];
+
+    foreach ($v1s as $v1) {
+        if (function_exists('hash_equals') ? hash_equals($expected, $v1) : ($expected === $v1)) {
+            return true;
+        }
+    }
+    return false;
 }
+
 if (!verify_stripe_signature($payload, $sigHeader, $endpointSecret)) {
     http_response_code(400); echo 'Invalid'; exit;
 }
@@ -84,7 +107,6 @@ $obj  = $event['data']['object'] ?? [];
    payment_intent.*    -> $obj['id'], $obj['status'], $obj['amount_received']
    charge.* / refund.* -> $obj['payment_intent'] ou $event['data']['object']['charge']['payment_intent']
 */
-
 switch ($type) {
     /* ---- CHECKOUT ---- */
     case 'checkout.session.completed': {
@@ -168,7 +190,7 @@ switch ($type) {
     case 'charge.refunded':
     case 'charge.refund.updated':
     case 'charge.refund.created': {
-        // Trouve le PI
+        // Déterminer le PaymentIntent
         $pi = null;
         if (isset($obj['payment_intent'])) {
             $pi = (string)$obj['payment_intent'];
@@ -177,8 +199,9 @@ switch ($type) {
         }
         $comId = $pi ? findOrderId($pdo, null, $pi) : null;
         if ($comId) {
-            $amountCaptured = $obj['amount_captured'] ?? null;
-            $amountRefunded = $obj['amount_refunded'] ?? ($obj['amount'] ?? null);
+            // amount_refunded existe sur Charge ; amount sur Refund
+            $amountCaptured = $obj['amount_captured'] ?? null; // charge
+            $amountRefunded = $obj['amount_refunded'] ?? ($obj['amount'] ?? null); // charge || refund
             $newStatus = 'partiellement_rembourse';
             if ($amountCaptured !== null && $amountRefunded !== null && (int)$amountRefunded >= (int)$amountCaptured) {
                 $newStatus = 'rembourse';

@@ -4,6 +4,9 @@ declare(strict_types=1);
 session_start();
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+
 
 // ===== Connexion BDD
 try {
@@ -126,13 +129,15 @@ function read_qty(): int {
 
 /** Retourne 'Bouquet' | 'Fleur' | 'Coffret' (Majuscule initiale) pour coller aux ENUM fréquents */
 function guessProductType(PDO $pdo, int $proId): string {
-    foreach (['FLEUR'=>'Fleur', 'BOUQUET'=>'Bouquet', 'COFFRET'=>'Coffret'] as $table => $type) {
+    // renvoie toujours en minuscule pour rester cohérent avec adresse_paiement.php
+    foreach (['FLEUR' => 'fleur', 'BOUQUET' => 'bouquet', 'COFFRET' => 'coffret'] as $table => $type) {
         $s = $pdo->prepare("SELECT 1 FROM {$table} WHERE PRO_ID=:id");
         $s->execute(['id' => $proId]);
         if ($s->fetchColumn()) return $type;
     }
-    return 'Bouquet';
+    return 'bouquet';
 }
+
 
 function addEmballage(PDO $pdo, int $comId, int $embId, int $qty): void {
     $chk = $pdo->prepare("SELECT 1 FROM EMBALLAGE WHERE EMB_ID=:id");
@@ -243,27 +248,28 @@ function subtotalFromItems(array $items): float {
    ========================= */
 try {
     if (in_array($action, ['add','add_emballage','add_supplement'], true)) {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            json_err('method_not_allowed', 405);
+        }
+
         $qty   = read_qty();
         $comId = getOrCreateOpenOrder($pdo, $perId, $IS_DEV);
 
-        $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
-        $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
-        $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
+        $proId = (int)($_POST['pro_id'] ?? 0);
+        $embId = (int)($_POST['emb_id'] ?? 0);
+        $supId = (int)($_POST['sup_id'] ?? 0);
 
         $pdo->beginTransaction();
         try {
             if ($proId > 0) {
-                // check produit
                 $chk = $pdo->prepare("SELECT 1 FROM PRODUIT WHERE PRO_ID=:id");
                 $chk->execute(['id' => $proId]);
                 if (!$chk->fetchColumn()) json_err('product_not_found', 404);
 
-                $type = guessProductType($pdo, $proId); // 'Bouquet' | 'Fleur' | 'Coffret'
-
-                // IMPORTANT : clé unique (COM_ID, PRO_ID) attendue pour ON DUPLICATE
+                $type = guessProductType($pdo, $proId); // 'bouquet' | 'fleur' | 'coffret'
                 $sql = "INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
-                        VALUES (:c,:p,:q,:t)
-                        ON DUPLICATE KEY UPDATE CP_QTE_COMMANDEE = CP_QTE_COMMANDEE + VALUES(CP_QTE_COMMANDEE)";
+                    VALUES (:c,:p,:q,:t)
+                    ON DUPLICATE KEY UPDATE CP_QTE_COMMANDEE = CP_QTE_COMMANDEE + VALUES(CP_QTE_COMMANDEE)";
                 $pdo->prepare($sql)->execute(['c'=>$comId,'p'=>$proId,'q'=>$qty,'t'=>$type]);
 
             } elseif ($embId > 0) {
@@ -287,21 +293,44 @@ try {
         json_ok(['com_id'=>$comId,'items'=>$items,'subtotal'=>$subtotal]);
     }
 
+
     if ($action === 'list') {
         $comId = (int)($_SESSION['com_id'] ?? 0);
-        if (!$comId) json_ok(['items'=>[],'subtotal'=>0.0]);
+        if (!$comId) {
+            // fallback BDD : retrouve la commande "en préparation"
+            $q = $pdo->prepare("
+            SELECT COM_ID FROM COMMANDE
+            WHERE PER_ID=:per AND COM_STATUT='en préparation'
+            ORDER BY COM_ID DESC LIMIT 1
+        ");
+            $q->execute(['per' => $perId]);
+            $comId = (int)($q->fetchColumn() ?: 0);
+            if ($comId) {
+                $_SESSION['com_id'] = $comId;
+            }
+        }
+
+        if (!$comId) {
+            json_ok(['items'=>[],'subtotal'=>0.0]);
+        }
+
         $items    = listOrder($pdo, $comId);
         $subtotal = subtotalFromItems($items);
         json_ok(['com_id'=>$comId,'items'=>$items,'subtotal'=>$subtotal]);
     }
 
+
     if ($action === 'remove') {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            json_err('method_not_allowed', 405);
+        }
+
         $comId = (int)($_SESSION['com_id'] ?? 0);
         if (!$comId) json_err('no_order');
 
-        $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
-        $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
-        $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
+        $proId = (int)($_POST['pro_id'] ?? 0);
+        $embId = (int)($_POST['emb_id'] ?? 0);
+        $supId = (int)($_POST['sup_id'] ?? 0);
 
         if ($proId > 0) {
             $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:p")

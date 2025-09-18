@@ -11,13 +11,12 @@ $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 $comId     = (int)($_GET['com_id'] ?? 0);
 $sessionId = $_GET['session_id'] ?? '';
 
-/* (Optionnel) lecture du statut Stripe si clé dispo */
-function get_key(string $which, string $localPath): ?string {
-    $keys = is_file($localPath) ? require $localPath : [];
-    return $keys[$which] ?? getenv($which) ?? ($_SERVER[$which] ?? ($_ENV[$which] ?? null));
-}
-$keysFile = __DIR__ . '/../config/keys.php';
-$sk = get_key('STRIPE_SECRET_KEY', $keysFile);
+/* Lecture des clés Stripe depuis /site/database/config/stripe.php */
+$keysFile = __DIR__ . '/../database/config/stripe.php';
+$keys = is_file($keysFile) ? require $keysFile : [];
+$sk = $keys['STRIPE_SECRET_KEY']
+    ?? getenv('STRIPE_SECRET_KEY')
+    ?? ($_SERVER['STRIPE_SECRET_KEY'] ?? $_ENV['STRIPE_SECRET_KEY'] ?? null);
 
 $stripeStatus = null;
 if ($sk && $sessionId) {
@@ -25,6 +24,8 @@ if ($sk && $sessionId) {
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $sk],
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
     ]);
     $raw  = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
