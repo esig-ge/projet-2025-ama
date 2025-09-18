@@ -153,6 +153,8 @@ $CSRF = $_SESSION['csrf_checkout'];
         .btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:10px;
             background:#8b0000; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:700; }
         .btn-primary[aria-disabled="true"] { opacity:.6; pointer-events:none; }
+        .btn-secondary {display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#ddd;color:#333;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700;}
+        .btn-secondary:hover {background:#ccc;}
         .note { background:#fff8e5; border:1px solid #ffecb3; padding:10px 12px; border-radius:8px; }
 
         /* ===== mini-cart ===== */
@@ -412,8 +414,14 @@ $CSRF = $_SESSION['csrf_checkout'];
 
                 <div class="hr"></div>
 
-                <button type="submit" id="btn-pay" class="btn-primary">Payer maintenant</button>
-                <p id="form-msg" class="muted" role="status" style="margin-top:10px"></p>
+                <div class="pay-group">
+                    <button type="submit" id="btn-pay" class="btn-primary">
+                        Payer maintenant
+                    </button>
+                    <a href="commande.php" id="btn-return" class="btn-secondary">
+                        Retour au panier
+                    </a>
+                </div>
             </section>
         </form>
 

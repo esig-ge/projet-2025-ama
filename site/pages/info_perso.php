@@ -236,7 +236,7 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <div class="actions">
-                    <a class="btn-secondary" href="<?= $BASE ?>commande.php">Voir ma commande en cours</a>
+                    <a class="btn-secondary" href="<?= $BASE ?>commande.php">Aller au panier</a>
                     <button class="btn-primary" type="submit" name="update_profile" value="1">Appliquer</button>
                 </div>
                 <p style="margin-top:10px;font-size:.9rem">

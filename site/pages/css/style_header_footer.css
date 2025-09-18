@@ -1,3 +1,4 @@
+
 /* ============= Base / Layout ============= */
 :root{
     --brand:#7a0000;
@@ -160,3 +161,4 @@ main{flex:1}
 @media (max-width:700px){
     .footer-links, .footer-nav{ gap:18px; }
 }
+

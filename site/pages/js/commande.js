@@ -323,7 +323,7 @@ function toastError(btn, fallback, err){
         || btn?.dataset?.embName
         || btn?.dataset?.suppName
         || fallback;
-    showToast(`Échec de l’ajout : ${label}`, 'error', 3600, 'Erreur');
+    showToast(`Échec de l’ajout : ${label}, vous n'êtes pas connecté(e)`, 'error', 3600, 'Erreur');
     console.error(err);
 }
 

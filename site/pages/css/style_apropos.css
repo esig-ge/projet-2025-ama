@@ -62,3 +62,4 @@ body .container.apropos .carrousel{
     border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.15);
 }
 @keyframes scroll{ 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+

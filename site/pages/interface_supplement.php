@@ -217,6 +217,7 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
 </main>
 
+
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
 </html>
