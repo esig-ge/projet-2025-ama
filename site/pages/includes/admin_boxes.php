@@ -1,5 +1,9 @@
 
-
+<?php
+session_start();
+// Prefixe URL qui marche depuis n'importe quelle page de /site/pages
+$BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
+?>
 
 
 <!doctype html>
@@ -27,11 +31,11 @@
         </thead>
         <tbody>
         <tr>
-            <td data-label="Nom">Rose rouge</td>
+            <td data-label="Nom">Boxe </td>
             <td data-label="ID">#12</td>
             <td data-label="Couleur">rouge</td>
             <td data-label="Qté min">5</td>
-            <td data-label="Qté max">50</td>
+            <td data-label="Qté max">200</td>
             <td data-label="Qté actuelle">22</td>
             <td data-label="Actions">
                 <a href="#" class="btn">Modifier</a>
@@ -39,11 +43,11 @@
             </td>
         </tr>
         <tr>
-            <td data-label="Nom">Rose blanche</td>
+            <td data-label="Nom">Boxe </td>
             <td data-label="ID">#13</td>
             <td data-label="Couleur">blanc</td>
             <td data-label="Qté min">3</td>
-            <td data-label="Qté max">40</td>
+            <td data-label="Qté max">200</td>
             <td data-label="Qté actuelle">0</td>
             <td data-label="Actions">
                 <a href="#" class="btn">Modifier</a>
@@ -51,11 +55,11 @@
             </td>
         </tr>
         <tr>
-            <td data-label="Nom">Bouquet mix</td>
+            <td data-label="Nom">Boxe</td>
             <td data-label="ID">#14</td>
             <td data-label="Couleur">multicolore</td>
             <td data-label="Qté min">10</td>
-            <td data-label="Qté max">100</td>
+            <td data-label="Qté max">200</td>
             <td data-label="Qté actuelle">74</td>
             <td data-label="Actions">
                 <a href="#" class="btn">Modifier</a>
