@@ -159,6 +159,13 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
             <h3>Paillettes</h3><p class="price">9 CHF</p>
             <label class="sr-only" for="qty-sup-7">Quantité</label>
             <input id="qty-sup-7" type="number" class="qty" name="qty" min="1" max="99" step="1" value="1" inputmode="numeric" required>
+            <div class="swatches" role="group" aria-label="Couleur">
+                <label><input type="radio" name="couleur_7" value="rouge" required><span class="swatch" style="--c:red"></span></label>
+                <label><input type="radio" name="couleur_7" value="rose"><span class="swatch" style="--c:pink"></span></label>
+                <label><input type="radio" name="couleur_7" value="blanc"><span class="swatch" style="--c:lightgrey"></span></label>
+                <label><input type="radio" name="couleur_7" value="bleu"><span class="swatch" style="--c:blue"></span></label>
+                <label><input type="radio" name="couleur_7" value="noir"><span class="swatch" style="--c:black"></span></label>
+            </div>
             <br><br>
             <button type="submit" class="add-to-cart" data-sup-name="Paillettes">Ajouter</button>
         </form>

@@ -367,6 +367,11 @@ $total = $subtotal + $shipping;
                     <li>Paiement sécurisé via Stripe</li>
                 </ul>
             </div>
+            <br>
+            <div>
+                    <label for="msg">Message pour la commande :</label><br>
+                    <input type="text" id="msg" name="message_client" placeholder="Écrire plus de details..." style="width:300px height: 600px"><br><br>
+            </div>
         </aside>
     </div>
 
