@@ -1,21 +1,26 @@
 <?php
 // /site/pages/success.php
+declare(strict_types=1);
 session_start();
+require __DIR__ . '/../../vendor/autoload.php';
+
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
+
+$secretKey = getenv('STRIPE_SECRET_KEY');
+Stripe::setApiKey($secretKey);
+
+$sessionId = $_GET['session_id'] ?? '';
+$comId     = (int)($_GET['com_id'] ?? 0);
+
+if ($sessionId) {
+    $session = Session::retrieve($sessionId);
+    // Affiche un "merci" + récap. La MAJ définitive sera faite par le webhook (fiable).
+}
 ?>
-<!doctype html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8" />
-    <title>Paiement réussi</title>
-    <link rel="stylesheet" href="<?= rtrim(dirname($_SERVER['PHP_SELF']),'/').'/'; ?>../css/style_header_footer.css">
-</head>
-<body>
-<?php include __DIR__ . '/includes/header.php'; ?>
-<main style="max-width:900px;margin:80px auto 40px;padding:0 16px;">
-    <h1>Merci pour votre achat 💐</h1>
-    <p>Votre paiement a été confirmé. Vous recevrez un email de confirmation sous peu.</p>
-    <p><a href="../index.php">Retour à l’accueil</a></p>
-</main>
-<?php include __DIR__ . '/includes/footer.php'; ?>
-</body>
-</html>
+<!DOCTYPE html>
+<html lang="fr"><body>
+<h1>Merci !</h1>
+<p>Référence commande #<?= htmlspecialchars($comId) ?>. Un email de confirmation va vous être envoyé.</p>
+<a href="interface_selection_produit.php">Continuer vos achats</a>
+</body></html>

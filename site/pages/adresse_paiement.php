@@ -14,15 +14,15 @@ $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\
 $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 $SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);
 
-/* Détection checkout.php (à la racine du site ou dans /pages) */
-$co_fs_main  = __DIR__ . '/../checkout.php';   // /site/checkout.php
-$co_fs_pages = __DIR__ . '/checkout.php';      // /site/pages/checkout.php
+/* Détection create_checkout.php (à la racine du site ou dans /pages) */
+$co_fs_main  = __DIR__ . '/../create_checkout.php';   // /site/create_checkout.php
+$co_fs_pages = __DIR__ . '/create_checkout.php';      // /site/pages/create_checkout.php
 if (is_file($co_fs_main)) {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
+    $CHECKOUT_URL = $SITE_BASE . 'create_checkout.php';
 } elseif (is_file($co_fs_pages)) {
-    $CHECKOUT_URL = $PAGE_BASE . 'checkout.php';
+    $CHECKOUT_URL = $PAGE_BASE . 'create_checkout.php';
 } else {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php'; // fallback
+    $CHECKOUT_URL = $SITE_BASE . 'create_checkout.php'; // fallback
 }
 
 /* Détection API cart.php pour afficher le récap (si tu gardes l'API) */
@@ -116,7 +116,7 @@ try {
     header('Location: commande.php'); exit;
 }
 
-/* ===== 4) CSRF pour POST → checkout.php ===== */
+/* ===== 4) CSRF pour POST → create_checkout.php ===== */
 $_SESSION['csrf_checkout'] = bin2hex(random_bytes(16));
 $CSRF = $_SESSION['csrf_checkout'];
 ?>
@@ -422,6 +422,7 @@ $CSRF = $_SESSION['csrf_checkout'];
                         Retour au panier
                     </a>
                 </div>
+                <p id="form-msg" class="muted" style="margin-top:8px"></p>
             </section>
         </form>
 
@@ -486,7 +487,7 @@ $CSRF = $_SESSION['csrf_checkout'];
     setShippingDisabled(same.checked);
 
     /* ==========================
-       2) Soumission → checkout.php
+       2) Soumission → create_checkout.php
        ========================== */
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -516,7 +517,7 @@ $CSRF = $_SESSION['csrf_checkout'];
             const m = text.match(/https:\/\/checkout\.stripe\.com\/pay\/[A-Za-z0-9_%\-]+/);
             if (m) { window.location.href = m[0]; return; }
 
-            throw new Error('Réponse inattendue de checkout.php');
+            throw new Error('Réponse inattendue de create_checkout.php');
         } catch (err) {
             console.error(err);
             msg.textContent = "Oups, impossible de démarrer le paiement. Réessaie ou contacte-nous.";
