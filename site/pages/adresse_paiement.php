@@ -209,36 +209,16 @@ $CSRF = $_SESSION['csrf_checkout'];
 
             // 5) Table standard
             const map = {
-                // Bouquets
                 '12 roses':'12Roses.png','bouquet 12':'12Roses.png',
                 '20 roses':'20Roses.png','bouquet 20':'20Roses.png',
                 '36 roses':'36Roses.png','bouquet 36':'36Roses.png',
                 '50 roses':'50Roses.png','bouquet 50':'50Roses.png',
                 '66 roses':'66Roses.png','bouquet 66':'66Roses.png',
                 '100 roses':'100Roses.png','bouquet 100':'100Roses.png',
-
-                // Roses unitaires
-                'rose rouge':'rouge.png',
-                'rose rose':'rose.png',
-                'rose blanche':'rosesBlanche.png',
-                'rose bleue':'bleu.png',
-                'rose noire':'noir.png',
-
-                // Suppléments
-                'mini ourson':'ours_blanc.PNG',
-                'deco anniv':'happybirthday.PNG',
-                'decoration anniversaire':'happybirthday.PNG',
-                'baton coeur':'baton_coeur.PNG',
-                'diamant':'diamant.PNG',
-                'couronne':'couronne.PNG',
-                'lettre':'lettre.png',
-                'initiale':'lettre.png',
-                'carte pour mot':'carte.PNG',
-                'carte':'carte.PNG',
-
-                // Paniers
-                'panier vide':'panier_vide.png',
-                'panier rempli':'panier_rempli.png',
+                'rose rouge':'rouge.png','rose rose':'rose.png','rose blanche':'rosesBlanche.png','rose bleue':'bleu.png','rose noire':'noir.png',
+                'mini ourson':'ours_blanc.PNG','deco anniv':'happybirthday.PNG','decoration anniversaire':'happybirthday.PNG','baton coeur':'baton_coeur.PNG',
+                'diamant':'diamant.PNG','couronne':'couronne.PNG','lettre':'lettre.png','initiale':'lettre.png','carte pour mot':'carte.PNG','carte':'carte.PNG',
+                'panier vide':'panier_vide.png','panier rempli':'panier_rempli.png',
             };
             if (map[k]) return map[k];
 
@@ -299,7 +279,15 @@ $CSRF = $_SESSION['csrf_checkout'];
 
     <div class="grid-pay">
         <!-- ===== FORMULAIRE ===== -->
-        <form id="checkout-form" autocomplete="on">
+        <form id="checkout-form"
+              action="<?= htmlspecialchars($CHECKOUT_URL) ?>"
+              method="post"
+              autocomplete="on"
+              novalidate>
+            <!-- Champs cachés pour fallback serveur -->
+            <input type="hidden" name="csrf" value="<?= htmlspecialchars($CSRF) ?>">
+            <input type="hidden" name="action" value="create_checkout">
+
             <!-- Colonne 1 : FACTURATION -->
             <section class="card" aria-labelledby="bill-title">
                 <h2 id="bill-title">Adresse de facturation</h2>
@@ -415,10 +403,13 @@ $CSRF = $_SESSION['csrf_checkout'];
                 <div class="hr"></div>
 
                 <div class="pay-group">
-                    <button type="submit" id="btn-pay" class="btn-primary">
+                    <button type="submit"
+                            id="btn-pay"
+                            class="btn-primary"
+                            formaction="<?= htmlspecialchars($CHECKOUT_URL) ?>">
                         Payer maintenant
                     </button>
-                    <a href="commande.php" id="btn-return" class="btn-secondary">
+                    <a href="<?= $PAGE_BASE ?>commande.php" id="btn-return" class="btn-secondary">
                         Retour au panier
                     </a>
                 </div>
@@ -487,22 +478,23 @@ $CSRF = $_SESSION['csrf_checkout'];
     setShippingDisabled(same.checked);
 
     /* ==========================
-       2) Soumission → create_checkout.php
+       2) Soumission → create_checkout.php (AJAX + fallback natif)
        ========================== */
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         msg.textContent = 'Création du paiement en cours…';
 
         const fd = new FormData(form);
-        fd.append('action', 'create_checkout');
-        fd.append('same_as_billing', same.checked ? '1' : '0');
-        fd.append('csrf', window.CSRF_CHECKOUT);
+        fd.set('action', 'create_checkout');
+        fd.set('same_as_billing', same.checked ? '1' : '0');
+        fd.set('csrf', window.CSRF_CHECKOUT);
 
         try {
             const res  = await fetch(window.CHECKOUT_URL, {
                 method: 'POST',
                 body: fd,
-                credentials: 'same-origin'
+                credentials: 'same-origin',
+                redirect: 'manual'
             });
             const text = await res.text();
             let data = null;
@@ -511,23 +503,24 @@ $CSRF = $_SESSION['csrf_checkout'];
             if (res.ok && data && data.ok && data.url) {
                 window.location.href = data.url; return;
             }
-            if (res.redirected) { window.location.href = res.url; return; }
-            if (!res.ok) throw new Error(`HTTP ${res.status} — ${text.slice(0,200)}`);
+            const loc = res.headers.get('Location');
+            if (loc) { window.location.href = loc; return; }
 
             const m = text.match(/https:\/\/checkout\.stripe\.com\/pay\/[A-Za-z0-9_%\-]+/);
             if (m) { window.location.href = m[0]; return; }
 
-            throw new Error('Réponse inattendue de create_checkout.php');
+            // Fallback natif : envoie le formulaire au serveur (pas d'event)
+            HTMLFormElement.prototype.submit.call(form);
         } catch (err) {
             console.error(err);
             msg.textContent = "Oups, impossible de démarrer le paiement. Réessaie ou contacte-nous.";
+            // Fallback natif malgré tout
+            HTMLFormElement.prototype.submit.call(form);
         }
     });
 
     /* ==========================
        3) Mini-récap du panier (lecture seule)
-          → récupère via API cart.php ; si pas d’URL d’image, on déduit depuis le nom,
-            puis on teste plusieurs variantes (extensions & sous-dossiers).
        ========================== */
     async function renderMiniCart(){
         const box = document.getElementById('mini-cart-list');

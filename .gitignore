@@ -1,6 +1,9 @@
-# --- IDE / PhpStorm ---
+# --- IDE / Editors ---
 .idea/
 *.iml
+.vscode/
+*.code-workspace
+.history/
 
 # --- OS files ---
 .DS_Store
@@ -11,20 +14,31 @@ Thumbs.db
 *.tmp
 *.cache
 *.bak
+tmp/
+cache/
 
-# --- Composer (même si tu ne l’utilises pas ici)
+# --- Composer (même si non utilisé partout) ---
 vendor/
+site/vendor/
 composer.lock
 
 # --- Environnements locaux ---
 .env
+.env.*
+!.env.example
+!.env.dist
 
-# --- Config locales spécifiques ---
-/config/*.local.php
+# --- Config locales / SECRETS (NE PAS COMMIT) ---
+site/database/config/stripe.php
+site/database/config/env.php
+site/database/config/*-local.php
+site/database/config/*.secrets.php
 
-# --- Uploads (si tu stockes des images côté serveur)
+# --- Uploads (
 public/uploads/
+site/uploads/
 
 # --- Cache & stockage internes ---
 app/storage/cache/
 app/storage/logs/
+storage/

@@ -3,66 +3,65 @@
 declare(strict_types=1);
 header('Content-Type: text/plain; charset=utf-8');
 
-// Pas de session ici
-require __DIR__ . '/../../../vendor/autoload.php';
+/* ======= Config ======= */
+$endpointSecret = getenv('STRIPE_WEBHOOK_SECRET'); // whsec_...
+if (!$endpointSecret) { http_response_code(500); echo 'Webhook secret manquant'; exit; }
 
-use Stripe\Webhook;
-
-/* =========================
-   0) Sécurité : secret
-   ========================= */
-$endpointSecret = getenv('STRIPE_WEBHOOK_SECRET');
-if (!$endpointSecret) {
-    http_response_code(500);
-    echo 'Webhook secret manquant'; exit;
-}
-
+/* ======= Lecture payload + signature ======= */
 $payload   = file_get_contents('php://input') ?: '';
 $sigHeader = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
 
-try {
-    $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
-} catch (Throwable $e) {
-    http_response_code(400);
-    echo 'Invalid'; // signature invalide
-    exit;
+/* ======= Vérification signature (HMAC, tolérance 5 min) ======= */
+function verify_stripe_signature(string $payload, string $sigHeader, string $secret, int $tolerance = 300): bool {
+    // Header ex: t=169..., v1=abc, v0=def
+    $parts = [];
+    foreach (explode(',', $sigHeader) as $kv) {
+        [$k,$v] = array_map('trim', explode('=', $kv, 2) + ['', '']);
+        if ($k && $v) $parts[$k] = $v;
+    }
+    if (empty($parts['t']) || empty($parts['v1'])) return false;
+    if (abs(time() - (int)$parts['t']) > $tolerance) return false;
+
+    $signed = $parts['t'].'.'.$payload;
+    $expected = hash_hmac('sha256', $signed, $secret);
+    // comparaison temps-constant
+    if (function_exists('hash_equals')) return hash_equals($expected, $parts['v1']);
+    return $expected === $parts['v1'];
+}
+if (!verify_stripe_signature($payload, $sigHeader, $endpointSecret)) {
+    http_response_code(400); echo 'Invalid'; exit;
 }
 
-/* =========================
-   1) BDD + helpers
-   ========================= */
-/** @var PDO $pdo */
+/* ======= BDD ======= */
 $pdo = require __DIR__ . '/../../database/config/connexionBDD.php';
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-/* --- Idempotence : ignorer les doublons (à créer une fois)
-CREATE TABLE IF NOT EXISTS STRIPE_WEBHOOK_LOG (
-  EVENT_ID VARCHAR(255) PRIMARY KEY,
-  TYPE     VARCHAR(255) NOT NULL,
-  RECEIVED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
--- (facultatif) indexer TYPE si besoin
+/* ======= Idempotence =======
+   CREATE TABLE IF NOT EXISTS STRIPE_WEBHOOK_LOG (
+     EVENT_ID VARCHAR(255) PRIMARY KEY,
+     TYPE     VARCHAR(255) NOT NULL,
+     RECEIVED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   ) ENGINE=InnoDB;
 */
+$event = json_decode($payload, true);
+if (!is_array($event) || empty($event['type'])) { http_response_code(400); echo 'bad_event'; exit; }
+
 try {
     $stmt = $pdo->prepare("INSERT IGNORE INTO STRIPE_WEBHOOK_LOG (EVENT_ID, TYPE) VALUES (:id, :t)");
-    $stmt->execute([':id' => $event->id, ':t' => $event->type]);
-    if ($stmt->rowCount() === 0) { // déjà traité
-        http_response_code(200); echo 'Duplicate'; exit;
-    }
+    $stmt->execute([':id'=>$event['id'] ?? '', ':t'=>$event['type'] ?? '']);
+    if ($stmt->rowCount() === 0) { http_response_code(200); echo 'Duplicate'; exit; }
 } catch (Throwable $e) {
-    // si la table n'existe pas, on continue (sans idempotence)
+    // si la table n'existe pas, on continue sans idempotence
 }
 
-/* --- Utils : trouver la COM_ID depuis session / intent --- */
+/* ======= Helpers ======= */
 function findOrderId(PDO $pdo, ?string $clientRef, ?string $pi): ?int {
-    // 1) client_reference_id (source la plus fiable côté Checkout)
     if ($clientRef && ctype_digit($clientRef)) {
         $id = (int)$clientRef;
         $chk = $pdo->prepare("SELECT COM_ID FROM COMMANDE WHERE COM_ID=:c LIMIT 1");
         $chk->execute([':c'=>$id]);
         if ($chk->fetchColumn()) return $id;
     }
-    // 2) Via le PaymentIntent (si on l’a)
     if ($pi) {
         $stmt = $pdo->prepare("SELECT COM_ID FROM COMMANDE WHERE FK_PAIEMENT_INTENT=:pi OR STRIPE_SESSION_ID=:pi LIMIT 1");
         $stmt->execute([':pi'=>$pi]);
@@ -71,59 +70,39 @@ function findOrderId(PDO $pdo, ?string $clientRef, ?string $pi): ?int {
     }
     return null;
 }
+function onOrderPaid(PDO $pdo, int $comId): void { /* TODO: stock, email, etc. */ }
+function onOrderRefunded(PDO $pdo, int $comId): void { /* TODO */ }
+function onOrderFailed(PDO $pdo, int $comId): void { /* TODO */ }
+function onOrderExpired(PDO $pdo, int $comId): void { /* TODO */ }
 
-/* --- Hooks : à implémenter selon ton MLD si tu veux automatiser --- */
-function onOrderPaid(PDO $pdo, int $comId): void {
-    // TODO: décrémenter stocks, générer facture/PDF, envoyer email, etc.
-}
-function onOrderRefunded(PDO $pdo, int $comId): void {
-    // TODO: email de confirmation de remboursement, etc.
-}
-function onOrderFailed(PDO $pdo, int $comId): void {
-    // TODO: notifier le client ou remettre la commande en "en préparation"
-}
-function onOrderExpired(PDO $pdo, int $comId): void {
-    // TODO: libérer les réservations de stock, etc.
-}
+/* ======= Routing ======= */
+$type = $event['type'];
+$obj  = $event['data']['object'] ?? [];
 
-/* =========================
-   2) Routing des événements
-   ========================= */
-switch ($event->type) {
+/* Examples fields:
+   checkout.session.*  -> $obj['payment_status'], $obj['payment_intent'], $obj['client_reference_id'], $obj['amount_total']
+   payment_intent.*    -> $obj['id'], $obj['status'], $obj['amount_received']
+   charge.* / refund.* -> $obj['payment_intent'] ou $event['data']['object']['charge']['payment_intent']
+*/
 
-    /* ---------- CHECKOUT ---------- */
+switch ($type) {
+    /* ---- CHECKOUT ---- */
     case 'checkout.session.completed': {
-        /** @var \Stripe\Checkout\Session $s */
-        $s = $event->data->object;
-        $status = (string)($s->payment_status ?? '');
-        $pi     = $s->payment_intent ? (string)$s->payment_intent : null;
-        $comId  = findOrderId($pdo, (string)($s->client_reference_id ?? ''), $pi);
+        $status = (string)($obj['payment_status'] ?? '');
+        $pi     = isset($obj['payment_intent']) ? (string)$obj['payment_intent'] : null;
+        $comId  = findOrderId($pdo, (string)($obj['client_reference_id'] ?? ''), $pi);
 
         if ($comId) {
-            // Mettre à jour les références Stripe connues
-            $upd = $pdo->prepare("
-                UPDATE COMMANDE
-                   SET STRIPE_SESSION_ID = COALESCE(STRIPE_SESSION_ID, :sid),
-                       FK_PAIEMENT_INTENT = COALESCE(FK_PAIEMENT_INTENT, :pi)
-                 WHERE COM_ID = :cid
-                 LIMIT 1
-            ");
-            $upd->execute([
-                ':sid' => (string)($s->id ?? ''),
-                ':pi'  => (string)($pi ?? ''),
-                ':cid' => $comId,
-            ]);
+            $pdo->prepare("UPDATE COMMANDE
+                              SET STRIPE_SESSION_ID = COALESCE(STRIPE_SESSION_ID, :sid),
+                                  FK_PAIEMENT_INTENT = COALESCE(FK_PAIEMENT_INTENT, :pi)
+                            WHERE COM_ID=:cid LIMIT 1")
+                ->execute([':sid'=>(string)($obj['id'] ?? ''), ':pi'=>(string)($pi ?? ''), ':cid'=>$comId]);
 
             if ($status === 'paid') {
-                $amt = isset($s->amount_total) ? ((int)$s->amount_total)/100 : null;
-                $stmt = $pdo->prepare("
-                    UPDATE COMMANDE
-                       SET COM_STATUT='payee',
-                           TOTAL_PAYER_CHF = COALESCE(:amt, TOTAL_PAYER_CHF)
-                     WHERE COM_ID=:cid
-                     LIMIT 1
-                ");
-                $stmt->execute([':amt'=>$amt, ':cid'=>$comId]);
+                $amt = isset($obj['amount_total']) ? ((int)$obj['amount_total'])/100 : null;
+                $pdo->prepare("UPDATE COMMANDE SET COM_STATUT='payee', TOTAL_PAYER_CHF=COALESCE(:amt, TOTAL_PAYER_CHF) WHERE COM_ID=:cid LIMIT 1")
+                    ->execute([':amt'=>$amt, ':cid'=>$comId]);
                 onOrderPaid($pdo, $comId);
             } elseif ($status === 'unpaid') {
                 $pdo->prepare("UPDATE COMMANDE SET COM_STATUT='paiement_echoue' WHERE COM_ID=:cid LIMIT 1")
@@ -135,9 +114,8 @@ switch ($event->type) {
     }
 
     case 'checkout.session.async_payment_failed': {
-        $s    = $event->data->object;
-        $pi   = $s->payment_intent ? (string)$s->payment_intent : null;
-        $comId= findOrderId($pdo, (string)($s->client_reference_id ?? ''), $pi);
+        $pi    = isset($obj['payment_intent']) ? (string)$obj['payment_intent'] : null;
+        $comId = findOrderId($pdo, (string)($obj['client_reference_id'] ?? ''), $pi);
         if ($comId) {
             $pdo->prepare("UPDATE COMMANDE SET COM_STATUT='paiement_echoue' WHERE COM_ID=:cid LIMIT 1")
                 ->execute([':cid'=>$comId]);
@@ -147,9 +125,8 @@ switch ($event->type) {
     }
 
     case 'checkout.session.expired': {
-        $s    = $event->data->object;
-        $pi   = $s->payment_intent ? (string)$s->payment_intent : null;
-        $comId= findOrderId($pdo, (string)($s->client_reference_id ?? ''), $pi);
+        $pi    = isset($obj['payment_intent']) ? (string)$obj['payment_intent'] : null;
+        $comId = findOrderId($pdo, (string)($obj['client_reference_id'] ?? ''), $pi);
         if ($comId) {
             $pdo->prepare("UPDATE COMMANDE SET COM_STATUT='expiree' WHERE COM_ID=:cid LIMIT 1")
                 ->execute([':cid'=>$comId]);
@@ -158,23 +135,18 @@ switch ($event->type) {
         break;
     }
 
-    /* ---------- PAYMENT INTENT ---------- */
+    /* ---- PAYMENT INTENT ---- */
     case 'payment_intent.succeeded': {
-        /** @var \Stripe\PaymentIntent $piObj */
-        $piObj = $event->data->object;
-        $pi    = (string)$piObj->id;
+        $pi    = (string)($obj['id'] ?? '');
         $comId = findOrderId($pdo, null, $pi);
         if ($comId) {
-            $amt = isset($piObj->amount_received) ? ((int)$piObj->amount_received)/100 : null;
-            $stmt = $pdo->prepare("
-                UPDATE COMMANDE
-                   SET COM_STATUT='payee',
-                       FK_PAIEMENT_INTENT=:pi,
-                       TOTAL_PAYER_CHF = COALESCE(:amt, TOTAL_PAYER_CHF)
-                 WHERE COM_ID=:cid
-                 LIMIT 1
-            ");
-            $stmt->execute([':pi'=>$pi, ':amt'=>$amt, ':cid'=>$comId]);
+            $amt = isset($obj['amount_received']) ? ((int)$obj['amount_received'])/100 : null;
+            $pdo->prepare("UPDATE COMMANDE
+                              SET COM_STATUT='payee',
+                                  FK_PAIEMENT_INTENT=:pi,
+                                  TOTAL_PAYER_CHF=COALESCE(:amt, TOTAL_PAYER_CHF)
+                            WHERE COM_ID=:cid LIMIT 1")
+                ->execute([':pi'=>$pi, ':amt'=>$amt, ':cid'=>$comId]);
             onOrderPaid($pdo, $comId);
         }
         break;
@@ -182,8 +154,7 @@ switch ($event->type) {
 
     case 'payment_intent.payment_failed':
     case 'payment_intent.canceled': {
-        $piObj = $event->data->object;
-        $pi    = (string)$piObj->id;
+        $pi    = (string)($obj['id'] ?? '');
         $comId = findOrderId($pdo, null, $pi);
         if ($comId) {
             $pdo->prepare("UPDATE COMMANDE SET COM_STATUT='paiement_echoue' WHERE COM_ID=:cid LIMIT 1")
@@ -193,60 +164,36 @@ switch ($event->type) {
         break;
     }
 
-    /* ---------- CHARGE / REFUND ---------- */
+    /* ---- CHARGE / REFUND ---- */
     case 'charge.refunded':
     case 'charge.refund.updated':
     case 'charge.refund.created': {
-        /** @var \Stripe\Charge $charge */
-        $charge = $event->data->object->charge ?? $event->data->object; // selon le type exact
-        // Récupérer le PaymentIntent depuis la charge si possible
+        // Trouve le PI
         $pi = null;
-        if (is_object($event->data->object) && isset($event->data->object->payment_intent)) {
-            $pi = (string)$event->data->object->payment_intent;
-        } elseif (is_object($charge) && isset($charge->payment_intent)) {
-            $pi = (string)$charge->payment_intent;
+        if (isset($obj['payment_intent'])) {
+            $pi = (string)$obj['payment_intent'];
+        } elseif (isset($obj['charge']['payment_intent'])) {
+            $pi = (string)$obj['charge']['payment_intent'];
         }
-
         $comId = $pi ? findOrderId($pdo, null, $pi) : null;
         if ($comId) {
-            // Montants (si dispo) pour déterminer le statut
-            $amountCaptured = null;
-            $amountRefunded = null;
-
-            if (isset($event->data->object->amount)) {
-                // refund.created / updated: montant de CE remboursement
-                $amountRefunded = (int)$event->data->object->amount;
-            }
-            if (isset($event->data->object->amount_refunded)) {
-                // charge.refunded: montant total remboursé à date
-                $amountRefunded = (int)$event->data->object->amount_refunded;
-            }
-            if (isset($event->data->object->amount_captured)) {
-                $amountCaptured = (int)$event->data->object->amount_captured;
-            }
-
-            // Déterminer le statut global
+            $amountCaptured = $obj['amount_captured'] ?? null;
+            $amountRefunded = $obj['amount_refunded'] ?? ($obj['amount'] ?? null);
             $newStatus = 'partiellement_rembourse';
-            if ($amountCaptured !== null && $amountRefunded !== null && $amountRefunded >= $amountCaptured) {
+            if ($amountCaptured !== null && $amountRefunded !== null && (int)$amountRefunded >= (int)$amountCaptured) {
                 $newStatus = 'rembourse';
             }
-
             $pdo->prepare("UPDATE COMMANDE SET COM_STATUT=:st WHERE COM_ID=:cid LIMIT 1")
                 ->execute([':st'=>$newStatus, ':cid'=>$comId]);
-
             onOrderRefunded($pdo, $comId);
         }
         break;
     }
 
-    /* ---------- FALLBACK : logger sans casser ---------- */
     default:
-        // Rien à faire pour les autres types, mais on répond 200.
+        // on ignore le reste
         break;
 }
 
-/* =========================
-   3) Fin
-   ========================= */
 http_response_code(200);
 echo 'OK';
