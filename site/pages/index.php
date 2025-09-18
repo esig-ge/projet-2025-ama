@@ -67,5 +67,21 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
+<script>window.DKBASE = <?= json_encode($BASE) ?>;</script>
+<script src="<?= $BASE ?>js/commande.js"></script>
+<?php if (!empty($_SESSION['toast'])):
+    $t = $_SESSION['toast'];
+    unset($_SESSION['toast']); ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const msg  = <?= json_encode($t['text'], JSON_UNESCAPED_UNICODE) ?>;
+            const type = <?= json_encode($t['type']) ?>;
+            if (typeof window.toast === 'function') { window.toast(msg, type); }
+            else if (typeof window.showToast === 'function') { window.showToast(msg, type); }
+            else { alert(msg); }
+        });
+    </script>
+<?php endif; ?>
+
 </body>
 </html>

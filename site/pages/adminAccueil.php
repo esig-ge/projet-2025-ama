@@ -122,7 +122,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'U
         <button class="burger" id="burger" aria-label="Menu">☰</button>
         <div class="welcome">
             <h1>Tableau de bord</h1>
-            <p>Bienvenue, <?= $adminName ?></p>
+            <p>Bienvenue à  l'accueil administrateur!</p>
         </div>
         <div class="top-actions">
             <a class="btn ghost" href="<?= $BASE ?>index.php">Voir le site</a>

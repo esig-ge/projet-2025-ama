@@ -29,13 +29,6 @@ if (empty($_SESSION['csrf'])) {
     <div class="conteneur_form">
         <h2>Connectez-vous</h2>
 
-        <?php if (!empty($_SESSION['message'])): ?>
-            <div class="flash" role="alert">
-                <?= htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8') ?>
-            </div>
-            <?php unset($_SESSION['message']); ?>
-        <?php endif; ?>
-
         <form action="<?= $BASE ?>traitement_connexion.php" method="POST">
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
 
@@ -52,5 +45,24 @@ if (empty($_SESSION['csrf'])) {
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+
+<!-- Expose BASE (si nécessaire pour ton toast) -->
+<script>window.DKBASE = <?= json_encode($BASE) ?>;</script>
+<!-- Charge le JS qui contient déjà ton système de toast (même que sur fleur/bouquet) -->
+<script src="<?= $BASE ?>js/commande.js"></script>
+<?php if (!empty($_SESSION['toast'])):
+          $t = $_SESSION['toast'];
+          unset($_SESSION['toast']); ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const msg  = <?= json_encode($t['text'], JSON_UNESCAPED_UNICODE) ?>;
+        const type = <?= json_encode($t['type']) ?>; // 'error' | 'success' | 'info'
+        // Compat selon le nom de ta fonction toast
+        if (typeof window.toast === 'function')       { window.toast(msg, type); }
+        else if (typeof window.showToast === 'function') { window.showToast(msg, type); }
+        else { alert(msg); }
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html>
