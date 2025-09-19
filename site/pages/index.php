@@ -1,5 +1,9 @@
 <?php
 session_start();
+
+// Vérifie si l'utilisateur a déjà accepté les cookies
+$showCookieBanner = !isset($_COOKIE['accept_cookies']);
+
 // Prefixe URL qui marche depuis n'importe quelle page de /site/pages
 $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 ?>
@@ -9,6 +13,32 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>DK Bloom — Accueil</title>
+    <style>
+        .cookie-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-family: sans-serif;
+            z-index: 1000;
+        }
+        .cookie-banner button {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
     <link rel="stylesheet" href="<?= $BASE ?>css/squeletteIndex.css">
 </head>
 
@@ -47,6 +77,20 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
                         <span class="accent">élégance</span>
                     <?php endif; ?>
                 </h1>
+
+                <?php if ($showCookieBanner): ?>
+                    <div class="cookie-banner" id="cookieBanner">
+                        <span>🍪 Nous utilisons des cookies pour améliorer votre expérience.</span>
+                        <button onclick="acceptCookies()">Accepter</button>
+                    </div>
+                    <script>
+                        function acceptCookies() {
+                            // Définit un cookie qui expire dans 1 an
+                            document.cookie = "accept_cookies=true; path=/; max-age=" + 60*60*24*365;
+                            document.getElementById('cookieBanner').style.display = 'none';
+                        }
+                    </script>
+                <?php endif; ?>
                 <p class="paragraphe">
                     L’art floral intemporel, au service d’une expérience unique et raffinée.
                     La beauté qui ne fane jamais.

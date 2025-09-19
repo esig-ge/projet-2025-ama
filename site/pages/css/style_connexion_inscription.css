@@ -79,7 +79,7 @@
 .conteneur_form a:hover {
     color: #fff;
 }
-<<<<<<< HEAD
+
 /*------------------------------------------- page a propos-------------------------------------------*/
 
 .slider {
@@ -121,9 +121,6 @@
     justify-items: center;
     background-color: #ffa0c4;
 }
-
-=======
->>>>>>> f2ead96d57c58a17ae80d92e00ab1f3ce1cd431d
 
 /*------------------------------------------- contact-------------------------------------------*/
 
@@ -193,6 +190,5 @@ form#contactForm {
     align-items: center;
     gap: 0.6rem;
 }
-
 
 

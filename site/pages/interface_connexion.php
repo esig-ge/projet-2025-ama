@@ -33,10 +33,10 @@ if (empty($_SESSION['csrf'])) {
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
 
             <label for="email">Adresse e-mail :</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" required autocomplete="email" autofocus maxlength="50">
 
             <label for="password">Mot de passe :</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" name="password" required autocomplete="current-password">
 
             <input type="submit" value="Connexion">
 <!--            <p><a href="--><?php //= $BASE ?><!--interface_modification_mdp.php">Mot de passe oublié ?</a></p>-->

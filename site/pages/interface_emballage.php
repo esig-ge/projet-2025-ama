@@ -1,6 +1,5 @@
 <?php
 // /site/pages/interface_emballage.php
-
 session_start();
 
 // Base URL avec slash final (ex: "/…/site/pages/")
@@ -9,23 +8,15 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
 /**
  * Déterminer l'origine de navigation (fleur | bouquet) pour la propager.
- * Ordre de priorité:
- *  1) Paramètre explicite ?from=... dans l'URL
- *  2) Paramètre ?from=... présent dans le referer (si l'on vient de Suppléments)
- *  3) Heuristique sur le path du referer (contient "fleur.php" ou "bouquet")
- *  4) Défaut: "bouquet"
  */
 $origin = $_GET['from'] ?? '';
 if ($origin === '') {
     $refQuery = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_QUERY);
-    if ($refQuery) {
-        parse_str($refQuery, $qs);
-        if (!empty($qs['from'])) $origin = $qs['from'];
-    }
+    if ($refQuery) { parse_str($refQuery, $qs); if (!empty($qs['from'])) $origin = $qs['from']; }
 }
 if ($origin === '') {
     $refPath = parse_url($_SERVER['HTTP_REFERER'] ?? '', PHP_URL_PATH) ?? '';
-    if (stripos($refPath, 'fleur.php') !== false)   $origin = 'fleur';
+    if (stripos($refPath, 'fleur') !== false)       $origin = 'fleur';
     elseif (stripos($refPath, 'bouquet') !== false) $origin = 'bouquet';
 }
 if ($origin === '') $origin = 'bouquet';
@@ -33,6 +24,62 @@ if ($origin === '') $origin = 'bouquet';
 // URLs nav
 $retourSupp = $BASE . 'interface_supplement.php?from=' . urlencode($origin);
 $suivantCmd = $BASE . 'commande.php';
+
+/** @var PDO $pdo */
+$pdo = require __DIR__ . '/../database/config/connexionBDD.php';
+
+// Récupération dynamique depuis la BDD
+$sql = "SELECT EMB_ID, EMB_NOM, EMB_COULEUR, COALESCE(EMB_QTE_STOCK,0) AS STOCK
+        FROM EMBALLAGE
+        ORDER BY EMB_NOM";
+$embs = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+/* ============================================================
+   OPTION B — Résolution d'image « intelligente »
+   1) essaie: img/emballages/emb_<ID>.png
+   2) anciens fichiers (compat): img/<legacyName>
+   3) slug du nom: img/<slug>.(png|PNG|jpg|jpeg|webp)
+   -> retourne l’URL publique (BASE/…) ou null si rien trouvé
+   ============================================================ */
+
+$legacyMap = [
+    1 => 'emballage_blanc.PNG',
+    2 => 'emballage_gris.PNG',
+    3 => 'emballage_noir.PNG',
+    4 => 'emballage_rose.PNG',
+    5 => 'emballage_violet.PNG',
+];
+
+function slugify_name(string $name): string {
+    $slug = @iconv('UTF-8','ASCII//TRANSLIT//IGNORE',$name);
+    if ($slug === false || $slug === null) $slug = $name;
+    $slug = strtolower(preg_replace('/[^a-z0-9]+/i','_', $slug));
+    return trim($slug, '_') ?: 'image';
+}
+
+function resolveEmbImage(int $id, string $name, string $BASE, array $legacyMap): ?string {
+    $fsRoot = __DIR__; // /site/pages
+
+    // 1) nouvelle convention
+    $fs1 = $fsRoot . "/img/emballages/emb_{$id}.png";
+    if (is_file($fs1)) return $BASE . "img/emballages/emb_{$id}.png";
+
+    // 2) fichiers legacy
+    if (!empty($legacyMap[$id])) {
+        $legacy = $legacyMap[$id];
+        $fs2 = $fsRoot . "/img/" . $legacy;
+        if (is_file($fs2)) return $BASE . "img/" . $legacy;
+    }
+
+    // 3) slug du nom
+    $slug = slugify_name($name);
+    foreach (['png','PNG','jpg','jpeg','webp'] as $ext) {
+        $fs3 = $fsRoot . "/img/{$slug}.{$ext}";
+        if (is_file($fs3)) return $BASE . "img/{$slug}.{$ext}";
+    }
+
+    return null;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -44,54 +91,8 @@ $suivantCmd = $BASE . 'commande.php';
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
 
-    <!-- Expose BASE + API_URL au JS -->
-    <script>
-        window.DKBASE  = <?= json_encode($BASE) ?>;
-        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
-    </script>
-
-    <!-- JS panier -->
-    <script src="<?= $BASE ?>js/commande.js" defer></script>
-
-    <script>
-        function addEmballageForm(form, evt){
-            (evt || window.event)?.preventDefault();
-            const embInput = form.querySelector('input[name="emb_id"]');
-            const btn      = form.querySelector('button.add-to-cart');
-            if(!embInput) return false;
-            window.addEmballage?.(embInput.value, btn);
-            return false;
-        }
-    </script>
-
     <style>
-        .catalogue{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-            gap:20px;justify-items:center
-        }
-        .catalogue .card.product{
-            background:#fff;
-            padding:12px;
-            border-radius:12px;
-            box-shadow:0 4px 12px rgba(0,0,0,.1);
-            text-align:center;
-            max-width:240px
-        }
-        .catalogue .card.product img{
-            max-width:180px;
-            height:auto;
-            display:block;
-            margin:0 auto 8px;
-            border-radius:8px
-        }
-        .price{
-            font-weight:600;
-            color:#2c7a2c
-        } /* vert pour “offert” */
-
-        /* ===== Emballages = grille comme Suppléments ===== */
-        #emb-page .catalogue{
+        #emb-grid{
             display:grid !important;
             grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
             gap:24px !important;
@@ -99,7 +100,7 @@ $suivantCmd = $BASE . 'commande.php';
             margin:0 auto;
             align-items:stretch;
         }
-        #emb-page .card.product{
+        .card.product{
             width:100% !important;
             max-width:none !important;
             background:#fff;
@@ -109,24 +110,36 @@ $suivantCmd = $BASE . 'commande.php';
             display:flex;
             flex-direction:column;
             justify-content:flex-start;
+            position:relative;
+            text-align:center;
         }
-        #emb-page .card.product img{
+        .card.product img{
             width:100%;
-            height:200px; /* même gabarit visuel que Suppléments */
+            height:200px;
             object-fit:cover;
             border-radius:10px;
             margin-bottom:10px;
+            display:block;
         }
-        #emb-page .card.product h3{
-            margin:6px 0 2px;
-            font-size:1.05rem;
+        .card.product h3{ margin:6px 0 2px; font-size:1.05rem; }
+        .price{ font-weight:600; color:#2c7a2c; margin-bottom:10px; }
+
+        .stock-badge{
+            margin:6px 0 8px; font-size:.9rem;
+            padding:4px 8px; border-radius:999px; display:inline-block;
+            background:#f4f4f5; color:#333;
         }
-        #emb-page .price{
-            font-weight:600;
-            color:#2c7a2c;
-            margin-bottom:10px;
+        .stock-badge.out{ background:#fff1f3; color:#7a0000; border:1px solid #ffd6e0; }
+
+        .stock-msg{
+            display:none; align-items:center; gap:8px;
+            margin:8px 0 0; padding:8px 12px; border-radius:10px; font-size:.9rem;
+            background:#fff5f7; border:1px solid #ffd6e0; color:#7a0000; text-align:left;
         }
-        #emb-page .add-to-cart{
+        .stock-msg.show{ display:flex; }
+        .stock-msg .dot{ width:8px; height:8px; border-radius:50%; background:#d90429; }
+
+        .add-to-cart{
             align-self:center;
             padding:.5rem 1.1rem;
             border-radius:999px;
@@ -136,110 +149,160 @@ $suivantCmd = $BASE . 'commande.php';
             cursor:pointer;
             transition:transform .06s ease, filter .2s ease;
         }
-        #emb-page .add-to-cart:hover{ filter:brightness(1.05); }
-        #emb-page .add-to-cart:active{ transform:translateY(1px); }
-
-        /* Petits écrans : 2 colonnes mini */
-        @media (max-width: 640px){
-            #emb-page .catalogue{
-                grid-template-columns: repeat(2, minmax(0,1fr)) !important;
-            }
-        }
+        .add-to-cart:hover{ filter:brightness(1.05); }
+        .add-to-cart:active{ transform:translateY(1px); }
+        .add-to-cart[disabled]{ opacity:.5; cursor:not-allowed; }
 
         /* Barre nav */
-        .nav-actions{
-            text-align:center;
-            margin:16px 0 24px;
-        }
+        .nav-actions{ text-align:center; margin:16px 0 24px; }
         .nav-actions .button{
-            display:inline-block;
-            margin:0 6px;
-            padding:.55rem 1.1rem;
-            border-radius:999px;
-            background:var(--accent, #7b0d15);
-            color:#fff;
-            text-decoration:none;
+            display:inline-block; margin:0 6px; padding:.55rem 1.1rem;
+            border-radius:999px; background:var(--accent, #7b0d15);
+            color:#fff; text-decoration:none;
         }
         .nav-actions .button:hover{ filter:brightness(1.05); }
+
+        @media (max-width: 640px){
+            #emb-grid{ grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+        }
     </style>
 
+    <script>
+        window.DKBASE  = <?= json_encode($BASE) ?>;
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
+    </script>
 </head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <main id="emb-page" class="container catalogue-page" role="main">
     <h1 class="section-title">Emballages</h1>
-    <br>
     <p class="muted" style="text-align:center;margin:-6px 0 16px;">
         Choisissez un emballage pour votre/vos fleur(s) ou votre/vos bouquet(s).<br>
         <strong class="price">Emballage offert</strong> — un seul emballage possible par fleur/bouquet.
     </p>
 
-    <div class="catalogue" aria-label="Liste d'emballages">
-        <!-- Blanc -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
-            <input type="hidden" name="emb_id" value="1">
-            <img src="<?= $BASE ?>img/emballage_blanc.PNG" alt="Emballage blanc" loading="lazy">
-            <h3>Emballage blanc</h3>
-            <br>
-            <p class="price">Offert</p>
-            <br>
-            <button type="submit" class="add-to-cart" data-emb-name="Emballage blanc">Ajouter</button>
-        </form>
+    <div id="emb-grid" aria-label="Liste d'emballages">
+        <?php foreach ($embs as $e):
+            $id    = (int)$e['EMB_ID'];
+            $name  = $e['EMB_NOM'];
+            $stock = (int)$e['STOCK'];
+            $imgUrl = resolveEmbImage($id, $name, $BASE, $legacyMap);
+            $disabled = $stock <= 0;
+            ?>
+            <div class="card product"
+                 data-emb-id="<?= $id ?>"
+                 data-name="<?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>"
+                 data-stock="<?= $stock ?>"
+                 data-disabled="<?= $disabled ? '1' : '0' ?>">
 
-        <!-- Gris -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
-            <input type="hidden" name="emb_id" value="2">
-            <img src="<?= $BASE ?>img/emballage_gris.PNG" alt="Emballage gris" loading="lazy">
-            <h3>Emballage gris</h3>
-            <br>
-            <p class="price">Offert</p>
-            <br>
-            <button type="submit" class="add-to-cart" data-emb-name="Emballage gris">Ajouter</button>
-        </form>
+                <?php if ($imgUrl): ?>
+                    <img src="<?= htmlspecialchars($imgUrl) ?>" alt="<?= htmlspecialchars($name) ?>" loading="lazy">
+                <?php endif; ?>
 
-        <!-- Noir -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
-            <input type="hidden" name="emb_id" value="3">
-            <img src="<?= $BASE ?>img/emballage_noir.PNG" alt="Emballage noir" loading="lazy">
-            <h3>Emballage noir</h3>
-            <br>
-            <p class="price">Offert</p>
-            <br>
-            <button type="submit" class="add-to-cart" data-emb-name="Emballage noir">Ajouter</button>
-        </form>
+                <h3><?= htmlspecialchars($name) ?></h3>
+                <span class="stock-badge <?= $disabled ? 'out':'' ?>" data-stock-badge>
+          <?= $disabled ? 'Rupture de stock' : ('En stock : '.$stock) ?>
+        </span>
 
-        <!-- Rose -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
-            <input type="hidden" name="emb_id" value="4">
-            <img src="<?= $BASE ?>img/emballage_rose.PNG" alt="Emballage rose" loading="lazy">
-            <h3>Emballage rose</h3>
-            <br>
-            <p class="price">Offert</p>
-            <br>
-            <button type="submit" class="add-to-cart" data-emb-name="Emballage rose">Ajouter</button>
-        </form>
+                <div class="stock-msg" data-stock-msg>
+                    <span class="dot" aria-hidden="true"></span>
+                    <span class="text" data-stock-text></span>
+                </div>
 
-        <!-- Violet -->
-        <form class="card product" method="POST" onsubmit="return addEmballageForm(this, event)">
-            <input type="hidden" name="emb_id" value="5">
-            <img src="<?= $BASE ?>img/emballage_violet.PNG" alt="Emballage violet" loading="lazy">
-            <h3>Emballage violet</h3>
-            <br>
-            <p class="price">Offert</p>
-            <br>
-            <button type="submit" class="add-to-cart" data-emb-name="Emballage violet">Ajouter</button>
-        </form>
+                <br>
+                <button type="button" class="add-to-cart" data-add <?= $disabled ? 'disabled' : '' ?>>
+                    Ajouter
+                </button>
+            </div>
+        <?php endforeach; ?>
     </div>
 
     <div class="nav-actions">
-        <!-- Toujours RETOUR → Suppléments, en propageant l'origine -->
         <a href="<?= htmlspecialchars($retourSupp) ?>" class="button">Retour</a>
-        <!-- Suivant → Commande (pas besoin d'origine ici) -->
         <a href="<?= htmlspecialchars($suivantCmd) ?>" class="button">Suivant</a>
     </div>
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+
+<script>
+    (function(){
+        function toast(msg, type){
+            if (typeof window.toast === 'function') return window.toast(msg, type);
+            if (typeof window.showToast === 'function') return window.showToast(msg, type);
+            alert(msg);
+        }
+        function showMsg(card, html){
+            const box = card.querySelector('[data-stock-msg]');
+            const txt = card.querySelector('[data-stock-text]');
+            if (!box || !txt) return;
+            txt.innerHTML = html;
+            box.classList.add('show');
+        }
+        function hideMsg(card){
+            const box = card.querySelector('[data-stock-msg]');
+            if (box) box.classList.remove('show');
+        }
+        function updateCardUI(card, stockLeft){
+            card.dataset.stock = String(stockLeft);
+            const badge = card.querySelector('[data-stock-badge]');
+            const btn   = card.querySelector('[data-add]');
+
+            if (badge){
+                badge.classList.toggle('out', stockLeft <= 0);
+                badge.textContent = (stockLeft <= 0) ? 'Rupture de stock' : ('En stock : ' + stockLeft);
+            }
+            if (btn){ btn.disabled = (stockLeft <= 0); }
+
+            card.dataset.disabled = (stockLeft <= 0) ? '1' : '0';
+            if (stockLeft <= 0) showMsg(card, `🎀 <strong>${card.dataset.name}</strong> est actuellement en <strong>rupture de stock</strong>.`);
+            else hideMsg(card);
+        }
+
+        // Message si on clique une carte en rupture
+        document.querySelectorAll('#emb-grid .card.product').forEach(card => {
+            card.addEventListener('click', function(e){
+                if (this.dataset.disabled === '1' && !e.target.closest('[data-add]')) {
+                    showMsg(this, `🎀 <strong>${this.dataset.name}</strong> est actuellement en <strong>rupture de stock</strong>.`);
+                }
+            });
+
+            // Ajouter (décrément stock côté API)
+            const btn = card.querySelector('[data-add]');
+            if (!btn) return;
+            btn.addEventListener('click', async function(){
+                if (card.dataset.disabled === '1') {
+                    showMsg(card, `🎀 <strong>${card.dataset.name}</strong> est en <strong>rupture de stock</strong>.`);
+                    return;
+                }
+                const embId = parseInt(card.dataset.embId || '0', 10);
+                try {
+                    const res = await fetch(window.API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({ action: 'add_emballage', emb_id: String(embId), qty: '1' })
+                    });
+                    const data = await res.json();
+
+                    if (!res.ok || !data.ok) {
+                        if (data?.error === 'insufficient_stock') {
+                            showMsg(card, `ℹ️ Le stock disponible pour <strong>${card.dataset.name}</strong> ne permet pas d'ajouter davantage.`);
+                            return;
+                        }
+                        throw new Error(data?.error || 'Erreur serveur');
+                    }
+
+                    updateCardUI(card, parseInt(data.stockLeft ?? '0', 10));
+                    toast(`${data.name} a été ajouté à votre commande.`, 'success');
+
+                } catch (err) {
+                    console.error(err);
+                    toast(`Impossible d'ajouter ${card.dataset.name}.`, 'error');
+                }
+            });
+        });
+    })();
+</script>
 </body>
 </html>
