@@ -1,168 +1,112 @@
 <?php
-// /site/pages/create_checkout.php
-declare(strict_types=1);
+// /site/pages/checkout.php
 session_start();
+header('Content-Type: application/json');
 
-/* On ne fixe le Content-Type JSON que si la requête le veut réellement */
-function want_json(): bool {
-    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
-    $xrw    = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
-    return (stripos($accept, 'application/json') !== false) || strcasecmp($xrw,'XMLHttpRequest') === 0;
-}
-
-/* ==== Garde-fous ==== */
 try {
-    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-        if (want_json()) header('Content-Type: application/json; charset=utf-8');
-        http_response_code(405);
-        echo json_encode(['ok'=>false,'error'=>'method_not_allowed']); exit;
+    /* ===== 0) ENV + STRIPE + DB ===== */
+    require_once __DIR__ . '/../database/config/env.php';
+    loadProjectEnv();
+    require_once __DIR__ . '/../database/config/stripe.php';        // setApiKey(...)
+    $pdo = require __DIR__ . '/../database/config/connexionBDD.php';// $pdo
+
+    /* ===== 1) URLs base (depuis /site/pages/) ===== */
+    $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\'); // /.../site/pages
+    $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';                       // /.../site/pages/
+    $SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);                               // /.../site/
+
+    $successUrl = $SITE_BASE . 'pages/success.php?cs={CHECKOUT_SESSION_ID}';
+    $cancelUrl  = $SITE_BASE . 'pages/adresse_paiement.php?canceled=1';
+
+    /* ===== 2) Vérif action ===== */
+    if (($_POST['action'] ?? '') !== 'create_checkout') {
+        throw new RuntimeException('Action invalide.');
     }
-    if (empty($_SESSION['per_id'])) {
-        if (want_json()) header('Content-Type: application/json; charset=utf-8');
-        http_response_code(401);
-        echo json_encode(['ok'=>false,'error'=>'not_logged_in']); exit;
-    }
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['csrf_checkout'] ?? '')) {
-        if (want_json()) header('Content-Type: application/json; charset=utf-8');
-        http_response_code(400);
-        echo json_encode(['ok'=>false,'error'=>'csrf_invalid']); exit;
-    }
 
-    /** @var PDO $pdo */
-    $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    /* ===== 3) Lire le panier/commande depuis la BDD ===== */
+    $comId = (int)($_SESSION['com_id'] ?? 0);
+    if ($comId <= 0) throw new RuntimeException('Panier introuvable.');
+    // Optionnel: vérifier l’utilisateur
+    $perId = (int)($_SESSION['per_id'] ?? 0);
 
-    // 🔑 LIRE LA CLÉ depuis stripe.php puis fallback env — NE PAS réécraser ensuite
-    $keysPath = __DIR__ . '/../database/config/stripe.php';
-    $keys = is_file($keysPath) ? require $keysPath : [];
-    $sk = $keys['STRIPE_SECRET_KEY']
-        ?? getenv('STRIPE_SECRET_KEY')
-        ?? ($_SERVER['STRIPE_SECRET_KEY'] ?? $_ENV['STRIPE_SECRET_KEY'] ?? null);
-    if (!$sk) throw new RuntimeException('STRIPE_SECRET_KEY manquante');
+    // PRODUITS
+    $sqlP = $pdo->prepare("
+        SELECT p.PRO_NOM AS name,
+               p.PRO_PRIX AS price,         -- CHF
+               cp.CP_QTE_COMMANDEE AS qty
+        FROM COMMANDE_PRODUIT cp
+        JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
+        WHERE cp.COM_ID = :com
+    ");
+    $sqlP->execute(['com' => $comId]);
+    $rows = $sqlP->fetchAll(PDO::FETCH_ASSOC);
 
-    $perId = (int)$_SESSION['per_id'];
+    // EMBALLAGES (prix 0.00)
+    $sqlE = $pdo->prepare("
+        SELECT e.EMB_NOM AS name,
+               0.00      AS price,
+               ce.CE_QTE AS qty
+        FROM COMMANDE_EMBALLAGE ce
+        JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
+        WHERE ce.COM_ID = :com
+    ");
+    $sqlE->execute(['com' => $comId]);
+    $rows = array_merge($rows, $sqlE->fetchAll(PDO::FETCH_ASSOC));
 
-    /* ==== 1) Récupère la commande "en préparation" ==== */
-    $st = $pdo->prepare("SELECT COM_ID
-                           FROM COMMANDE
-                          WHERE PER_ID=:p AND COM_STATUT='en préparation'
-                       ORDER BY COM_ID DESC LIMIT 1");
-    $st->execute([':p'=>$perId]);
-    $comId = (int)$st->fetchColumn();
-    if ($comId <= 0) throw new RuntimeException('no_order');
+    // SUPPLÉMENTS
+    $sqlS = $pdo->prepare("
+        SELECT s.SUP_NOM AS name,
+               s.SUP_PRIX_UNITAIRE AS price,
+               cs.CS_QTE_COMMANDEE AS qty
+        FROM COMMANDE_SUPP cs
+        JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
+        WHERE cs.COM_ID = :com
+    ");
+    $sqlS->execute(['com' => $comId]);
+    $rows = array_merge($rows, $sqlS->fetchAll(PDO::FETCH_ASSOC));
 
-    /* ==== 2) Construit les line_items à partir de la BDD ==== */
+    if (!$rows) throw new RuntimeException('Votre panier est vide.');
+
+    /* ===== 4) Construit line_items Stripe ===== */
     $lineItems = [];
+    $currency  = 'chf';
+    $subtotal  = 0.0;
 
-    // Produits
-    $q = $pdo->prepare("
-        SELECT cp.CP_QTE_COMMANDEE AS qty, p.PRO_NOM AS name, p.PRO_PRIX AS price
-          FROM COMMANDE_PRODUIT cp
-          JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
-         WHERE cp.COM_ID = :c
-    ");
-    $q->execute([':c'=>$comId]);
-    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        $amt = (int)round(((float)$r['price'])*100);
-        if ($amt <= 0) continue; // Stripe refuse 0 CHF
+    foreach ($rows as $r) {
+        $name = $r['name'] ?: 'Article';
+        $qty  = max(1, (int)$r['qty']);
+        $prc  = (float)$r['price'];            // CHF
+        $subtotal += $qty * $prc;
+
         $lineItems[] = [
-            'name' => (string)$r['name'],
-            'unit_amount' => $amt,
-            'quantity' => (int)$r['qty'],
+            'quantity'   => $qty,
+            'price_data' => [
+                'currency'     => $currency,
+                'unit_amount'  => (int) round($prc * 100), // centimes
+                'product_data' => ['name' => $name],
+            ],
         ];
     }
+    if (!$lineItems) throw new RuntimeException('Aucun article facturable.');
 
-    // Suppléments
-    $q = $pdo->prepare("
-        SELECT cs.CS_QTE_COMMANDEE AS qty, s.SUP_NOM AS name, s.SUP_PRIX_UNITAIRE AS price
-          FROM COMMANDE_SUPP cs
-          JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
-         WHERE cs.COM_ID = :c
-    ");
-    $q->execute([':c'=>$comId]);
-    foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r) {
-        $amt = (int)round(((float)$r['price'])*100);
-        if ($amt <= 0) continue;
-        $lineItems[] = [
-            'name' => (string)$r['name'],
-            'unit_amount' => $amt,
-            'quantity' => (int)$r['qty'],
-        ];
-    }
-
-    if (!$lineItems) throw new RuntimeException('empty_items');
-
-    /* ==== 3) URLs absolues ==== */
-    $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
-    $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
-
-    $success_url = "{$scheme}://{$host}{$BASE}success.php?com_id={$comId}&session_id={CHECKOUT_SESSION_ID}";
-    $cancel_url  = "{$scheme}://{$host}{$BASE}adresse_paiement.php";
-
-    /* ==== 4) Appel REST Stripe (cURL) ==== */
-    $params = [
-        'mode' => 'payment',
-        'success_url' => $success_url,
-        'cancel_url'  => $cancel_url,
-        'client_reference_id' => (string)$comId,
-        'payment_method_types[]' => 'card',
-    ];
-
-    $i = 0;
-    foreach ($lineItems as $it) {
-        $params["line_items[$i][quantity]"]                               = (string)$it['quantity'];
-        $params["line_items[$i][price_data][currency]"]                   = 'chf';
-        $params["line_items[$i][price_data][unit_amount]"]                = (string)$it['unit_amount'];
-        $params["line_items[$i][price_data][product_data][name]"]         = $it['name'];
-        $i++;
-    }
-
-    $ch = curl_init('https://api.stripe.com/v1/checkout/sessions');
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => http_build_query($params),
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => ['Authorization: Bearer '.$sk],
-        CURLOPT_TIMEOUT        => 20,
-        CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-        // CURLOPT_SSL_VERIFYPEER => true, // (true par défaut) ; laisse activé en prod
+    /* ===== 5) Crée la Session Checkout ===== */
+    $session = \Stripe\Checkout\Session::create([
+        'mode'        => 'payment',
+        'line_items'  => $lineItems,
+        'success_url' => $successUrl,
+        'cancel_url'  => $cancelUrl,
+        'metadata'    => [
+            'per_id' => (string)$perId,
+            'com_id' => (string)$comId,
+        ],
+        // laissez Stripe choisir les moyens dispos (TWINT, carte…) selon votre compte
+        'automatic_payment_methods' => ['enabled' => true],
     ]);
-    $raw = curl_exec($ch);
-    if ($raw === false) throw new RuntimeException('cURL: '.curl_error($ch));
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
 
-    $resp = json_decode($raw, true);
-    if ($code >= 400 || !isset($resp['id'], $resp['url'])) {
-        $err = $resp['error']['message'] ?? ('HTTP '.$code.' / '.$raw);
-        throw new RuntimeException('stripe_error: '.$err);
-    }
-
-    // Marquer la commande "en attente"
-    $pdo->prepare("UPDATE COMMANDE
-                      SET COM_STATUT='en attente', STRIPE_SESSION_ID=:sid
-                    WHERE COM_ID=:cid")
-        ->execute([':sid'=>$resp['id'], ':cid'=>$comId]);
-
-    // Réponse
-    if (want_json()) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['ok'=>true,'url'=>$resp['url']], JSON_UNESCAPED_SLASHES);
-    } else {
-        header('Location: '.$resp['url']); // 302 par défaut
-    }
+    echo json_encode(['ok' => true, 'url' => $session->url], JSON_UNESCAPED_SLASHES);
     exit;
 
-} catch (Throwable $e) {
-    if (want_json()) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(['ok'=>false,'error'=>$e->getMessage()]);
-    } else {
-        header('Content-Type: text/plain; charset=utf-8');
-        http_response_code(500);
-        echo 'Erreur: '.$e->getMessage();
-    }
-    exit;
+} catch (\Throwable $e) {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }

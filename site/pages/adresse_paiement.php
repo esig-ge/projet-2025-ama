@@ -14,15 +14,15 @@ $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\
 $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 $SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);
 
-/* Détection create_checkout.php (à la racine du site ou dans /pages) */
-$co_fs_main  = __DIR__ . '/../create_checkout.php';   // /site/create_checkout.php
-$co_fs_pages = __DIR__ . '/create_checkout.php';      // /site/pages/create_checkout.php
+/* Détection checkout.php (à la racine du site ou dans /pages) */
+$co_fs_main  = __DIR__ . '/../checkout.php';   // /site/checkout.php
+$co_fs_pages = __DIR__ . '/checkout.php';      // /site/pages/checkout.php
 if (is_file($co_fs_main)) {
-    $CHECKOUT_URL = $SITE_BASE . 'create_checkout.php';
+    $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
 } elseif (is_file($co_fs_pages)) {
-    $CHECKOUT_URL = $PAGE_BASE . 'create_checkout.php';
+    $CHECKOUT_URL = $PAGE_BASE . 'checkout.php';
 } else {
-    $CHECKOUT_URL = $SITE_BASE . 'create_checkout.php'; // fallback
+    $CHECKOUT_URL = $SITE_BASE . 'checkout.php'; // fallback
 }
 
 /* Détection API cart.php pour afficher le récap (si tu gardes l'API) */
@@ -65,7 +65,7 @@ function norm_name(string $s): string {
 function getProductImage(string $name): string {
     $k = norm_name($name);
     if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) return 'emballage_' . $m[2] . '.PNG';
-    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pâle)?$/', $k)) return 'emballage_rose.PNG';
+    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k)) return 'emballage_rose.PNG';
     if (preg_match('/paillet+e?s?/', $k)) return 'paillette_argent.PNG';
     if (preg_match('/papillon/', $k)) return 'papillon_doree.PNG';
     if (preg_match('/^rose.*clair$/', $k)) return 'rose_claire.png';
@@ -116,7 +116,7 @@ try {
     header('Location: commande.php'); exit;
 }
 
-/* ===== 4) CSRF pour POST → create_checkout.php ===== */
+/* ===== 4) CSRF pour POST → checkout.php ===== */
 $_SESSION['csrf_checkout'] = bin2hex(random_bytes(16));
 $CSRF = $_SESSION['csrf_checkout'];
 ?>
@@ -153,8 +153,6 @@ $CSRF = $_SESSION['csrf_checkout'];
         .btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:10px;
             background:#8b0000; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:700; }
         .btn-primary[aria-disabled="true"] { opacity:.6; pointer-events:none; }
-        .btn-secondary {display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#ddd;color:#333;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700;}
-        .btn-secondary:hover {background:#ccc;}
         .note { background:#fff8e5; border:1px solid #ffecb3; padding:10px 12px; border-radius:8px; }
 
         /* ===== mini-cart ===== */
@@ -209,16 +207,36 @@ $CSRF = $_SESSION['csrf_checkout'];
 
             // 5) Table standard
             const map = {
+                // Bouquets
                 '12 roses':'12Roses.png','bouquet 12':'12Roses.png',
                 '20 roses':'20Roses.png','bouquet 20':'20Roses.png',
                 '36 roses':'36Roses.png','bouquet 36':'36Roses.png',
                 '50 roses':'50Roses.png','bouquet 50':'50Roses.png',
                 '66 roses':'66Roses.png','bouquet 66':'66Roses.png',
                 '100 roses':'100Roses.png','bouquet 100':'100Roses.png',
-                'rose rouge':'rouge.png','rose rose':'rose.png','rose blanche':'rosesBlanche.png','rose bleue':'bleu.png','rose noire':'noir.png',
-                'mini ourson':'ours_blanc.PNG','deco anniv':'happybirthday.PNG','decoration anniversaire':'happybirthday.PNG','baton coeur':'baton_coeur.PNG',
-                'diamant':'diamant.PNG','couronne':'couronne.PNG','lettre':'lettre.png','initiale':'lettre.png','carte pour mot':'carte.PNG','carte':'carte.PNG',
-                'panier vide':'panier_vide.png','panier rempli':'panier_rempli.png',
+
+                // Roses unitaires
+                'rose rouge':'rouge.png',
+                'rose rose':'rose.png',
+                'rose blanche':'rosesBlanche.png',
+                'rose bleue':'bleu.png',
+                'rose noire':'noir.png',
+
+                // Suppléments
+                'mini ourson':'ours_blanc.PNG',
+                'deco anniv':'happybirthday.PNG',
+                'decoration anniversaire':'happybirthday.PNG',
+                'baton coeur':'baton_coeur.PNG',
+                'diamant':'diamant.PNG',
+                'couronne':'couronne.PNG',
+                'lettre':'lettre.png',
+                'initiale':'lettre.png',
+                'carte pour mot':'carte.PNG',
+                'carte':'carte.PNG',
+
+                // Paniers
+                'panier vide':'panier_vide.png',
+                'panier rempli':'panier_rempli.png',
             };
             if (map[k]) return map[k];
 
@@ -279,15 +297,7 @@ $CSRF = $_SESSION['csrf_checkout'];
 
     <div class="grid-pay">
         <!-- ===== FORMULAIRE ===== -->
-        <form id="checkout-form"
-              action="<?= htmlspecialchars($CHECKOUT_URL) ?>"
-              method="post"
-              autocomplete="on"
-              novalidate accept-charset="UTF-8">
-            <!-- Champs cachés pour fallback serveur -->
-            <input type="hidden" name="csrf" value="<?= htmlspecialchars($CSRF) ?>">
-            <input type="hidden" name="action" value="create_checkout">
-
+        <form id="checkout-form" autocomplete="on">
             <!-- Colonne 1 : FACTURATION -->
             <section class="card" aria-labelledby="bill-title">
                 <h2 id="bill-title">Adresse de facturation</h2>
@@ -402,18 +412,8 @@ $CSRF = $_SESSION['csrf_checkout'];
 
                 <div class="hr"></div>
 
-                <div class="pay-group">
-                    <button type="submit"
-                            id="btn-pay"
-                            class="btn-primary"
-                            formaction="<?= htmlspecialchars($CHECKOUT_URL) ?>">
-                        Payer maintenant
-                    </button>
-                    <a href="<?= $PAGE_BASE ?>commande.php" id="btn-return" class="btn-secondary">
-                        Retour au panier
-                    </a>
-                </div>
-                <p id="form-msg" class="muted" style="margin-top:8px"></p>
+                <button type="submit" id="btn-pay" class="btn-primary">Payer maintenant</button>
+                <p id="form-msg" class="muted" role="status" style="margin-top:10px"></p>
             </section>
         </form>
 
@@ -478,23 +478,22 @@ $CSRF = $_SESSION['csrf_checkout'];
     setShippingDisabled(same.checked);
 
     /* ==========================
-       2) Soumission → create_checkout.php (AJAX + fallback natif)
+       2) Soumission → checkout.php
        ========================== */
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         msg.textContent = 'Création du paiement en cours…';
 
         const fd = new FormData(form);
-        fd.set('action', 'create_checkout');
-        fd.set('same_as_billing', same.checked ? '1' : '0');
-        fd.set('csrf', window.CSRF_CHECKOUT);
+        fd.append('action', 'create_checkout');
+        fd.append('same_as_billing', same.checked ? '1' : '0');
+        fd.append('csrf', window.CSRF_CHECKOUT);
 
         try {
             const res  = await fetch(window.CHECKOUT_URL, {
                 method: 'POST',
                 body: fd,
-                credentials: 'same-origin',
-                redirect: 'manual'
+                credentials: 'same-origin'
             });
             const text = await res.text();
             let data = null;
@@ -503,24 +502,23 @@ $CSRF = $_SESSION['csrf_checkout'];
             if (res.ok && data && data.ok && data.url) {
                 window.location.href = data.url; return;
             }
-            const loc = res.headers.get('Location');
-            if (loc) { window.location.href = loc; return; }
+            if (res.redirected) { window.location.href = res.url; return; }
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${text.slice(0,200)}`);
 
             const m = text.match(/https:\/\/checkout\.stripe\.com\/pay\/[A-Za-z0-9_%\-]+/);
             if (m) { window.location.href = m[0]; return; }
 
-            // Fallback natif : envoie le formulaire au serveur (pas d'event)
-            HTMLFormElement.prototype.submit.call(form);
+            throw new Error('Réponse inattendue de checkout.php');
         } catch (err) {
             console.error(err);
             msg.textContent = "Oups, impossible de démarrer le paiement. Réessaie ou contacte-nous.";
-            // Fallback natif malgré tout
-            HTMLFormElement.prototype.submit.call(form);
         }
     });
 
     /* ==========================
        3) Mini-récap du panier (lecture seule)
+          → récupère via API cart.php ; si pas d’URL d’image, on déduit depuis le nom,
+            puis on teste plusieurs variantes (extensions & sous-dossiers).
        ========================== */
     async function renderMiniCart(){
         const box = document.getElementById('mini-cart-list');

@@ -77,6 +77,10 @@ $action = $_GET['action'] ?? $_POST['action'] ?? 'list';
    HELPERS
    ========================= */
 
+// --- Mets ici la valeur EXACTE existant dans COMMANDE.COM_STATUT
+// Exemples possibles: 'PANIER' | 'en préparation' | 'en_preparation'
+const ORDER_STATUS_OPEN = 'PANIER';
+
 function json_ok(array $data=[]): void {
     echo json_encode(['ok'=>true] + $data, JSON_UNESCAPED_UNICODE);
     exit;
@@ -87,16 +91,31 @@ function json_err(string $msg, int $code=400): void {
     exit;
 }
 
+/** Teste si une colonne existe (pour construire l'INSERT dynamiquement) */
+function db_has_col(PDO $pdo, string $table, string $col): bool {
+    $sql = "SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = :t
+              AND COLUMN_NAME = :c
+            LIMIT 1";
+    $s = $pdo->prepare($sql);
+    $s->execute([':t'=>$table, ':c'=>$col]);
+    return (bool)$s->fetchColumn();
+}
+
 function getOrCreateOpenOrder(PDO $pdo, int $perId, bool $isDev): int {
     if (!empty($_SESSION['com_id'])) return (int)$_SESSION['com_id'];
 
+    // 1) Réutiliser une commande ouverte existante
     if (!$isDev) {
         $q = $pdo->prepare("
-            SELECT COM_ID FROM COMMANDE
-            WHERE PER_ID=:per AND COM_STATUT='en préparation'
-            ORDER BY COM_ID DESC LIMIT 1
+            SELECT COM_ID
+            FROM COMMANDE
+            WHERE PER_ID = :per AND COM_STATUT = :st
+            ORDER BY COM_ID DESC
+            LIMIT 1
         ");
-        $q->execute(['per' => $perId]);
+        $q->execute(['per' => $perId, 'st' => ORDER_STATUS_OPEN]);
         $id = (int)($q->fetchColumn() ?: 0);
         if ($id) {
             $_SESSION['com_id'] = $id;
@@ -104,11 +123,25 @@ function getOrCreateOpenOrder(PDO $pdo, int $perId, bool $isDev): int {
         }
     }
 
-    $pdo->prepare("
-        INSERT INTO COMMANDE
-        (PER_ID, LIV_ID, RAB_ID, COM_STATUT, COM_DATE, COM_DESCRIPTION, COM_PTS_CUMULE)
-        VALUES (:per, NULL, NULL, 'en préparation', NOW(), 'Panier en cours', 0)
-    ")->execute(['per' => $perId]);
+    // 2) Construire un INSERT qui s'adapte aux colonnes présentes
+    $cols = ['PER_ID', 'COM_STATUT', 'COM_DATE', 'COM_DESCRIPTION', 'COM_PTS_CUMULE'];
+    $vals = [':per', ':st', 'NOW()', ':desc', '0'];
+
+    foreach (['LIV_ID','RAB_ID','PAI_ID','STRIPE_SESSION_ID','TOTAL_PAYER_CHF'] as $opt) {
+        if (db_has_col($pdo, 'COMMANDE', $opt)) {
+            $cols[] = $opt;
+            $vals[] = 'NULL';
+        }
+    }
+
+    $sql = "INSERT INTO COMMANDE (" . implode(',', $cols) . ")
+            VALUES (" . implode(',', $vals) . ")";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':per'  => $perId,
+        ':st'   => ORDER_STATUS_OPEN,
+        ':desc' => 'Panier en cours',
+    ]);
 
     $newId = (int)$pdo->lastInsertId();
     $_SESSION['com_id'] = $newId;
