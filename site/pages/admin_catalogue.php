@@ -22,7 +22,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /2526_grep/t2
 
     <div id="select_produit">
 <div></div>
-            <a href="<?= $BASE ?>fleur.php">Fleurs</a>
+            <a href="<?= $BASE ?>admin_catalogue_fleur.php">Fleurs</a>
             <a href="<?= $BASE ?>interface_catalogue_bouquet.php">Bouquets</a>
             <a href="<?= $BASE ?>coffret.php">Coffret</a>
             <a href="<?= $BASE ?>supplément.php">Supplément</a>
