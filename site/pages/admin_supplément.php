@@ -3,7 +3,7 @@
 <?php
 session_start();
 // Prefixe URL qui marche depuis n'importe quelle page de /site/pages
-$BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
+$BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . 'admin_supplément.php/';
 ?>
 
 
