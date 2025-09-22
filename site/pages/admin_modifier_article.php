@@ -121,16 +121,113 @@ function recup_donnee_emballage(PDO $pdo): array {
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
-$rows = recup_donnee_fleur($pdo);
 
-foreach ($rows as $r) {
-    echo "<tr>";
-    echo "<td>" . htmlspecialchars($r['PRO_NOM']) . "</td>";
-    echo "<td>#". (int)$r['PRO_ID'] . "</td>";
-    echo "<td>" . htmlspecialchars($r['FLE_COULEUR'] ?? '-') . "</td>";
-    echo "<td>" . htmlspecialchars(number_format((float)$r['PRO_PRIX'], 2, '.', '')) . "</td>";
-    echo "<td>" . htmlspecialchars((string)($r['PRO_QTE_MAX'] ?? '-')) . "</td>";
-    echo "<td>" . (int)$r['FLE_QTE_STOCK'] . "</td>";
-    echo '<td><a class="btn" href="'.$BASE.'admin_modifier_article.php?type=fleur&id='.(int)$r['PRO_ID'].'">Modifier</a></td>';
-    echo "</tr>";
-}
+?>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Admin — Modifier l’article</title>
+</head>
+<body class="adm">
+
+  <!-- En-tête / fil d’Ariane -->
+  <header class="admin-header">
+    <nav class="breadcrumb">
+      <a href="#">Dashboard</a> › <a href="#">Produits</a> › <span>Modifier</span>
+    </nav>
+    <h1>Modifier l’article</h1>
+  </header>
+
+  <!-- Carte “aperçu” -->
+  <section class="product-hero">
+    <figure class="product-cover">
+      <!-- Remplacer src par l’URL de l’image de l’article -->
+      <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
+      <figcaption>Image actuelle</figcaption>
+    </figure>
+
+    <div class="product-summary">
+      <h2 class="product-name"><span data-field="nom">Nom du produit</span></h2>
+      <ul class="product-meta">
+        <li><strong>ID :</strong> <span data-field="id">—</span></li>
+        <li><strong>Type :</strong> <span data-field="type">fleur | bouquet | coffret | supplement | emballage</span></li>
+        <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
+      </ul>
+      <p class="product-desc" data-field="description">Description de l’article…</p>
+    </div>
+  </section>
+
+  <!-- Détails (toutes les données) -->
+  <section class="product-details">
+    <h3>Données de l’article</h3>
+
+    <table class="kv">
+      <tbody>
+        <!-- Champs génériques -->
+        <tr>
+          <th>Nom</th>
+          <td><span data-field="nom">—</span></td>
+        </tr>
+        <tr>
+          <th>Description</th>
+          <td><span data-field="description">—</span></td>
+        </tr>
+        <tr>
+          <th>Prix (CHF)</th>
+          <td><span data-field="prix">—</span></td>
+        </tr>
+        <tr>
+          <th>Prix unitaire (CHF)</th>
+          <td><span data-field="prix_unitaire">—</span></td>
+        </tr>
+        <tr>
+          <th>Stock</th>
+          <td><span data-field="stock">—</span></td>
+        </tr>
+        <tr>
+          <th>Quantité max</th>
+          <td><span data-field="qte_max">—</span></td>
+        </tr>
+        <tr>
+          <th>Visible</th>
+          <td><span data-field="actif">—</span></td>
+        </tr>
+        <tr>
+          <th>Image (URL)</th>
+          <td><span data-field="image_url_text">—</span></td>
+        </tr>
+
+        <!-- Champs spécifiques par TYPE (remplir si applicable, sinon laisser “—”) -->
+        <tr>
+          <th>Couleur (FLEUR/EMBALLAGE)</th>
+          <td><span data-field="couleur">—</span></td>
+        </tr>
+        <tr>
+          <th>Nombre de roses (BOUQUET)</th>
+          <td><span data-field="nb_roses">—</span></td>
+        </tr>
+        <tr>
+          <th>Taille (COFFRET)</th>
+          <td><span data-field="taille">—</span></td>
+        </tr>
+
+        <!-- Métadonnées optionnelles -->
+        <tr>
+          <th>Tags</th>
+          <td><span data-field="tags">—</span></td>
+        </tr>
+        <tr>
+          <th>Créé le</th>
+          <td><span data-field="created_at">—</span></td>
+        </tr>
+        <tr>
+          <th>Mis à jour le</th>
+          <td><span data-field="updated_at">—</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Actions (affichage seulement pour l’instant) -->
+  <section class="product-actio
