@@ -68,7 +68,7 @@ function recup_donnee_coffret($pdo)
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>DK Bloom — Accueil</title>
+    <title>DK Bloom</title>
     <link rel="stylesheet" href="<?= $BASE ?>css/admin_catalogue.css">
 </head>
 <body>
