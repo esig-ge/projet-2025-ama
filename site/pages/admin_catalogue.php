@@ -105,8 +105,17 @@ function recup_donnee_coffret($pdo)
                 echo "<td>" . htmlspecialchars($row['PRO_PRIX'] ?? '-') . "</td>";
                 echo "<td>" . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . "</td>";
                 echo "<td>" . htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-') . "</td>";
-                echo "<td><a href='modifier.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
-                echo "<td><a href='supprimer.php?id=" . urlencode($row['PRO_ID']) . "'>Supprimer</a></td>";
+                echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
+                echo '<td>
+                        <form method="post" action="'.$BASE.'admin_toggle_visibility.php"
+                              onsubmit="return confirm(\'Masquer cet article ? Vous pourrez le réactiver plus tard.\')">
+                          <input type="hidden" name="type" value="fleur">
+                          <input type="hidden" name="id" value="'.(int)$row['PRO_ID'].'">
+                          <input type="hidden" name="visible" value="0">
+                          <input type="hidden" name="return" value="'.htmlspecialchars($_SERVER['REQUEST_URI']).'">
+                          <button type="submit" class="link danger">Supprimer</button>
+                        </form>
+      </td>';
                 echo "</tr>";
             }
             ?>
@@ -208,8 +217,8 @@ function recup_donnee_coffret($pdo)
             echo "<td>" . htmlspecialchars($row['PRO_PRIX'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['COF_QTE_MAX'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['COF_QTE_STOCK'] ?? '-') . "</td>";
-            echo "<td><a href='modifier.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
-            echo "<td><a href='supprimer.php?id=" . urlencode($row['PRO_ID']) . "'>Supprimer</a></td>";
+            echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
+            echo "<td><a href='admin_supprimer_article.php?id=" . urlencode($row['PRO_ID']) . "'>Supprimer</a></td>";
             echo "</tr>";
         }
         ?>
@@ -261,8 +270,8 @@ function recup_donnee_coffret($pdo)
             echo "<td>" . htmlspecialchars($row['SUP_PRIX_UNITAIRE'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['SUP_QTE_MAX'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['SUP_QTE_STOCK'] ?? '-') . "</td>";
-            echo "<td><a href='modifier.php?id=" . urlencode($row['SUP_ID']) . "'>Modifier</a></td>";
-            echo "<td><a href='supprimer.php?id=" . urlencode($row['SUP_ID']) . "'>Supprimer</a></td>";
+            echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['SUP_ID']) . "'>Modifier</a></td>";
+            echo "<td><a href='admin_supprimer_article.php?id=" . urlencode($row['SUP_ID']) . "'>Supprimer</a></td>";
             echo "</tr>";
         }
         ?>
@@ -313,8 +322,8 @@ function recup_donnee_coffret($pdo)
             echo "<td>" . htmlspecialchars($row['PRO_PRIX'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['EMB_QTE_STOCK'] ?? '-') . "</td>";
-            echo "<td><a href='modifier.php?id=" . urlencode($row['EMB_ID']) . "'>Modifier</a></td>";
-            echo "<td><a href='supprimer.php?id=" . urlencode($row['EMB_ID']) . "'>Supprimer</a></td>";
+            echo "<td><a href='admin_supprimer_article.php?id=" . urlencode($row['EMB_ID']) . "'>Modifier</a></td>";
+            echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['EMB_ID']) . "'>Supprimer</a></td>";
             echo "</tr>";
         }
         ?>

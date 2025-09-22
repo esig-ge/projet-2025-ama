@@ -126,108 +126,108 @@ function recup_donnee_emballage(PDO $pdo): array {
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <title>Admin — Modifier l’article</title>
+    <meta charset="utf-8">
+    <title>Admin — Modifier l’article</title>
 </head>
 <body class="adm">
 
-  <!-- En-tête / fil d’Ariane -->
-  <header class="admin-header">
+<!-- En-tête / fil d’Ariane -->
+<header class="admin-header">
     <nav class="breadcrumb">
-      <a href="#">Dashboard</a> › <a href="#">Produits</a> › <span>Modifier</span>
+        <a href="#">Dashboard</a> › <a href="#">Produits</a> › <span>Modifier</span>
     </nav>
     <h1>Modifier l’article</h1>
-  </header>
+</header>
 
-  <!-- Carte “aperçu” -->
-  <section class="product-hero">
+<!-- Carte “aperçu” -->
+<section class="product-hero">
     <figure class="product-cover">
-      <!-- Remplacer src par l’URL de l’image de l’article -->
-      <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
-      <figcaption>Image actuelle</figcaption>
+        <!-- Remplacer src par l’URL de l’image de l’article -->
+        <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
+        <figcaption>Image actuelle</figcaption>
     </figure>
 
     <div class="product-summary">
-      <h2 class="product-name"><span data-field="nom">Nom du produit</span></h2>
-      <ul class="product-meta">
-        <li><strong>ID :</strong> <span data-field="id">—</span></li>
-        <li><strong>Type :</strong> <span data-field="type">fleur | bouquet | coffret | supplement | emballage</span></li>
-        <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
-      </ul>
-      <p class="product-desc" data-field="description">Description de l’article…</p>
+        <h2 class="product-name"><span data-field="nom">Nom du produit</span></h2>
+        <ul class="product-meta">
+            <li><strong>ID :</strong> <span data-field="id">—</span></li>
+            <li><strong>Type :</strong> <span data-field="type">fleur | bouquet | coffret | supplement | emballage</span></li>
+            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
+        </ul>
+        <p class="product-desc" data-field="description">Description de l’article…</p>
     </div>
-  </section>
+</section>
 
-  <!-- Détails (toutes les données) -->
-  <section class="product-details">
+<!-- Détails (toutes les données) -->
+<section class="product-details">
     <h3>Données de l’article</h3>
 
     <table class="kv">
-      <tbody>
+        <tbody>
         <!-- Champs génériques -->
         <tr>
-          <th>Nom</th>
-          <td><span data-field="nom">—</span></td>
+            <th>Nom</th>
+            <td><span data-field="nom">—</span></td>
         </tr>
         <tr>
-          <th>Description</th>
-          <td><span data-field="description">—</span></td>
+            <th>Description</th>
+            <td><span data-field="description">—</span></td>
         </tr>
         <tr>
-          <th>Prix (CHF)</th>
-          <td><span data-field="prix">—</span></td>
+            <th>Prix (CHF)</th>
+            <td><span data-field="prix">—</span></td>
         </tr>
         <tr>
-          <th>Prix unitaire (CHF)</th>
-          <td><span data-field="prix_unitaire">—</span></td>
+            <th>Prix unitaire (CHF)</th>
+            <td><span data-field="prix_unitaire">—</span></td>
         </tr>
         <tr>
-          <th>Stock</th>
-          <td><span data-field="stock">—</span></td>
+            <th>Stock</th>
+            <td><span data-field="stock">—</span></td>
         </tr>
         <tr>
-          <th>Quantité max</th>
-          <td><span data-field="qte_max">—</span></td>
+            <th>Quantité max</th>
+            <td><span data-field="qte_max">—</span></td>
         </tr>
         <tr>
-          <th>Visible</th>
-          <td><span data-field="actif">—</span></td>
+            <th>Visible</th>
+            <td><span data-field="actif">—</span></td>
         </tr>
         <tr>
-          <th>Image (URL)</th>
-          <td><span data-field="image_url_text">—</span></td>
+            <th>Image (URL)</th>
+            <td><span data-field="image_url_text">—</span></td>
         </tr>
 
         <!-- Champs spécifiques par TYPE (remplir si applicable, sinon laisser “—”) -->
         <tr>
-          <th>Couleur (FLEUR/EMBALLAGE)</th>
-          <td><span data-field="couleur">—</span></td>
+            <th>Couleur (FLEUR/EMBALLAGE)</th>
+            <td><span data-field="couleur">—</span></td>
         </tr>
         <tr>
-          <th>Nombre de roses (BOUQUET)</th>
-          <td><span data-field="nb_roses">—</span></td>
+            <th>Nombre de roses (BOUQUET)</th>
+            <td><span data-field="nb_roses">—</span></td>
         </tr>
         <tr>
-          <th>Taille (COFFRET)</th>
-          <td><span data-field="taille">—</span></td>
+            <th>Taille (COFFRET)</th>
+            <td><span data-field="taille">—</span></td>
         </tr>
 
         <!-- Métadonnées optionnelles -->
         <tr>
-          <th>Tags</th>
-          <td><span data-field="tags">—</span></td>
+            <th>Tags</th>
+            <td><span data-field="tags">—</span></td>
         </tr>
         <tr>
-          <th>Créé le</th>
-          <td><span data-field="created_at">—</span></td>
+            <th>Créé le</th>
+            <td><span data-field="created_at">—</span></td>
         </tr>
         <tr>
-          <th>Mis à jour le</th>
-          <td><span data-field="updated_at">—</span></td>
+            <th>Mis à jour le</th>
+            <td><span data-field="updated_at">—</span></td>
         </tr>
-      </tbody>
+        </tbody>
     </table>
-  </section>
+</section>
 
-  <!-- Actions (affichage seulement pour l’instant) -->
-  <section class="product-actio
+<!-- Actions (affichage seulement pour l’instant) -->
+<section class="product-actio
