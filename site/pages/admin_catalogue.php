@@ -59,6 +59,19 @@ function recup_donnee_coffret($pdo)
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+function recup_produit($pdo)
+{
+    $sql = "SELECT p.PRO_ID, p.PRO_NOM, p.PRO_DESCRIPTION, p.PRO_PRIX, p.PRO_QTE_MAX, p.PRO_IMAGE,
+           f.FLE_COULEUR, f.FLE_QTE_STOCK
+    FROM PRODUIT p
+    JOIN FLEUR f ON f.PRO_ID = p.PRO_ID
+    WHERE f.FLE_QTE_STOCK > 0
+    ORDER BY p.PRO_NOM ASC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+}
 
 ?>
 
@@ -107,7 +120,7 @@ function recup_donnee_coffret($pdo)
                 echo "<td>" . htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-') . "</td>";
                 echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
                 echo '<td>
-                        <form method="post" action="'.$BASE.'admin_toggle_visibility.php"
+                        <form method="post" action="'.$BASE.'admin_supprimer_article.php"
                               onsubmit="return confirm(\'Masquer cet article ? Vous pourrez le réactiver plus tard.\')">
                           <input type="hidden" name="type" value="fleur">
                           <input type="hidden" name="id" value="'.(int)$row['PRO_ID'].'">
