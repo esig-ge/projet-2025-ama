@@ -138,15 +138,7 @@ function recup_produit($pdo)
                 } else {
                     // Bouton "Supprimer" (cacher)
                     echo '<td>
-                <form method="post" action="'.$BASE.'admin_supprimer_article.php"
-                      onsubmit="return confirm(\'Masquer cet article ? Vous pourrez le réactiver plus tard.\')">
-                  <input type="hidden" name="type" value="fleur">
-                  <input type="hidden" name="id" value="'.$id.'">
-                  <input type="hidden" name="visible" value="0">
-                  <input type="hidden" name="return" value="'.htmlspecialchars($_SERVER['REQUEST_URI']).'">
-                  <button type="submit" class="link danger">Supprimer</button>
-                </form>
-              </td>';
+              ';
                 }
 
                 echo '</tr>';
