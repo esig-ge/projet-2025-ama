@@ -106,16 +106,9 @@ function recup_donnee_coffret($pdo)
                 echo "<td>" . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . "</td>";
                 echo "<td>" . htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-') . "</td>";
                 echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
-                echo '<td>
-                        <form method="post" action="'.$BASE.'admin_toggle_visibility.php"
-                              onsubmit="return confirm(\'Masquer cet article ? Vous pourrez le réactiver plus tard.\')">
-                          <input type="hidden" name="type" value="fleur">
-                          <input type="hidden" name="id" value="'.(int)$row['PRO_ID'].'">
-                          <input type="hidden" name="visible" value="0">
-                          <input type="hidden" name="return" value="'.htmlspecialchars($_SERVER['REQUEST_URI']).'">
-                          <button type="submit" class="link danger">Supprimer</button>
-                        </form>
-      </td>';
+                echo '<a href="admin_supprimer_article.php?type=fleur&id='.urlencode($row['PRO_ID']).'&action=hide"
+          onclick="return confirm(\'Masquer cet article ?\')">Supprimer</a>';
+
                 echo "</tr>";
             }
             ?>
