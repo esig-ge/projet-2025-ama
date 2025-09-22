@@ -1,37 +1,29 @@
 <?php
-
 // /site/pages/admin_supprimer_article.php
 declare(strict_types=1);
 session_start();
 
-/* Base URL */
-$dir = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+/* Base */
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
 /* DB */
-try {
-    /** @var PDO $pdo */
-    $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (Throwable $e) {
-    http_response_code(500);
-    echo "Erreur DB: " . htmlspecialchars($e->getMessage());
-    exit;
-}
+$pdo = require __DIR__ . '/../database/config/connexionBDD.php';
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-/* Inputs (accepte GET ou POST) */
-$type = strtolower(trim($_REQUEST['type'] ?? ''));  // fleur | bouquet | coffret | supplement | emballage
-$id = (int)($_REQUEST['id'] ?? 0);
-$action = strtolower(trim($_REQUEST['action'] ?? 'hide')); // hide | show (optionnel pour réactiver)
-$return = $_REQUEST['return'] ?? ($_SERVER['HTTP_REFERER'] ?? $BASE . 'admin_catalogue.php');
+/* Inputs */
+$type   = strtolower(trim($_POST['type'] ?? $_GET['type'] ?? ''));
+$id     = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+$action = strtolower(trim($_POST['action'] ?? $_GET['action'] ?? 'hide')); // hide|show
+$return = $_POST['return'] ?? $_GET['return'] ?? ($_SERVER['HTTP_REFERER'] ?? $BASE.'admin_catalogue.php');
 
-/* Mapping par type -> table, PK, colonne actif */
+/* Mapping */
 $map = [
-    'fleur' => ['table' => 'PRODUIT', 'pk' => 'PRO_ID', 'col' => 'PRO_ACTIF'],
-    'bouquet' => ['table' => 'PRODUIT', 'pk' => 'PRO_ID', 'col' => 'PRO_ACTIF'],
-    'coffret' => ['table' => 'PRODUIT', 'pk' => 'PRO_ID', 'col' => 'PRO_ACTIF'],
-    'supplement' => ['table' => 'SUPPLEMENT', 'pk' => 'SUP_ID', 'col' => 'SUP_ACTIF'],
-    'emballage' => ['table' => 'EMBALLAGE', 'pk' => 'EMB_ID', 'col' => 'EMB_ACTIF'],
+    'fleur'      => ['table'=>'PRODUIT',   'pk'=>'PRO_ID', 'col'=>'PRO_ACTIF'],
+    'bouquet'    => ['table'=>'PRODUIT',   'pk'=>'PRO_ID', 'col'=>'PRO_ACTIF'],
+    'coffret'    => ['table'=>'PRODUIT',   'pk'=>'PRO_ID', 'col'=>'PRO_ACTIF'],
+    'supplement' => ['table'=>'SUPPLEMENT','pk'=>'SUP_ID', 'col'=>'SUP_ACTIF'],
+    'emballage'  => ['table'=>'EMBALLAGE', 'pk'=>'EMB_ID', 'col'=>'EMB_ACTIF'],
 ];
 
 if (!isset($map[$type]) || $id <= 0) {
@@ -40,17 +32,25 @@ if (!isset($map[$type]) || $id <= 0) {
     exit;
 }
 
-$cfg = $map[$type];
-$newVal = ($action === 'show') ? 1 : 0; // par défaut on masque
+$cfg    = $map[$type];
+$newVal = ($action === 'show') ? 1 : 0;
 
-$sql = "UPDATE `{$cfg['table']}` SET `{$cfg['col']}` = :v WHERE `{$cfg['pk']}` = :id";
-$ok = $pdo->prepare($sql)->execute([':v' => $newVal, ':id' => $id]);
+/* Vérifie que la ligne existe */
+$check = $pdo->prepare("SELECT 1 FROM `{$cfg['table']}` WHERE `{$cfg['pk']}` = :id LIMIT 1");
+$check->execute([':id'=>$id]);
+if (!$check->fetchColumn()) {
+    $_SESSION['toast'] = ['type'=>'error','text'=>"L'élément #$id est introuvable."];
+    header("Location: $return"); exit;
+}
+
+/* UPDATE UNE SEULE LIGNE */
+$sql = "UPDATE `{$cfg['table']}` SET `{$cfg['col']}` = :v WHERE `{$cfg['pk']}` = :id LIMIT 1";
+$st  = $pdo->prepare($sql);
+$st->execute([':v'=>$newVal, ':id'=>$id]);
 
 $_SESSION['toast'] = [
-    'type' => $ok ? 'success' : 'error',
-    'text' => $ok
-        ? (($newVal === 0) ? 'Article masqué avec succès.' : 'Article rendu visible.')
-        : 'Échec de la mise à jour.'
+    'type' => 'success',
+    'text' => $newVal ? 'Article rendu visible.' : 'Article masqué avec succès.'
 ];
 
 header("Location: $return");
