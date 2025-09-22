@@ -3,9 +3,11 @@
    ============================ */
 
 body {
-    background-color: #fff; /* fond page blanc */
+    background-color: blue; /* fond page blanc */
     font-family: "Segoe UI", Arial, sans-serif;
     padding: 20px;
+    background-image: url("site/pages/img/rose_admin_page_produit.jpg");
+
 }
 
 /* Titre principal */

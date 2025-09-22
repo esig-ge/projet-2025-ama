@@ -156,8 +156,8 @@ function recup_donnee_coffret($pdo)
         echo "<td>" . htmlspecialchars($row['PRO_PRIX'] ?? '-') . "</td>";
         echo "<td>" . htmlspecialchars($row['BOU_QTE_MAX'] ?? '-') . "</td>";
         echo "<td>" . htmlspecialchars($row['BOU_QTE_STOCK'] ?? '-') . "</td>";
-        echo "<td><a href='modifier.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
-        echo "<td><a href='supprimer.php?id=" . urlencode($row['PRO_ID']) . "'>Supprimer</a></td>";
+        echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['PRO_ID']) . "'>Modifier</a></td>";
+        echo "<td><a href='admin_supprimer_article.php?id=" . urlencode($row['PRO_ID']) . "'>Supprimer</a></td>";
         echo "</tr>";
     }
     ?>

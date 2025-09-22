@@ -23,6 +23,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
             <th>Nom</th>
             <th>ID</th>
             <th>Couleur</th>
+            <th>taille</th>
             <th>Qté min</th>
             <th>Qté max</th>
             <th>Qté actuelle</th>
