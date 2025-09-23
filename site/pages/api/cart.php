@@ -144,39 +144,69 @@ try {
             ok(['com_id'=>$comId, 'items'=>$items, 'subtotal'=>subtotal($items)]);
         }
 
-        /* ===== ADD_SUPPLEMENT ===== */
+        /* ---------- ADD_SUPPLEMENT (décrémente stock + renvoie name/stockLeft) ---------- */
         case 'add_supplement': {
             $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
             $qty   = read_qty();
             if ($supId <= 0) err('validation','Supplément invalide',422);
 
-            $ck = $pdo->prepare("SELECT SUP_ID FROM SUPPLEMENT WHERE SUP_ID=:id");
+            // 1) existe + lire stock + nom
+            $ck = $pdo->prepare("SELECT SUP_NOM, COALESCE(SUP_QTE_STOCK,0) AS stock FROM SUPPLEMENT WHERE SUP_ID=:id");
             $ck->execute([':id'=>$supId]);
-            if (!$ck->fetchColumn()) err('not_found','Supplément introuvable',404);
+            $row = $ck->fetch(PDO::FETCH_ASSOC);
+            if (!$row) err('not_found','Supplément introuvable',404);
 
+            $name  = (string)$row['SUP_NOM'];
+            $stock = (int)$row['stock'];
+            if ($stock < $qty) err('insufficient_stock','Stock insuffisant',409);
+
+            // 2) commande ouverte
             $comId = getOpenOrderId($pdo, $perId);
 
+            // 3) décrément stock (atomique)
+            $u = $pdo->prepare("
+        UPDATE SUPPLEMENT
+        SET SUP_QTE_STOCK = SUP_QTE_STOCK - :q
+        WHERE SUP_ID = :id AND SUP_QTE_STOCK >= :q
+    ");
+            $u->execute([':q'=>$qty, ':id'=>$supId]);
+            if ($u->rowCount() === 0) err('insufficient_stock','Stock insuffisant (conflit)',409);
+
+            // 4) upsert COMMANDE_SUPP (sans ON DUPLICATE pour compat schémas)
             $sel = $pdo->prepare("SELECT CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:s");
             $sel->execute([':c'=>$comId, ':s'=>$supId]);
             $cur = $sel->fetchColumn();
             if ($cur === false) {
                 $ins = $pdo->prepare("
-                    INSERT INTO COMMANDE_SUPP (COM_ID, SUP_ID, CS_QTE_COMMANDEE)
-                    VALUES (:c, :s, :q)
-                ");
+            INSERT INTO COMMANDE_SUPP (COM_ID, SUP_ID, CS_QTE_COMMANDEE)
+            VALUES (:c, :s, :q)
+        ");
                 $ins->execute([':c'=>$comId, ':s'=>$supId, ':q'=>$qty]);
             } else {
                 $newQ = (int)$cur + $qty;
                 $upd = $pdo->prepare("
-                    UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q
-                    WHERE COM_ID=:c AND SUP_ID=:s
-                ");
+            UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q
+            WHERE COM_ID=:c AND SUP_ID=:s
+        ");
                 $upd->execute([':q'=>$newQ, ':c'=>$comId, ':s'=>$supId]);
             }
 
-            $items = listItems($pdo, $comId);
-            ok(['com_id'=>$comId, 'items'=>$items, 'subtotal'=>subtotal($items)]);
+            // 5) payload attendu par la page
+            $left   = max(0, $stock - $qty);
+            $items  = listItems($pdo, $comId);
+            $subtot = subtotal($items);
+            ok([
+                'com_id'    => $comId,
+                'type'      => 'supplement',
+                'supId'     => $supId,
+                'name'      => $name,
+                'stockLeft' => $left,
+                'items'     => $items,
+                'subtotal'  => $subtot,
+            ]);
         }
+
+
 
         /* ===== ADD_EMBALLAGE ===== */
         case 'add_emballage': {
