@@ -13,7 +13,6 @@ function recup_donnee_fleur(PDO $pdo): array {
     $sql = "SELECT
               p.PRO_ID,
               p.PRO_NOM,
-              p.PRO_DESCRIPTION,
               p.PRO_PRIX,
               p.PRO_QTE_MAX,
               p.PRO_IMAGE,
