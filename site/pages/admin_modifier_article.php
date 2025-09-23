@@ -160,7 +160,7 @@ function recup_donnee_emballage(PDO $pdo): array {
                 <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
             </tr>
             <tr>
-                <td>Prix (CHF)</td>
+                <td>Prix </td>
                 <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
             </tr>
             <tr>
@@ -176,9 +176,11 @@ function recup_donnee_emballage(PDO $pdo): array {
                 <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '-') ?></td>
             </tr>
             <tr>
-                <td>Image (URL)</td>
+                <td>Image</td>
                 <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '-') ?></td>
             </tr>
+            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
+            <br>
         <?php } ?>
         </tbody>
     </table>
