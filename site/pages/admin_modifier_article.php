@@ -149,42 +149,38 @@ function recup_donnee_emballage(PDO $pdo): array {
     <h3>Données de l’article</h3>
 
     <table class="kv">
+          <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
         <tbody>
-        <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
         <?php
         $fleurs = recup_donnee_fleur($pdo);
         foreach ($fleurs as $fleur) { ?>
             <tr>
-                <th>Nom</th>
-                <td><h2><?= htmlspecialchars($fleur['PRO_NOM']) ?></h2></td>
+                <td>Nom</td>
+                <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
             </tr>
             <tr>
-                <th>Prix (CHF)</th>
-                <td><span data-field="prix"><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</span></td>
+                <td>Prix (CHF)</td>
+                <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
             </tr>
             <tr>
-                <th>Couleur</th>
-                <td><span data-field="couleur"><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '-') ?></span></td>
+                <td>Couleur</td>
+                <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '-') ?></td>
             </tr>
             <tr>
-                <th>Stock</th>
-                <td><span data-field="stock"><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? 0) ?></span></td>
+                <td>Stock</td>
+                <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? 0) ?></td>
             </tr>
             <tr>
-                <th>Quantité max</th>
-                <td><span data-field="qte_max"><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '-') ?></span></td>
+                <td>Quantité max</td>
+                <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '-') ?></td>
             </tr>
             <tr>
-                <th>Image (URL)</th>
-                <td><span data-field="image_url_text"><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '-') ?></span></td>
-            </tr>
-            <!-- Métadonnées optionnelles -->
-            <tr>
-                <th>Mis à jour le</th>
-                <td><span data-field="updated_at">—</span></td>
+                <td>Image (URL)</td>
+                <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '-') ?></td>
             </tr>
         <?php } ?>
         </tbody>
+
 
     </table>
 </section>
