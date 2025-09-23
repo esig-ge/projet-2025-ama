@@ -124,7 +124,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Admin — Modifier l’article</title>
+    <title>Admin — Modifier les articles </title>
 </head>
 <body class="adm">
 
@@ -142,14 +142,6 @@ function recup_donnee_emballage(PDO $pdo): array {
         <!-- Remplacer src par l’URL de l’image de l’article -->
         <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
     </figure>
-
-    <div class="product-summary">
-        <h2 class="product-name"><span data-field="nom">Nom du produit</span></h2>
-        <ul class="product-meta">
-
-            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
-        </ul>
-    </div>
 </section>
 
 <!-- Détails (toutes les données) -->
@@ -158,12 +150,13 @@ function recup_donnee_emballage(PDO $pdo): array {
 
     <table class="kv">
         <tbody>
+        <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
         <?php
         $fleurs = recup_donnee_fleur($pdo);
         foreach ($fleurs as $fleur) { ?>
             <tr>
                 <th>Nom</th>
-                <td><span data-field="nom"><h2><?= htmlspecialchars($fleur['PRO_NOM']) ?></h2></span></td>
+                <td><h2><?= htmlspecialchars($fleur['PRO_NOM']) ?></h2></td>
             </tr>
             <tr>
                 <th>Prix (CHF)</th>
