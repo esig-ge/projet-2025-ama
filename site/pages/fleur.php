@@ -18,14 +18,14 @@ $imgMap = [
     'noir'       => ['id' => 'c-noir',   'file' => $BASE.'img/noir.png',         'class' => 'noire',   'swatch' => '#111',     'alt' => 'Rose noire',       'title' => 'Noir'],
 ];
 
-// Récupération BDD (on garde simple)
+// Récupération BDD
 $sql = "SELECT p.PRO_ID, p.PRO_NOM, f.FLE_COULEUR, COALESCE(f.FLE_QTE_STOCK,0) AS STOCK
         FROM FLEUR f
         JOIN PRODUIT p ON p.PRO_ID = f.PRO_ID
         ORDER BY FIELD(f.FLE_COULEUR,'rouge','rose clair','rose','blanc','bleu','noir')";
 $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-// Index par couleur (seulement celles réellement présentes)
+// Index par couleur présente
 $roses = [];
 foreach ($rows as $r) {
     $c = $r['FLE_COULEUR'];
@@ -57,11 +57,9 @@ foreach ($imgMap as $coul => $meta) {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DK Bloom — Fleurs</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleFleurUnique.css">
 
-    <!-- Micro-styles utiles -->
     <style>
         .stock-msg{display:none;align-items:center;gap:8px;margin:12px 0 0;padding:10px 14px;border-radius:12px;background:#fff5f7;border:1px solid #ffd6e0;color:#7a0000;font-size:.95rem}
         .stock-msg.show{display:inline-flex}
@@ -96,11 +94,9 @@ foreach ($imgMap as $coul => $meta) {
         <div class="produit">
             <div class="produit-info">
                 <h3 class="product-title">La rose</h3>
-                <p class="product-desc">
-                    Elle est le symbole d’un amour né au premier regard et incarne l’unicité.
-                </p>
+                <p class="product-desc">Elle symbolise l’amour au premier regard et l’unicité.</p>
 
-                <!-- Radios couleurs dynamiques (disabled si rupture) -->
+                <!-- Radios couleurs (disabled si rupture) -->
                 <?php foreach ($imgMap as $coul => $meta): if (!isset($roses[$coul])) continue;
                     $proId   = (int)$roses[$coul]['PRO_ID'];
                     $proNom  = $roses[$coul]['PRO_NOM'];
@@ -133,7 +129,7 @@ foreach ($imgMap as $coul => $meta) {
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Pastilles (labels) + message stock -->
+                <!-- Pastilles + message stock -->
                 <fieldset class="swatches" aria-label="Couleur de la rose">
                     <?php foreach ($imgMap as $coul => $meta): if (!isset($roses[$coul])) continue;
                         $stock   = (int)$roses[$coul]['STOCK'];
@@ -169,9 +165,9 @@ foreach ($imgMap as $coul => $meta) {
                     <?= $initialCheckedId ? '' : 'disabled' ?>
                 >
 
-                <!-- Bouton AJOUTER (clean, sans $row*) -->
+                <!-- Bouton -->
                 <button id="btn-add-rose" class="btn-add" type="button">
-                    Sélectionner
+                    Ajouter au panier
                 </button>
             </div>
         </div>
@@ -185,7 +181,7 @@ foreach ($imgMap as $coul => $meta) {
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
-<!-- Script local léger : gestion visuel + binding du clic. NE PAS redéfinir selectRose ici. -->
+<!-- Script local : visuel + binding. NE PAS redéfinir selectRose ici. -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const radios  = document.querySelectorAll('.color-radio');
@@ -232,7 +228,6 @@ foreach ($imgMap as $coul => $meta) {
             }
         }
 
-        // Pastilles cliquées si rupture -> message
         document.querySelectorAll('.swatch').forEach(label => {
             label.addEventListener('click', function(e){
                 if (this.dataset.disabled === '1') {
@@ -243,7 +238,6 @@ foreach ($imgMap as $coul => $meta) {
             });
         });
 
-        // Clamp quantité
         ['input','change','blur'].forEach(ev => {
             if (!qty) return;
             qty.addEventListener(ev, function(){
@@ -259,7 +253,6 @@ foreach ($imgMap as $coul => $meta) {
 
         radios.forEach(r => r.addEventListener('change', refreshUI));
 
-        // Init images & UI
         const checked = document.querySelector('.color-radio:checked');
         if (checked) showImageByClass(checked.dataset.imgClass || fallback);
         else if (fallback) showImageByClass(fallback);
@@ -268,10 +261,9 @@ foreach ($imgMap as $coul => $meta) {
         // 🔗 Bind: utiliser la vraie selectRose de commande.js
         if (btn) {
             btn.addEventListener('click', () => {
-                // pousse la qty actuelle dans data-qty pour commande.js (resolveQty)
                 const q = parseInt(qty?.value || '1', 10);
                 if (Number.isFinite(q) && q > 0) btn.dataset.qty = String(q);
-                window.selectRose(btn); // défini dans js/commande.js
+                window.selectRose(btn);
             });
         }
     });
