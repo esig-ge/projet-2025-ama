@@ -14,7 +14,8 @@ function recup_donnee_fleur($pdo)
         FROM PRODUIT p
         INNER JOIN FLEUR f ON p.PRO_ID = f.PRO_ID";
 
-    $stmt = $pdo->prepare($sql);
+    $stmt = $pdo->prepare($sql);$
+
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }

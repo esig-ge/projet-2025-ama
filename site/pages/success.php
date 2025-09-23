@@ -14,7 +14,7 @@ session_start();
 <main style="max-width:900px;margin:80px auto 40px;padding:0 16px;">
     <h1>Merci pour votre achat 💐</h1>
     <p>Votre paiement a été confirmé. Vous recevrez un email de confirmation sous peu.</p>
-    <p><a href="../index.php">Retour à l’accueil</a></p>
+    <p><a href="index.php">Retour à l’accueil</a></p>
 </main>
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>

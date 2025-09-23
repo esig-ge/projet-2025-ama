@@ -56,7 +56,6 @@ function getProductImage(string $name): string {
 function color_hex(?string $c): ?string {
     if (!$c) return null;
     $k = strtolower(trim($c));
-    // Adapte les clés à celles que tu envoies depuis le produit (ex: rouge, rose, blanc, bleu, noir)
     $map = [
         'rouge' => '#b70f0f',
         'rose'  => '#f29fb5',
@@ -64,21 +63,19 @@ function color_hex(?string $c): ?string {
         'bleu'  => '#3b6bd6',
         'noir'  => '#222222',
         'gris'  => '#9aa0a6',
-        // tu peux ajouter d’autres couleurs ici
     ];
-    // si on reçoit déjà un hex (#xxxxxx), le laisser passer
     if (preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6})$/i', $k)) return $k;
     return $map[$k] ?? null;
 }
 
-/* ========= A) SUPPRESSION D’UN ARTICLE (existant) ========= */
+/* ========= A) SUPPRESSION D’UN ARTICLE ========= */
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
     $itemId = (int)($_POST['item_id'] ?? 0);
     $kind   = $_POST['kind'] ?? 'produit';
 
     if ($delCom > 0 && $itemId > 0) {
-        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en préparation' LIMIT 1");
+        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
         $chk->execute([':c'=>$delCom, ':p'=>$perId]);
         if ($chk->fetchColumn()) {
             if ($kind === 'produit') {
@@ -98,12 +95,12 @@ if (($_POST['action'] ?? '') === 'del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
-/* ========= A2) SUPPRESSION MULTIPLE (NOUVEAU) ========= */
+/* ========= A2) SUPPRESSION MULTIPLE ========= */
 if (($_POST['action'] ?? '') === 'bulk_del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
-    $selected = $_POST['sel'] ?? []; // tableau de "kind:id"
+    $selected = $_POST['sel'] ?? [];
     if ($delCom > 0 && is_array($selected) && count($selected)) {
-        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en préparation' LIMIT 1");
+        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
         $chk->execute([':c'=>$delCom, ':p'=>$perId]);
         if ($chk->fetchColumn()) {
             $pdo->beginTransaction();
@@ -113,8 +110,7 @@ if (($_POST['action'] ?? '') === 'bulk_del') {
                 $stmtE = $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id");
                 foreach ($selected as $token) {
                     if (!preg_match('/^(produit|supplement|emballage):(\d+)$/', $token, $m)) continue;
-                    [$all,$k,$id] = $m;
-                    $id = (int)$id;
+                    [$all,$k,$id] = $m; $id = (int)$id;
                     if ($id <= 0) continue;
                     if ($k === 'produit')   $stmtP->execute([':c'=>$delCom, ':id'=>$id]);
                     elseif ($k === 'supplement') $stmtS->execute([':c'=>$delCom, ':id'=>$id]);
@@ -135,11 +131,11 @@ if (($_POST['action'] ?? '') === 'bulk_del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
-/* ========= A3) VIDER TOUT LE PANIER (NOUVEAU) ========= */
+/* ========= A3) VIDER TOUT LE PANIER ========= */
 if (($_POST['action'] ?? '') === 'clear_all') {
     $delCom = (int)($_POST['com_id'] ?? 0);
     if ($delCom > 0) {
-        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en préparation' LIMIT 1");
+        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
         $chk->execute([':c'=>$delCom, ':p'=>$perId]);
         if ($chk->fetchColumn()) {
             $pdo->beginTransaction();
@@ -163,7 +159,7 @@ if (($_POST['action'] ?? '') === 'clear_all') {
 /* ========= B) CHARGEMENT DE LA COMMANDE + LIGNES ========= */
 $sql = "SELECT COM_ID, COM_DATE
         FROM COMMANDE
-        WHERE PER_ID = :per AND COM_STATUT = 'en préparation'
+        WHERE PER_ID = :per AND COM_STATUT = 'en preparation'
         ORDER BY COM_ID DESC
         LIMIT 1";
 $st  = $pdo->prepare($sql);
@@ -228,7 +224,6 @@ $total = $subtotal + $shipping;
         .card{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);overflow:hidden}
         .card.disabled{opacity:.6;filter:grayscale(.5)}
         .muted{color:#777}
-        /* Ajout d’une colonne checkbox (32px) */
         .cart-row{display:grid;grid-template-columns:32px 64px 1fr auto auto auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #eee}
         .cart-img{width:64px;height:64px;object-fit:cover;border-radius:8px}
         .cart-name{font-weight:600}
@@ -278,7 +273,6 @@ $total = $subtotal + $shipping;
                 </p>
             <?php else: ?>
 
-                <!-- Barre de sélection multiple (NOUVEAU) -->
                 <div class="bulk-bar">
                     <div class="left-actions">
                         <label style="display:flex;gap:8px;align-items:center;">
@@ -287,7 +281,6 @@ $total = $subtotal + $shipping;
                         <form method="post" action="<?= $BASE ?>commande.php" id="bulkDeleteForm" onsubmit="return confirm('Supprimer tous les articles sélectionnés ?');">
                             <input type="hidden" name="action" value="bulk_del">
                             <input type="hidden" name="com_id" value="<?= (int)$com['COM_ID'] ?>">
-                            <!-- Les <input name="sel[]"> sont ajoutés par les lignes du panier -->
                             <button class="btn-ghost small" type="submit">Supprimer la sélection</button>
                         </form>
                     </div>
@@ -308,7 +301,6 @@ $total = $subtotal + $shipping;
                     $img  = $BASE . 'img/' . getProductImage($L['NAME']);
                     ?>
                     <div class="cart-row">
-                        <!-- Case à cocher liée au formulaire bulk (NOUVEAU) -->
                         <input form="bulkDeleteForm" type="checkbox" name="sel[]" value="<?= htmlspecialchars($kind) . ':' . $id ?>">
                         <img class="cart-img" src="<?= htmlspecialchars($img) ?>" alt="">
                         <div class="cart-name">
@@ -317,8 +309,6 @@ $total = $subtotal + $shipping;
                         </div>
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
                         <div class="cart-total"><?= number_format($lt, 2, '.', ' ') ?> CHF</div>
-
-                        <!-- Suppression unitaire (existant) -->
                         <form class="trash-form" method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Supprimer cet article ?');">
                             <input type="hidden" name="action" value="del">
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
@@ -401,11 +391,14 @@ $total = $subtotal + $shipping;
         </div>
     </section>
 
+    <div class="btn_accueil">
+        <a href="<?= $BASE ?>interface_emballage.php" class="button">Retour</a>
+    </div>
+
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
-<!-- Petit JS pour cocher/décocher tout (facultatif, pas nécessaire au « Vider tout ») -->
 <script>
     document.addEventListener('DOMContentLoaded', function(){
         var checkAll = document.getElementById('checkAll');
