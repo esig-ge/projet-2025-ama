@@ -125,7 +125,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <head>
     <meta charset="utf-8">
     <title>Admin — Modifier les articles </title>
-    <link rel="stylesheet" href="css/admin_modification.css">
+    <link rel="stylesheet" href=<?= $BASE ?>"css/admin_modification.css">
 
 
 </head>
