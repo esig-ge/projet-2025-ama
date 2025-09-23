@@ -72,7 +72,7 @@ foreach ($imgMap as $coul => $meta) {
         .swatch{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:2px solid #ddd;cursor:pointer}
         .swatch>span{display:block;width:18px;height:18px;border-radius:50%;background:var(--swatch)}
         .qty{margin:14px 0 18px;width:100px}
-        .btn-add{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #ccc;background:#111;color:#fff;cursor:pointer}
+        .btn-add{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #ccc;background: #800e0e;color:#fff;cursor:pointer}
         .btn-add[disabled]{opacity:.6;cursor:not-allowed}
         .btn_accueil{display:flex;gap:10px;margin-top:18px}
         .button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;color:#111}
