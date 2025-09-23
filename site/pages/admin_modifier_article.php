@@ -141,7 +141,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 
 
 <section class="product-details">
-    <h3>Données de l’article</h3>
+    <h3>Données de l’article de yasmine</h3>
 
     <aside>
         <table class="kv">
