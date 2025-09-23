@@ -149,12 +149,11 @@ function recup_donnee_emballage(PDO $pdo): array {
             <?php
             $fleurs = recup_donnee_fleur($pdo);
             foreach ($fleurs as $fleur) {
-                echo '<td>' . htmlspecialchars($fleur['PRO_NOM']) . '</td>';
-                echo '<td>' . htmlspecialchars($fleur['PRO_ID']) . '</td>';
-                echo '<td>' . htmlspecialchars($fleur['FLE_COULEUR'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fleur['PRO_PRIX'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '-') . '</td>';
-                echo '<td><a href="admin_modifier_article.php?type=fleur&id=">Modifier</a></td>';
+                echo "<h2>" . htmlspecialchars($fleur['PRO_NOM']) . "</h2>";
+                echo "<p>Prix : " . htmlspecialchars($fleur['PRO_PRIX']) . " CHF</p>";
+                echo "<p>Couleur : " . htmlspecialchars($fleur['FLE_COULEUR'] ?? '-') . "</p>";
+                echo "<p>Stock : " . htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? 0) . "</p>";
+                echo '<br>';
             }
             ?>
             <li><strong>ID :</strong> <span data-field="id">—</span></li>
