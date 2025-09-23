@@ -125,6 +125,8 @@ function recup_donnee_emballage(PDO $pdo): array {
 <head>
     <meta charset="utf-8">
     <title>Admin — Modifier les articles </title>
+    <link rel="stylesheet" href="<?= $BASE ?>css/admin_catalogue.css">
+
 </head>
 <body class="adm">
 
@@ -135,55 +137,47 @@ function recup_donnee_emballage(PDO $pdo): array {
     </nav>
     <h1>Modifier l’article</h1>
 </header>
-
-<!-- Carte “aperçu” -->
-<section class="product-hero">
-    <figure class="product-cover">
-        <!-- Remplacer src par l’URL de l’image de l’article -->
-        <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
-    </figure>
-</section>
-
-
-<!-- Détails (toutes les données) -->
 <section class="product-details">
     <h3>Données de l’article</h3>
-
-    <table class="kv">
-        <tbody>
-        <?php
-        $fleurs = recup_donnee_fleur($pdo);
-        foreach ($fleurs as $fleur) { ?>
-            <tr>
-                <td>Nom</td>
-                <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
-            </tr>
-            <tr>
-                <td>Prix </td>
-                <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
-            </tr>
-            <tr>
-                <td>Couleur</td>
-                <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '-') ?></td>
-            </tr>
-            <tr>
-                <td>Stock</td>
-                <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>Quantité max</td>
-                <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '-') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Image</strong></td>
-                <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '-') ?></td>
-            </tr>
-            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
-
-            <br>
-        <?php } ?>
-        </tbody>
-    </table>
+<div>
+    <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
+</div>
+    <aside>
+        <table class="kv">
+            <tbody>
+            <?php
+            $fleurs = recup_donnee_fleur($pdo);
+            foreach ($fleurs as $fleur) { ?>
+                <tr>
+                    <td><strong>Nom</strong></td>
+                    <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
+                </tr>
+                <tr>
+                    <td><strong>Prix</strong> </td>
+                    <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
+                </tr>
+                <tr>
+                    <td><strong>Couleur</strong></td>
+                    <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '---') ?></td>
+                </tr>
+                <tr>
+                    <td><strong>Stock</strong></td>
+                    <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '---') ?></td>
+                </tr>
+                <tr>
+                    <td><strong>Quantité max</strong></td>
+                    <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '---') ?></td>
+                </tr>
+                <tr>
+                    <td><strong>Image</strong></td>
+                    <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '---') ?></td>
+                </tr>
+                <!--            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>-->
+                <br>
+            <?php } ?>
+            </tbody>
+        </table>
+    </aside>
 
 </section>
 
