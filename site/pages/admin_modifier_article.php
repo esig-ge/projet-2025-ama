@@ -124,7 +124,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Admin — Modifier les articles </title>
+    <title>Admin — Modifier les articles</title>
     <link rel="stylesheet" href=<?= $BASE ?>"css/admin_modification.css">
 
 
@@ -136,14 +136,14 @@ function recup_donnee_emballage(PDO $pdo): array {
     <nav class="breadcrumb">
         <a href="#">Dashboard</a> › <a href="#">Produits</a> › <span>Modifier</span>
     </nav>
-    <h1>Modifier l’article</h1>
+    <h1>Modifier les articles</h1>
 </header>
 
 
 <section class="product-details">
-    <h3>Données de l’article de yasmine</h3>
+    <h3>Données de l’article</h3>
 
-    <aside>
+
         <table class="kv">
             <tbody>
             <?php
@@ -179,7 +179,7 @@ function recup_donnee_emballage(PDO $pdo): array {
             <?php } ?>
             </tbody>
         </table>
-    </aside>
+
 
 </section>
 
