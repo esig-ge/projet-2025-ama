@@ -63,7 +63,7 @@ function listItems(PDO $pdo, int $comId): array {
                cp.CP_QTE_COMMANDEE AS qty, cp.CP_TYPE_PRODUIT AS subtype
         FROM COMMANDE_PRODUIT cp
         JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
-        WHERE cp.COM_ID = :c
+        WHERE cp.COM_ID = :c1
 
         UNION ALL
         SELECT 'supplement', s.SUP_ID, s.SUP_NOM, s.SUP_PRIX_UNITAIRE,
@@ -80,9 +80,10 @@ function listItems(PDO $pdo, int $comId): array {
         WHERE ce.COM_ID = :c3
     ";
     $st = $pdo->prepare($sql);
-    $st->execute([':c'=>$comId, ':c2'=>$comId, ':c3'=>$comId]);
+    $st->execute(['c1'=>$comId, 'c2'=>$comId, 'c3'=>$comId]); // ← 3 binds
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
+
 function subtotal(array $items): float {
     $s = 0.0;
     foreach ($items as $r) $s += (float)$r['PRO_PRIX'] * (int)$r['qty'];
@@ -118,9 +119,12 @@ try {
             $comId = getOpenOrderId($pdo, $perId);
 
             // 1) décrément stock (simple)
-            $u = $pdo->prepare("UPDATE FLEUR SET FLE_QTE_STOCK = FLE_QTE_STOCK - :q WHERE PRO_ID=:id");
-            $u->execute([':q'=>$qty, ':id'=>$proId]);
-
+            $u = $pdo->prepare("
+    UPDATE SUPPLEMENT
+    SET SUP_QTE_STOCK = SUP_QTE_STOCK - :qdec
+    WHERE SUP_ID = :id AND SUP_QTE_STOCK >= :qmin
+");
+            $u->execute(['qdec'=>$qty, 'qmin'=>$qty, 'id'=>$supId]);
             // 2) upsert ligne -> version *sans* ON DUPLICATE KEY (compat schémas sans index unique)
             $sel = $pdo->prepare("SELECT CP_QTE_COMMANDEE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:p");
             $sel->execute([':c'=>$comId, ':p'=>$proId]);
@@ -150,9 +154,9 @@ try {
             $qty   = read_qty();
             if ($supId <= 0) err('validation','Supplément invalide',422);
 
-            // 1) existe + lire stock + nom
+            // existe + stock + nom
             $ck = $pdo->prepare("SELECT SUP_NOM, COALESCE(SUP_QTE_STOCK,0) AS stock FROM SUPPLEMENT WHERE SUP_ID=:id");
-            $ck->execute([':id'=>$supId]);
+            $ck->execute(['id'=>$supId]);
             $row = $ck->fetch(PDO::FETCH_ASSOC);
             if (!$row) err('not_found','Supplément introuvable',404);
 
@@ -160,41 +164,41 @@ try {
             $stock = (int)$row['stock'];
             if ($stock < $qty) err('insufficient_stock','Stock insuffisant',409);
 
-            // 2) commande ouverte
             $comId = getOpenOrderId($pdo, $perId);
 
-            // 3) décrément stock (atomique)
+            // décrément stock SUPPLEMENT (placeholders uniques)
             $u = $pdo->prepare("
         UPDATE SUPPLEMENT
-        SET SUP_QTE_STOCK = SUP_QTE_STOCK - :q
-        WHERE SUP_ID = :id AND SUP_QTE_STOCK >= :q
+        SET SUP_QTE_STOCK = SUP_QTE_STOCK - :qdec
+        WHERE SUP_ID = :id AND SUP_QTE_STOCK >= :qmin
     ");
-            $u->execute([':q'=>$qty, ':id'=>$supId]);
+            $u->execute(['qdec'=>$qty, 'qmin'=>$qty, 'id'=>$supId]);
             if ($u->rowCount() === 0) err('insufficient_stock','Stock insuffisant (conflit)',409);
 
-            // 4) upsert COMMANDE_SUPP (sans ON DUPLICATE pour compat schémas)
+            // upsert COMMANDE_SUPP (sans ON DUPLICATE)
             $sel = $pdo->prepare("SELECT CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:s");
-            $sel->execute([':c'=>$comId, ':s'=>$supId]);
+            $sel->execute(['c'=>$comId, 's'=>$supId]);
             $cur = $sel->fetchColumn();
+
             if ($cur === false) {
                 $ins = $pdo->prepare("
             INSERT INTO COMMANDE_SUPP (COM_ID, SUP_ID, CS_QTE_COMMANDEE)
             VALUES (:c, :s, :q)
         ");
-                $ins->execute([':c'=>$comId, ':s'=>$supId, ':q'=>$qty]);
+                $ins->execute(['c'=>$comId, 's'=>$supId, 'q'=>$qty]);
             } else {
                 $newQ = (int)$cur + $qty;
                 $upd = $pdo->prepare("
             UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q
             WHERE COM_ID=:c AND SUP_ID=:s
         ");
-                $upd->execute([':q'=>$newQ, ':c'=>$comId, ':s'=>$supId]);
+                $upd->execute(['q'=>$newQ, 'c'=>$comId, 's'=>$supId]);
             }
 
-            // 5) payload attendu par la page
             $left   = max(0, $stock - $qty);
             $items  = listItems($pdo, $comId);
             $subtot = subtotal($items);
+
             ok([
                 'com_id'    => $comId,
                 'type'      => 'supplement',
@@ -205,8 +209,6 @@ try {
                 'subtotal'  => $subtot,
             ]);
         }
-
-
 
         /* ===== ADD_EMBALLAGE ===== */
         case 'add_emballage': {
