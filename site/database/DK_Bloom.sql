@@ -48,10 +48,8 @@ CREATE TABLE `PERSONNE` (
                             `PER_EMAIL`   VARCHAR(50) NOT NULL,
                             `PER_MDP`     VARCHAR(100) NOT NULL,
                             `PER_NUM_TEL` CHAR(10) NOT NULL,
-
                             CONSTRAINT `UK_PERSONNE_EMAIL` UNIQUE (`PER_EMAIL`),
                             CONSTRAINT `UK_PERSONNE_TEL`   UNIQUE (`PER_NUM_TEL`)
-    -- (CHECK avec REGEXP_LIKE supprimés pour compatibilité MySQL)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `ADMINISTRATEUR` (
@@ -66,7 +64,6 @@ CREATE TABLE `CLIENT` (
                           `CLI_DATENAISSANCE`      DATE NULL,
                           `CLI_NB_POINTS_FIDELITE` INT NOT NULL DEFAULT 0,
                           `CLI_STRIPE_CUSTOMER_ID` VARCHAR(64) NULL,
-
                           CONSTRAINT `UK_CLIENT_STRIPE_CUS` UNIQUE (`CLI_STRIPE_CUSTOMER_ID`),
                           CONSTRAINT `FK_CLIENT_PERSONNE`
                               FOREIGN KEY (`PER_ID`) REFERENCES `PERSONNE`(`PER_ID`)
@@ -74,7 +71,6 @@ CREATE TABLE `CLIENT` (
                           CONSTRAINT `CK_CLIENT_POINTS_NON_NEGATIFS`
                               CHECK (`CLI_NB_POINTS_FIDELITE` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 -- ADRESSES --------------------------------------------
 CREATE TABLE `ADRESSE` (
@@ -85,7 +81,6 @@ CREATE TABLE `ADRESSE` (
                            `ADR_VILLE`  VARCHAR(120) NOT NULL,
                            `ADR_PAYS`   VARCHAR(120) NOT NULL,
                            `ADR_TYPE`   ENUM('LIVRAISON','FACTURATION') NOT NULL
-    -- (CHECK NPA REGEXP supprimé pour compatibilité MySQL)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `ADRESSE_CLIENT` (
@@ -110,11 +105,11 @@ CREATE TABLE `PRODUIT` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `SUPPLEMENT` (
-                              `SUP_ID`           BIGINT PRIMARY KEY AUTO_INCREMENT,
-                              `SUP_NOM`          VARCHAR(190) NOT NULL,
-                              `SUP_DESCRIPTION`  TEXT NULL,
+                              `SUP_ID`            BIGINT PRIMARY KEY AUTO_INCREMENT,
+                              `SUP_NOM`           VARCHAR(190) NOT NULL,
+                              `SUP_DESCRIPTION`   TEXT NULL,
                               `SUP_PRIX_UNITAIRE` DECIMAL(12,2) NOT NULL,
-                              `SUP_QTE_STOCK`    INT NOT NULL DEFAULT 0,
+                              `SUP_QTE_STOCK`     INT NOT NULL DEFAULT 0,
                               CONSTRAINT `CK_SUP_PRIX_NON_NEGATIFS` CHECK (`SUP_PRIX_UNITAIRE` >= 0),
                               CONSTRAINT `CK_SUP_STOCK_NON_NEGATIFS` CHECK (`SUP_QTE_STOCK` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -133,9 +128,9 @@ CREATE TABLE `SUPP_PRODUIT` (
 
 -- SOUS-TYPES DE PRODUIT -------------------------------
 CREATE TABLE `FLEUR` (
-                         `PRO_ID`       BIGINT PRIMARY KEY,
-                         `FLE_TYPE`     VARCHAR(50) NOT NULL,
-                         `FLE_COULEUR`  ENUM('rouge','rose clair','rose','blanc','bleu','noir') NOT NULL,
+                         `PRO_ID`        BIGINT PRIMARY KEY,
+                         `FLE_TYPE`      VARCHAR(50) NOT NULL,
+                         `FLE_COULEUR`   ENUM('rouge','rose clair','rose','blanc','bleu','noir') NOT NULL,
                          `FLE_QTE_STOCK` INT NOT NULL DEFAULT 0,
                          CONSTRAINT `CK_FLE_STOCK_NON_NEG` CHECK (`FLE_QTE_STOCK` >= 0),
                          CONSTRAINT `FK_FLEUR_PRODUIT`
@@ -143,13 +138,16 @@ CREATE TABLE `FLEUR` (
                                  ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- >>> BOUQUET: BOU_TYPE supprimé + ajout BOU_NB_ROSES + unicité (NB_ROSES,COULEUR)
 CREATE TABLE `BOUQUET` (
-                           `PRO_ID`        BIGINT PRIMARY KEY,
-                           `BOU_DESCRIPTION` VARCHAR(600) NULL, -- optionnelle
-                           `BOU_TYPE`      ENUM('standard','personnalise','mariage','anniversaire','naissance','deuil','romantique','saisonnier','luxe') NOT NULL,
-                           `BOU_COULEUR`   ENUM('rouge','rose','blanc','bleu','noir') NOT NULL DEFAULT 'rouge',
-                           `BOU_QTE_STOCK` INT NOT NULL DEFAULT 0,
+                           `PRO_ID`          BIGINT PRIMARY KEY,
+                           `BOU_DESCRIPTION` VARCHAR(600) NULL,
+                           `BOU_COULEUR`     ENUM('rouge','rose clair','rose','blanc','bleu','noir') NOT NULL,
+                           `BOU_NB_ROSES`    INT NOT NULL,
+                           `BOU_QTE_STOCK`   INT NOT NULL DEFAULT 0,
                            CONSTRAINT `CK_BOU_STOCK_NON_NEG` CHECK (`BOU_QTE_STOCK` >= 0),
+                           CONSTRAINT `CK_BOU_NB_POS` CHECK (`BOU_NB_ROSES` > 0),
+                           CONSTRAINT `UK_BOU_TAILLE_COULEUR` UNIQUE (`BOU_NB_ROSES`,`BOU_COULEUR`),
                            CONSTRAINT `FK_BOUQUET_PRODUIT`
                                FOREIGN KEY (`PRO_ID`) REFERENCES `PRODUIT`(`PRO_ID`)
                                    ON UPDATE CASCADE ON DELETE CASCADE
@@ -170,9 +168,9 @@ CREATE TABLE `BOUQUET_FLEUR` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `COFFRET` (
-                           `PRO_ID`        BIGINT PRIMARY KEY,
+                           `PRO_ID`         BIGINT PRIMARY KEY,
                            `COF_EVENEMENT`  ENUM('Anniversaire','Saint-Valentin','Fêtes des Mères','Baptême','Mariage','Pâques','Noël','Nouvel An') NOT NULL,
-                           `COF_QTE_STOCK` INT NOT NULL DEFAULT 0,
+                           `COF_QTE_STOCK`  INT NOT NULL DEFAULT 0,
                            CONSTRAINT `CK_COF_STOCK_NON_NEG` CHECK (`COF_QTE_STOCK` >= 0),
                            CONSTRAINT `FK_COFFRET_PRODUIT`
                                FOREIGN KEY (`PRO_ID`) REFERENCES `PRODUIT`(`PRO_ID`)
@@ -223,7 +221,6 @@ CREATE TABLE `LIVRAISON` (
 -- PAIEMENT (Stripe simplifié) -------------------------
 CREATE TABLE `PAIEMENT` (
                             `PAI_ID` BIGINT PRIMARY KEY AUTO_INCREMENT,
-
                             `PER_ID` BIGINT NULL,
                             `PAI_MODE` VARCHAR(64) NULL,
                             `PAI_MONTANT` INT NOT NULL,
@@ -231,16 +228,14 @@ CREATE TABLE `PAIEMENT` (
                             `PAI_STRIPE_PAYMENT_INTENT_ID` VARCHAR(64) NOT NULL,
                             `PAI_STRIPE_LATEST_CHARGE_ID`  VARCHAR(64) NULL,
                             `PAI_RECEIPT_URL` VARCHAR(255) NULL,
-
                             `PAI_STATUT` ENUM('mode_paiement_requis','confirmation_requise','action_requise','en_traitement','reussi','annule')
-      NOT NULL DEFAULT 'mode_paiement_requis',
+    NOT NULL DEFAULT 'mode_paiement_requis',
                             `PAI_DATE_`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             `PAI_DATE_CONFIRMATION` DATETIME NULL,
                             `PAI_DATE_ANNULATION`   DATETIME NULL,
                             `PAI_LAST_EVENT_ID`      VARCHAR(64)  NULL,
                             `PAI_LAST_EVENT_TYPE`    VARCHAR(80)  NULL,
                             `PAI_LAST_EVENT_PAYLOAD` LONGTEXT     NULL,
-
                             CONSTRAINT `UK_PAI_PI` UNIQUE (`PAI_STRIPE_PAYMENT_INTENT_ID`),
                             CONSTRAINT `UK_PAI_CH` UNIQUE (`PAI_STRIPE_LATEST_CHARGE_ID`),
                             CONSTRAINT `FK_PAI_CLIENT` FOREIGN KEY (`PER_ID`) REFERENCES `CLIENT`(`PER_ID`)
@@ -258,9 +253,7 @@ CREATE TABLE `COMMANDE` (
                             `COM_DATE` DATE NOT NULL,
                             `COM_DESCRIPTION` TEXT NULL,
                             `COM_PTS_CUMULE` INT NOT NULL DEFAULT 0,
-
                             CONSTRAINT `CK_COM_PTS_NON_NEG` CHECK (`COM_PTS_CUMULE` >= 0),
-
                             CONSTRAINT `FK_COM_CLIENT`
                                 FOREIGN KEY (`PER_ID`) REFERENCES `CLIENT`(`PER_ID`)
                                     ON UPDATE RESTRICT ON DELETE RESTRICT,
@@ -325,17 +318,13 @@ CREATE TABLE `AVIS` (
                         `AVI_NOTE` TINYINT NOT NULL,
                         `AVI_DESCRIPTION` VARCHAR(500) NULL,
                         `AVI_DATE` DATE NOT NULL,
-
                         CONSTRAINT `CK_AVI_NOTE_RANGE` CHECK (`AVI_NOTE` BETWEEN 0 AND 5),
-
                         CONSTRAINT `FK_AVIS_PRO`
                             FOREIGN KEY (`PRO_ID`) REFERENCES `PRODUIT`(`PRO_ID`)
                                 ON UPDATE CASCADE ON DELETE CASCADE,
                         CONSTRAINT `FK_AVIS_PER`
                             FOREIGN KEY (`PER_ID`) REFERENCES `CLIENT`(`PER_ID`)
                                 ON UPDATE CASCADE ON DELETE CASCADE,
-
-    -- Un seul avis par client & produit
                         CONSTRAINT `UK_AVIS_UNIQUE` UNIQUE (`PRO_ID`,`PER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -350,4 +339,3 @@ CREATE TABLE `CLIENT_RABAIS` (
                                      FOREIGN KEY (`PER_ID`) REFERENCES `CLIENT`(`PER_ID`)
                                          ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
