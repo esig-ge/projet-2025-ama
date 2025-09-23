@@ -1,0 +1,72 @@
+/* --- Layout image gauche / infos droite --- */
+.product-details {
+    display: grid;
+    grid-template-columns: 280px 1fr; /* colonne image ~280px + colonne infos */
+    gap: 1.25rem;
+    align-items: start;
+    margin: 1rem 0 2rem;
+}
+
+/* Conteneur de l'image (ton <div>) */
+.product-details > div {
+    position: sticky;         /* optionnel: l’image reste visible au scroll */
+    top: 1rem;                /* idem */
+}
+
+.product-details img[data-field="image_url"] {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    object-fit: cover;
+    /* Si tu veux une vignette bien uniforme: décommente la ligne suivante */
+    /* aspect-ratio: 1 / 1; */
+}
+
+/* Panneau de droite */
+.product-details aside {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+
+/* --- Table key/value --- */
+.kv {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.kv td {
+    padding: .5rem .6rem;
+    vertical-align: top;
+    border-bottom: 1px dashed #eee;
+}
+
+/* 1ère colonne = titres en gras uniquement */
+.kv tr td:first-child {
+    width: 180px;
+    font-weight: 700;
+    color: #333;
+    white-space: nowrap;
+}
+.kv tr td:last-child {
+    font-weight: 400;
+    color: #111;
+}
+
+/* Espacement entre les “blocs” (remplace ton <br> dans <tbody>) */
+.kv tr:last-child td {
+    border-bottom: 0;
+}
+
+/* --- Responsive --- */
+@media (max-width: 720px) {
+    .product-details {
+        grid-template-columns: 1fr; /* on empile image puis tableau */
+    }
+    .product-details > div {
+        position: static;
+    }
+}
