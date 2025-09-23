@@ -269,7 +269,7 @@ $total = $subtotal + $shipping;
                     <p><strong>Le panier est vide</strong><br><span class="muted">Aucun article dans le panier.</span></p>
                 </div>
                 <p style="text-align:center; padding:0 0 16px">
-                    <a class="btn-primary" href="<?= $BASE ?>interface_catalogue_bouquet.php">Parcourir le catalogue</a>
+                    <a class="btn-primary" href="<?= $BASE ?>interface_selection_produit.php">Parcourir le catalogue</a>
                 </p>
             <?php else: ?>
 
