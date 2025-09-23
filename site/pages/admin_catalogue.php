@@ -111,17 +111,17 @@ function recup_produit($pdo)
             <?php
             $produits = recup_donnee_fleur($pdo);
             foreach ($produits as $row) {
-                echo '<td>'.htmlspecialchars($row['PRO_NOM']).'</td>';
-                echo '<td>'.htmlspecialchars($row['PRO_ID']).'</td>';
-                echo '<td>'.htmlspecialchars($row['FLE_COULEUR'] ?? '-').'</td>';
-                echo '<td>'.htmlspecialchars($row['PRO_PRIX'] ?? '-').'</td>';
-                echo '<td>'.htmlspecialchars($row['PRO_QTE_MAX'] ?? '-').'</td>';
-                echo '<td>'.htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-').'</td>';
+                echo '<td>' . htmlspecialchars($row['PRO_NOM']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['PRO_ID']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['FLE_COULEUR'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($row['PRO_PRIX'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-') . '</td>';
                 echo '<td><a href="admin_modifier_article.php?type=fleur&id=">Modifier</a></td>';
                 echo '<td><a href="admin_supprimer_article.php?type=fleur&id=">Supprimer</a></td>';
-
-
+            }
             ?>
+
             </tbody>
 
         </table>

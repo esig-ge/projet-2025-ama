@@ -144,12 +144,23 @@ function recup_donnee_emballage(PDO $pdo): array {
     <figure class="product-cover">
         <!-- Remplacer src par l’URL de l’image de l’article -->
         <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
-        <figcaption>Image actuelle</figcaption>
     </figure>
 
     <div class="product-summary">
         <h2 class="product-name"><span data-field="nom">Nom du produit</span></h2>
         <ul class="product-meta">
+            <?php
+            $fleurs = recup_donnee_fleur($pdo);
+            foreach ($fleurs as $fleur) {
+                echo '<td>' . htmlspecialchars($fleur['PRO_NOM']) . '</td>';
+                echo '<td>' . htmlspecialchars($fleur['PRO_ID']) . '</td>';
+                echo '<td>' . htmlspecialchars($fleur['FLE_COULEUR'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fleur['PRO_PRIX'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '-') . '</td>';
+                echo '<td><a href="admin_modifier_article.php?type=fleur&id=">Modifier</a></td>';
+            }
+            ?>
             <li><strong>ID :</strong> <span data-field="id">—</span></li>
             <li><strong>Type :</strong> <span data-field="type">fleur | bouquet | coffret | supplement | emballage</span></li>
             <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
