@@ -72,20 +72,51 @@ function color_hex(?string $c): ?string {
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
     $itemId = (int)($_POST['item_id'] ?? 0);
-    $kind   = $_POST['kind'] ?? 'produit';
+    $kind   = strtolower((string)($_POST['kind'] ?? 'produit'));
 
     if ($delCom > 0 && $itemId > 0) {
         $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
         $chk->execute([':c'=>$delCom, ':p'=>$perId]);
         if ($chk->fetchColumn()) {
+
             if ($kind === 'produit') {
+                $sel = $pdo->prepare("SELECT CP_QTE_COMMANDEE, CP_TYPE_PRODUIT FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id");
+                $sel->execute([':c'=>$delCom, ':id'=>$itemId]);
+                if ($r = $sel->fetch(PDO::FETCH_ASSOC)) {
+                    $q = (int)$r['CP_QTE_COMMANDEE'];
+                    $type = strtolower((string)$r['CP_TYPE_PRODUIT']);
+                    $map = [
+                        'fleur'   => ['table'=>'FLEUR',   'col'=>'FLE_QTE_STOCK', 'id'=>'PRO_ID'],
+                        'bouquet' => ['table'=>'BOUQUET', 'col'=>'BOU_QTE_STOCK', 'id'=>'PRO_ID'],
+                        'coffret' => ['table'=>'COFFRET', 'col'=>'COF_QTE_STOCK', 'id'=>'PRO_ID'],
+                    ];
+                    if (isset($map[$type]) && $q > 0) {
+                        $sql = "UPDATE {$map[$type]['table']} SET {$map[$type]['col']} = {$map[$type]['col']} + :q WHERE {$map[$type]['id']} = :id";
+                        $pdo->prepare($sql)->execute([':q'=>$q, ':id'=>$itemId]);
+                    }
+                }
                 $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
+
             } elseif ($kind === 'supplement') {
+                $sel = $pdo->prepare("SELECT CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id");
+                $sel->execute([':c'=>$delCom, ':id'=>$itemId]);
+                if ($r = $sel->fetch(PDO::FETCH_ASSOC)) {
+                    $q = (int)$r['CS_QTE_COMMANDEE'];
+                    if ($q > 0) $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK = SUP_QTE_STOCK + :q WHERE SUP_ID=:id")->execute([':q'=>$q, ':id'=>$itemId]);
+                }
                 $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
-            } else {
+
+            } else { // emballage
+                $sel = $pdo->prepare("SELECT CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id");
+                $sel->execute([':c'=>$delCom, ':id'=>$itemId]);
+                if ($r = $sel->fetch(PDO::FETCH_ASSOC)) {
+                    $q = (int)$r['CE_QTE'];
+                    if ($q > 0) $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK = EMB_QTE_STOCK + :q WHERE EMB_ID=:id")->execute([':q'=>$q, ':id'=>$itemId]);
+                }
                 $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
             }
-            $_SESSION['message'] = "Article supprimé de votre commande.";
+
+            $_SESSION['message'] = "Article supprimé et stock rétabli.";
         } else {
             $_SESSION['message'] = "Action non autorisée.";
         }
@@ -95,33 +126,57 @@ if (($_POST['action'] ?? '') === 'del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
+
 /* ========= A2) SUPPRESSION MULTIPLE ========= */
 if (($_POST['action'] ?? '') === 'bulk_del') {
-    $delCom = (int)($_POST['com_id'] ?? 0);
+    $delCom   = (int)($_POST['com_id'] ?? 0);
     $selected = $_POST['sel'] ?? [];
     if ($delCom > 0 && is_array($selected) && count($selected)) {
         $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
         $chk->execute([':c'=>$delCom, ':p'=>$perId]);
         if ($chk->fetchColumn()) {
-            $pdo->beginTransaction();
-            try {
-                $stmtP = $pdo->prepare("DELETE FROM COMMANDE_PRODUIT   WHERE COM_ID=:c AND PRO_ID=:id");
-                $stmtS = $pdo->prepare("DELETE FROM COMMANDE_SUPP     WHERE COM_ID=:c AND SUP_ID=:id");
-                $stmtE = $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id");
-                foreach ($selected as $token) {
-                    if (!preg_match('/^(produit|supplement|emballage):(\d+)$/', $token, $m)) continue;
-                    [$all,$k,$id] = $m; $id = (int)$id;
-                    if ($id <= 0) continue;
-                    if ($k === 'produit')   $stmtP->execute([':c'=>$delCom, ':id'=>$id]);
-                    elseif ($k === 'supplement') $stmtS->execute([':c'=>$delCom, ':id'=>$id]);
-                    else $stmtE->execute([':c'=>$delCom, ':id'=>$id]);
+            foreach ($selected as $token) {
+                if (!preg_match('/^(produit|supplement|emballage):(\d+)$/', $token, $m)) continue;
+                $kind = $m[1]; $id = (int)$m[2];
+
+                if ($kind === 'produit') {
+                    $sel = $pdo->prepare("SELECT CP_QTE_COMMANDEE, CP_TYPE_PRODUIT FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id");
+                    $sel->execute([':c'=>$delCom, ':id'=>$id]);
+                    if ($r = $sel->fetch(PDO::FETCH_ASSOC)) {
+                        $q = (int)$r['CP_QTE_COMMANDEE'];
+                        $type = strtolower((string)$r['CP_TYPE_PRODUIT']);
+                        $map = [
+                            'fleur'   => ['table'=>'FLEUR',   'col'=>'FLE_QTE_STOCK', 'id'=>'PRO_ID'],
+                            'bouquet' => ['table'=>'BOUQUET', 'col'=>'BOU_QTE_STOCK', 'id'=>'PRO_ID'],
+                            'coffret' => ['table'=>'COFFRET', 'col'=>'COF_QTE_STOCK', 'id'=>'PRO_ID'],
+                        ];
+                        if (isset($map[$type]) && $q > 0) {
+                            $sql = "UPDATE {$map[$type]['table']} SET {$map[$type]['col']} = {$map[$type]['col']} + :q WHERE {$map[$type]['id']} = :id";
+                            $pdo->prepare($sql)->execute([':q'=>$q, ':id'=>$id]);
+                        }
+                    }
+                    $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id")->execute([':c'=>$delCom, ':id'=>$id]);
+
+                } elseif ($kind === 'supplement') {
+                    $sel = $pdo->prepare("SELECT CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id");
+                    $sel->execute([':c'=>$delCom, ':id'=>$id]);
+                    if ($r = $sel->fetch(PDO::FETCH_ASSOC)) {
+                        $q = (int)$r['CS_QTE_COMMANDEE'];
+                        if ($q > 0) $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK = SUP_QTE_STOCK + :q WHERE SUP_ID=:id")->execute([':q'=>$q, ':id'=>$id]);
+                    }
+                    $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id")->execute([':c'=>$delCom, ':id'=>$id]);
+
+                } else { // emballage
+                    $sel = $pdo->prepare("SELECT CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id");
+                    $sel->execute([':c'=>$delCom, ':id'=>$id]);
+                    if ($r = $sel->fetch(PDO::FETCH_ASSOC)) {
+                        $q = (int)$r['CE_QTE'];
+                        if ($q > 0) $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK = EMB_QTE_STOCK + :q WHERE EMB_ID=:id")->execute([':q'=>$q, ':id'=>$id]);
+                    }
+                    $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id")->execute([':c'=>$delCom, ':id'=>$id]);
                 }
-                $pdo->commit();
-                $_SESSION['message'] = "Sélection supprimée.";
-            } catch (Throwable $e) {
-                $pdo->rollBack();
-                $_SESSION['message'] = "Erreur lors de la suppression multiple.";
             }
+            $_SESSION['message'] = "Sélection supprimée et stocks rétablis.";
         } else {
             $_SESSION['message'] = "Action non autorisée.";
         }
@@ -131,6 +186,7 @@ if (($_POST['action'] ?? '') === 'bulk_del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
+
 /* ========= A3) VIDER TOUT LE PANIER ========= */
 if (($_POST['action'] ?? '') === 'clear_all') {
     $delCom = (int)($_POST['com_id'] ?? 0);
@@ -138,23 +194,54 @@ if (($_POST['action'] ?? '') === 'clear_all') {
         $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
         $chk->execute([':c'=>$delCom, ':p'=>$perId]);
         if ($chk->fetchColumn()) {
-            $pdo->beginTransaction();
-            try {
-                $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c")->execute([':c'=>$delCom]);
-                $pdo->prepare("DELETE FROM COMMANDE_SUPP      WHERE COM_ID=:c")->execute([':c'=>$delCom]);
-                $pdo->prepare("DELETE FROM COMMANDE_PRODUIT   WHERE COM_ID=:c")->execute([':c'=>$delCom]);
-                $pdo->commit();
-                $_SESSION['message'] = "Panier vide";
-            } catch (Throwable $e) {
-                $pdo->rollBack();
-                $_SESSION['message'] = "Erreur lors du vidage du panier.";
+
+            // produits -> restock
+            $st = $pdo->prepare("SELECT PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT FROM COMMANDE_PRODUIT WHERE COM_ID=:c");
+            $st->execute([':c'=>$delCom]);
+            while ($r = $st->fetch(PDO::FETCH_ASSOC)) {
+                $q = (int)$r['CP_QTE_COMMANDEE'];
+                $type = strtolower((string)$r['CP_TYPE_PRODUIT']);
+                $pid  = (int)$r['PRO_ID'];
+                $map = [
+                    'fleur'   => ['table'=>'FLEUR',   'col'=>'FLE_QTE_STOCK', 'id'=>'PRO_ID'],
+                    'bouquet' => ['table'=>'BOUQUET', 'col'=>'BOU_QTE_STOCK', 'id'=>'PRO_ID'],
+                    'coffret' => ['table'=>'COFFRET', 'col'=>'COF_QTE_STOCK', 'id'=>'PRO_ID'],
+                ];
+                if (isset($map[$type]) && $q > 0) {
+                    $sql = "UPDATE {$map[$type]['table']} SET {$map[$type]['col']} = {$map[$type]['col']} + :q WHERE {$map[$type]['id']} = :id";
+                    $pdo->prepare($sql)->execute([':q'=>$q, ':id'=>$pid]);
+                }
             }
+
+            // suppléments -> restock
+            $st = $pdo->prepare("SELECT SUP_ID, CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c");
+            $st->execute([':c'=>$delCom]);
+            while ($r = $st->fetch(PDO::FETCH_ASSOC)) {
+                $q = (int)$r['CS_QTE_COMMANDEE'];
+                if ($q > 0) $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK = SUP_QTE_STOCK + :q WHERE SUP_ID=:id")->execute([':q'=>$q, ':id'=>$r['SUP_ID']]);
+            }
+
+            // emballages -> restock
+            $st = $pdo->prepare("SELECT EMB_ID, CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c");
+            $st->execute([':c'=>$delCom]);
+            while ($r = $st->fetch(PDO::FETCH_ASSOC)) {
+                $q = (int)$r['CE_QTE'];
+                if ($q > 0) $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK = EMB_QTE_STOCK + :q WHERE EMB_ID=:id")->execute([':q'=>$q, ':id'=>$r['EMB_ID']]);
+            }
+
+            // purge
+            $pdo->prepare("DELETE FROM COMMANDE_PRODUIT   WHERE COM_ID=:c")->execute([':c'=>$delCom]);
+            $pdo->prepare("DELETE FROM COMMANDE_SUPP     WHERE COM_ID=:c")->execute([':c'=>$delCom]);
+            $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c")->execute([':c'=>$delCom]);
+
+            $_SESSION['message'] = "Panier vidé et stocks rétablis.";
         } else {
             $_SESSION['message'] = "Action non autorisée.";
         }
     }
     header("Location: ".$BASE."commande.php"); exit;
 }
+
 
 /* ========= B) CHARGEMENT DE LA COMMANDE + LIGNES ========= */
 $sql = "SELECT COM_ID, COM_DATE

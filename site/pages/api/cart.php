@@ -281,64 +281,78 @@ try {
             ok(['com_id'=>$comId, 'items'=>$items, 'subtotal'=>subtotal($items)]);
         }
 
-        /* ===== REMOVE (récrédit stock) ===== */
+        /* ---------- REMOVE (récrédite le stock) ---------- */
         case 'remove': {
             $comId = (int)($_SESSION['com_id'] ?? 0);
             if ($comId <= 0) err('no_order','Aucune commande ouverte');
 
-            // PRODUIT (fleur)
-            if (isset($_POST['pro_id']) || isset($_GET['pro_id'])) {
-                $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
-                if ($proId > 0) {
-                    $sel = $pdo->prepare("SELECT CP_QTE_COMMANDEE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:p");
-                    $sel->execute([':c'=>$comId, ':p'=>$proId]);
-                    $q = (int)($sel->fetchColumn() ?: 0);
+            $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
+            $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
+            $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
 
-                    if ($q > 0) {
-                        $pdo->prepare("UPDATE FLEUR SET FLE_QTE_STOCK = FLE_QTE_STOCK + :q WHERE PRO_ID=:p")
-                            ->execute([':q'=>$q, ':p'=>$proId]);
+            if ($proId > 0) {
+                // lire la ligne + type
+                $sel = $pdo->prepare("
+            SELECT CP_QTE_COMMANDEE, CP_TYPE_PRODUIT
+            FROM COMMANDE_PRODUIT
+            WHERE COM_ID=:c AND PRO_ID=:p
+        ");
+                $sel->execute(['c'=>$comId, 'p'=>$proId]);
+                if ($row = $sel->fetch(PDO::FETCH_ASSOC)) {
+                    $q = (int)$row['CP_QTE_COMMANDEE'];
+                    $type = strtolower(trim((string)$row['CP_TYPE_PRODUIT']));
+                    $map = [
+                        'fleur'   => ['table'=>'FLEUR',   'col'=>'FLE_QTE_STOCK', 'id'=>'PRO_ID'],
+                        'bouquet' => ['table'=>'BOUQUET', 'col'=>'BOU_QTE_STOCK', 'id'=>'PRO_ID'],
+                        'coffret' => ['table'=>'COFFRET', 'col'=>'COF_QTE_STOCK', 'id'=>'PRO_ID'],
+                    ];
+                    if (isset($map[$type]) && $q > 0) {
+                        $sql = "UPDATE {$map[$type]['table']}
+                        SET {$map[$type]['col']} = {$map[$type]['col']} + :qadd
+                        WHERE {$map[$type]['id']} = :id";
+                        $pdo->prepare($sql)->execute(['qadd'=>$q, 'id'=>$proId]);
                     }
-                    $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:p")
-                        ->execute([':c'=>$comId, ':p'=>$proId]);
                 }
+                $pdo->prepare("DELETE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:p")
+                    ->execute(['c'=>$comId, 'p'=>$proId]);
             }
-            // EMBALLAGE
-            elseif (isset($_POST['emb_id']) || isset($_GET['emb_id'])) {
-                $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
-                if ($embId > 0) {
-                    $sel = $pdo->prepare("SELECT CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:e");
-                    $sel->execute([':c'=>$comId, ':e'=>$embId]);
-                    $q = (int)($sel->fetchColumn() ?: 0);
+            elseif ($embId > 0) {
+                $sel = $pdo->prepare("SELECT CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:e");
+                $sel->execute(['c'=>$comId, 'e'=>$embId]);
+                if ($row = $sel->fetch(PDO::FETCH_ASSOC)) {
+                    $q = (int)$row['CE_QTE'];
                     if ($q > 0) {
-                        $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK = EMB_QTE_STOCK + :q WHERE EMB_ID=:e")
-                            ->execute([':q'=>$q, ':e'=>$embId]);
+                        $pdo->prepare("
+                    UPDATE EMBALLAGE SET EMB_QTE_STOCK = EMB_QTE_STOCK + :qadd WHERE EMB_ID=:id
+                ")->execute(['qadd'=>$q, 'id'=>$embId]);
                     }
-                    $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:e")
-                        ->execute([':c'=>$comId, ':e'=>$embId]);
                 }
+                $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:e")
+                    ->execute(['c'=>$comId, 'e'=>$embId]);
             }
-            // SUPPLÉMENT
-            elseif (isset($_POST['sup_id']) || isset($_GET['sup_id'])) {
-                $supId = (int)($_POST['sup_id'] ?? $_GET['sup_id'] ?? 0);
-                if ($supId > 0) {
-                    $sel = $pdo->prepare("SELECT CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:s");
-                    $sel->execute([':c'=>$comId, ':s'=>$supId]);
-                    $q = (int)($sel->fetchColumn() ?: 0);
+            elseif ($supId > 0) {
+                $sel = $pdo->prepare("SELECT CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:s");
+                $sel->execute(['c'=>$comId, 's'=>$supId]);
+                if ($row = $sel->fetch(PDO::FETCH_ASSOC)) {
+                    $q = (int)$row['CS_QTE_COMMANDEE'];
                     if ($q > 0) {
-                        $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK = SUP_QTE_STOCK + :q WHERE SUP_ID=:s")
-                            ->execute([':q'=>$q, ':s'=>$supId]);
+                        $pdo->prepare("
+                    UPDATE SUPPLEMENT SET SUP_QTE_STOCK = SUP_QTE_STOCK + :qadd WHERE SUP_ID=:id
+                ")->execute(['qadd'=>$q, 'id'=>$supId]);
                     }
-                    $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:s")
-                        ->execute([':c'=>$comId, ':s'=>$supId]);
                 }
+                $pdo->prepare("DELETE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:s")
+                    ->execute(['c'=>$comId, 's'=>$supId]);
             }
             else {
                 err('missing_id','Aucun identifiant fourni');
             }
 
-            $items = listItems($pdo, $comId);
-            ok(['com_id'=>$comId, 'items'=>$items, 'subtotal'=>subtotal($items)]);
+            $items    = listItems($pdo, $comId);
+            $subtotal = subtotal($items);
+            ok(['com_id'=>$comId, 'items'=>$items, 'subtotal'=>$subtotal]);
         }
+
 
         default:
             err('bad_request','Action inconnue',400);
