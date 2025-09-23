@@ -149,7 +149,7 @@ function recup_donnee_emballage(PDO $pdo): array {
             <?php
             $fleurs = recup_donnee_fleur($pdo);
             foreach ($fleurs as $fleur) { ?>
-                <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
+<!--                <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />-->
                 <tr>
                     <td><strong>Nom</strong></td>
                     <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
