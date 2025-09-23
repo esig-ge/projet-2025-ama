@@ -1,5 +1,5 @@
 <?php
-// Base URL (avec slash final)
+// Base URL (avec slash final robuste)
 if (!isset($BASE)) {
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
     $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
@@ -18,27 +18,27 @@ $imgMap = [
     'noir'       => ['id' => 'c-noir',   'file' => $BASE.'img/noir.png',         'class' => 'noire',   'swatch' => '#111',     'alt' => 'Rose noire',       'title' => 'Noir'],
 ];
 
-// Récupération BDD
+// Récupération BDD (on garde simple)
 $sql = "SELECT p.PRO_ID, p.PRO_NOM, f.FLE_COULEUR, COALESCE(f.FLE_QTE_STOCK,0) AS STOCK
         FROM FLEUR f
         JOIN PRODUIT p ON p.PRO_ID = f.PRO_ID
         ORDER BY FIELD(f.FLE_COULEUR,'rouge','rose clair','rose','blanc','bleu','noir')";
 $rows = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-// Index par couleur (seulement celles présentes en BDD)
+// Index par couleur (seulement celles réellement présentes)
 $roses = [];
 foreach ($rows as $r) {
     $c = $r['FLE_COULEUR'];
     if (isset($imgMap[$c])) $roses[$c] = $r;
 }
 
-// 1re couleur existante (pour l’aperçu si tout est à 0)
+// 1re couleur existante (fallback visuel)
 $fallbackClass = null;
 foreach ($imgMap as $coul => $meta) {
     if (isset($roses[$coul])) { $fallbackClass = $meta['class']; break; }
 }
 
-// 1re couleur EN STOCK (pour cocher par défaut)
+// 1re couleur EN STOCK (cochée par défaut)
 $initialCheckedId = null;
 $initialMax       = 1;
 foreach ($imgMap as $coul => $meta) {
@@ -61,17 +61,21 @@ foreach ($imgMap as $coul => $meta) {
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleFleurUnique.css">
 
-    <!-- Styles pour messages stock -->
+    <!-- Micro-styles utiles -->
     <style>
-        .stock-msg{
-            display:none; align-items:center; gap:8px;
-            margin:12px 0 0; padding:10px 14px; border-radius:12px;
-            background:#fff5f7; border:1px solid #ffd6e0; color:#7a0000; font-size:.95rem;
-        }
-        .stock-msg.show{ display:inline-flex; }
-        .stock-msg .dot{ width:8px; height:8px; border-radius:50%; background:#d90429; display:inline-block; }
-        .img-rose{ display:none; }
-        .img-rose.show{ display:block; }
+        .stock-msg{display:none;align-items:center;gap:8px;margin:12px 0 0;padding:10px 14px;border-radius:12px;background:#fff5f7;border:1px solid #ffd6e0;color:#7a0000;font-size:.95rem}
+        .stock-msg.show{display:inline-flex}
+        .stock-msg .dot{width:8px;height:8px;border-radius:50%;background:#d90429;display:inline-block}
+        .img-rose{display:none}
+        .img-rose.show{display:block}
+        .swatches{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+        .swatch{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:2px solid #ddd;cursor:pointer}
+        .swatch>span{display:block;width:18px;height:18px;border-radius:50%;background:var(--swatch)}
+        .qty{margin:14px 0 18px;width:100px}
+        .btn-add{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #ccc;background:#111;color:#fff;cursor:pointer}
+        .btn-add[disabled]{opacity:.6;cursor:not-allowed}
+        .btn_accueil{display:flex;gap:10px;margin-top:18px}
+        .button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;color:#111}
     </style>
 
     <!-- Expose BASE + API_URL au JS -->
@@ -80,7 +84,7 @@ foreach ($imgMap as $coul => $meta) {
         window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
 
-    <!-- (On laisse ton JS global) -->
+    <!-- JS global panier -->
     <script src="<?= $BASE ?>js/commande.js?v=qty4" defer></script>
 </head>
 
@@ -96,7 +100,7 @@ foreach ($imgMap as $coul => $meta) {
                     Elle est le symbole d’un amour né au premier regard et incarne l’unicité.
                 </p>
 
-                <!-- Radios dynamiques (disabled si rupture ; 1re en stock cochée) -->
+                <!-- Radios couleurs dynamiques (disabled si rupture) -->
                 <?php foreach ($imgMap as $coul => $meta): if (!isset($roses[$coul])) continue;
                     $proId   = (int)$roses[$coul]['PRO_ID'];
                     $proNom  = $roses[$coul]['PRO_NOM'];
@@ -152,31 +156,21 @@ foreach ($imgMap as $coul => $meta) {
                     <span class="text"></span>
                 </div>
 
-                <!-- Quantité : max = stock ; disabled si 0 -->
+                <!-- Quantité : max = stock ; disabled si aucune couleur en stock -->
                 <input
                         type="number"
                         class="qty"
                         name="qty"
                         min="1"
-                        max="<?= max(1, $initialMax) ?>"
+                        max="<?= max(1, (int)$initialMax) ?>"
                         step="1"
                         value="1"
                         inputmode="numeric"
                     <?= $initialCheckedId ? '' : 'disabled' ?>
                 >
 
-                <!-- Bouton -->
-                <?php
-                $initialStock = 0;
-                if ($initialCheckedId) {
-                    foreach ($imgMap as $coul => $meta) {
-                        if ($meta['id'] === $initialCheckedId && isset($roses[$coul])) {
-                            $initialStock = (int)$roses[$coul]['STOCK']; break;
-                        }
-                    }
-                }
-                ?>
-                <button class="btn" type="button" onclick="selectRose(this)" <?= ($initialStock > 0) ? '' : 'disabled' ?>>
+                <!-- Bouton AJOUTER (clean, sans $row*) -->
+                <button id="btn-add-rose" class="btn-add" type="button">
                     Sélectionner
                 </button>
             </div>
@@ -191,139 +185,95 @@ foreach ($imgMap as $coul => $meta) {
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
-<!-- UX : image fallback, messages rupture & “max stock”, et SELECTROSE qui affiche le nom -->
+<!-- Script local léger : gestion visuel + binding du clic. NE PAS redéfinir selectRose ici. -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const radios = document.querySelectorAll('.color-radio');
-        const qty    = document.querySelector('.qty');
-        const btn    = document.querySelector('.btn');
-        const msgBox = document.getElementById('stockMsg');
-        const msgTxt = msgBox ? msgBox.querySelector('.text') : null;
-        const images = document.querySelectorAll('.img-rose');
-        const fallback = document.body.dataset.fallback || '';
+        const radios  = document.querySelectorAll('.color-radio');
+        const qty     = document.querySelector('.qty');
+        const msgBox  = document.getElementById('stockMsg');
+        const msgTxt  = msgBox ? msgBox.querySelector('.text') : null;
+        const images  = document.querySelectorAll('.img-rose');
+        const fallback= document.body.dataset.fallback || '';
+        const btn     = document.getElementById('btn-add-rose');
 
         function showImageByClass(cls){
-            images.forEach(img => {
-                img.classList.toggle('show', img.classList.contains(cls));
-            });
+            images.forEach(img => img.classList.toggle('show', img.classList.contains(cls)));
         }
-
-        function currentSelection(){
+        function selected(){
             const sel = document.querySelector('.color-radio:checked');
             if (!sel) return null;
             return {
-                proId: parseInt(sel.dataset.proId || '0',10),
-                name:  sel.dataset.name || ('Produit #' + sel.dataset.proId),
-                stock: parseInt(sel.dataset.stock || '0',10),
-                imgCls: sel.dataset.imgClass || ''
+                id:   parseInt(sel.dataset.proId || '0', 10),
+                name: sel.dataset.name || ('Produit #' + sel.dataset.proId),
+                cls:  sel.dataset.imgClass || '',
+                stk:  parseInt(sel.dataset.stock || '0', 10)
             };
         }
-
-        function showMessage(html){
-            if (!msgBox || !msgTxt) return;
-            msgTxt.innerHTML = html;
-            msgBox.classList.add('show');
-        }
-        function hideMessage(){ if (msgBox) msgBox.classList.remove('show'); }
+        function showMsg(html){ if (msgBox && msgTxt){ msgTxt.innerHTML = html; msgBox.classList.add('show'); } }
+        function hideMsg(){ if (msgBox) msgBox.classList.remove('show'); }
 
         function refreshUI(){
-            const sel = currentSelection();
-            if (sel){
-                if (sel.imgCls) showImageByClass(sel.imgCls);
+            const s = selected();
+            if (s){
+                if (s.cls) showImageByClass(s.cls);
                 if (qty){
-                    const max = Math.max(1, sel.stock);
-                    qty.max = max;
-                    qty.disabled = (sel.stock <= 0);
-                    if (parseInt(qty.value,10) > max) qty.value = max;
+                    const m = Math.max(1, s.stk);
+                    qty.max = m;
+                    qty.disabled = (s.stk <= 0);
+                    if ((parseInt(qty.value,10) || 1) > m) qty.value = m;
                 }
-                if (btn) btn.disabled = (sel.stock <= 0);
-                hideMessage();
+                if (btn) btn.disabled = (s.stk <= 0);
+                hideMsg();
             } else {
                 if (fallback) showImageByClass(fallback);
                 if (qty){ qty.disabled = true; qty.max = 1; qty.value = 1; }
                 if (btn) btn.disabled = true;
-                hideMessage();
+                hideMsg();
             }
         }
 
-        // Pastille cliquée alors que la radio est disabled -> message rupture
+        // Pastilles cliquées si rupture -> message
         document.querySelectorAll('.swatch').forEach(label => {
             label.addEventListener('click', function(e){
                 if (this.dataset.disabled === '1') {
                     const name = this.dataset.label || 'Cette rose';
-                    showMessage(`🌸 <strong>${name}</strong> est actuellement en <strong>rupture de stock</strong>.`);
+                    showMsg(`🌸 <strong>${name}</strong> est en <strong>rupture de stock</strong>.`);
                     e.preventDefault();
                 }
             });
         });
 
-        // Saisie quantité > stock -> message et clamp
+        // Clamp quantité
         ['input','change','blur'].forEach(ev => {
             if (!qty) return;
             qty.addEventListener(ev, function(){
-                const sel = currentSelection(); if (!sel) return;
-                const max = Math.max(1, sel.stock);
-                const val = parseInt(qty.value || '1', 10);
-                if (val > max){
-                    qty.value = max;
-                    showMessage(`ℹ️ Il reste <strong>${sel.stock}</strong> en stock pour <strong>${sel.name}</strong>. La quantité a été ajustée à <strong>${max}</strong>.`);
-                } else {
-                    hideMessage();
-                }
+                const s = selected(); if (!s) return;
+                const m = Math.max(1, s.stk);
+                const v = parseInt(qty.value || '1', 10);
+                if (v > m){
+                    qty.value = m;
+                    showMsg(`ℹ️ Il reste <strong>${s.stk}</strong> en stock pour <strong>${s.name}</strong>. Quantité ajustée à <strong>${m}</strong>.`);
+                } else hideMsg();
             });
         });
 
         radios.forEach(r => r.addEventListener('change', refreshUI));
 
-        // Initialisation
+        // Init images & UI
         const checked = document.querySelector('.color-radio:checked');
         if (checked) showImageByClass(checked.dataset.imgClass || fallback);
         else if (fallback) showImageByClass(fallback);
         refreshUI();
 
-        // === Remplace la fonction globale selectRose pour afficher le NOM dans le toast ===
-        window.selectRose = async function(btnEl){
-            const sel = currentSelection();
-            if (!sel) return;
-
-            const q = parseInt(qty?.value || '1', 10);
-            if (q > sel.stock){
-                // sécurité si l’utilisateur a forcé la valeur
-                qty.value = sel.stock;
-                showMessage(`ℹ️ Il reste <strong>${sel.stock}</strong> en stock pour <strong>${sel.name}</strong>. La quantité a été ajustée.`);
-                return;
-            }
-            if (sel.stock <= 0){
-                showMessage(`🌸 <strong>${sel.name}</strong> est en <strong>rupture de stock</strong>.`);
-                return;
-            }
-
-            try {
-                // Appel simple vers l’API panier (POST urlencoded).
-                // Adapte les clés si ton API diffère (action/type/pro_id/qty).
-                const res = await fetch(window.API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        action: 'add',
-                        type:   'fleur',
-                        pro_id: String(sel.proId),
-                        qty:    String(q)
-                    })
-                });
-                const data = await res.json().catch(()=> ({}));
-                if (!res.ok || (data && data.ok === false)) throw new Error(data.error || 'Erreur panier');
-
-                // Toast lisible avec le NOM
-                if (typeof window.toast === 'function') window.toast(`${sel.name} a bien été ajoutée au panier !`, 'success');
-                else if (typeof window.showToast === 'function') window.showToast(`${sel.name} a bien été ajoutée au panier !`, 'success');
-                else alert(`${sel.name} a bien été ajoutée au panier !`);
-            } catch (e){
-                if (typeof window.toast === 'function') window.toast(`Impossible d'ajouter ${sel.name}.`, 'error');
-                else if (typeof window.showToast === 'function') window.showToast(`Impossible d'ajouter ${sel.name}.`, 'error');
-                else alert(`Impossible d'ajouter ${sel.name}.`);
-            }
-        };
+        // 🔗 Bind: utiliser la vraie selectRose de commande.js
+        if (btn) {
+            btn.addEventListener('click', () => {
+                // pousse la qty actuelle dans data-qty pour commande.js (resolveQty)
+                const q = parseInt(qty?.value || '1', 10);
+                if (Number.isFinite(q) && q > 0) btn.dataset.qty = String(q);
+                window.selectRose(btn); // défini dans js/commande.js
+            });
+        }
     });
 </script>
 </body>

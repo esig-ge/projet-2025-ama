@@ -230,7 +230,7 @@ async function addEmballage(embId, btn){
 
     if (btn) btn.disabled = true;
     try {
-        await callApi('add', { emb_id: id, qty: 1 });
+        await callApi('add_emballage', { emb_id: id, qty: 1 });
         if (document.getElementById('cart-list')) await renderCart();
 
         const name = btn?.dataset?.embName || `Emballage #${id}`;
@@ -259,7 +259,7 @@ async function addSupplement(supId, btn){
 
     if (btn) btn.disabled = true;
     try {
-        await callApi('add', { sup_id: id, qty }); // ← qty dynamique
+        await callApi('add_supplement', { sup_id: id, qty }); // ← qty dynamique
         if (document.getElementById('cart-list')) await renderCart();
 
         const name = btn?.dataset?.supName || `Supplément #${id}`;
@@ -323,7 +323,8 @@ function toastError(btn, fallback, err){
         || btn?.dataset?.embName
         || btn?.dataset?.suppName
         || fallback;
-    showToast(`Échec de l’ajout : ${label}, vous n'êtes pas connecté(e)`, 'error', 3600, 'Erreur');
+    const msg = (err && err.message) ? String(err.message) : 'Erreur inconnue';
+    showToast(`Échec de l’ajout : ${label} — ${msg}`, 'error', 3600, 'Erreur');
     console.error(err);
 }
 

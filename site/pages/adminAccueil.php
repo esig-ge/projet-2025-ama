@@ -126,7 +126,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'U
         </div>
         <div class="top-actions">
             <a class="btn ghost" href="<?= $BASE ?>index.php">Voir le site</a>
-            <a class="btn" href="<?= $BASE ?>logout.php">Se déconnecter</a>
+            <a class="btn" href="<?= $BASE ?>admin_deconnexion.php">Se déconnecter</a>
         </div>
     </header>
 
