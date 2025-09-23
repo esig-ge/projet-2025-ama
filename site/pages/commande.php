@@ -390,11 +390,6 @@ $total = $subtotal + $shipping;
             <?php endif; ?>
         </div>
     </section>
-
-    <div class="btn_accueil">
-        <a href="<?= $BASE ?>interface_emballage.php" class="button">Retour</a>
-    </div>
-
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
