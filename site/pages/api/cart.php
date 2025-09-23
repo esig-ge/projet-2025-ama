@@ -97,55 +97,82 @@ try {
     switch ($action) {
 
         /* ===== ADD (FLEUR: décrément stock) ===== */
+        /* ===== Fleur/Bouquet/Coffret) ===== */
         case 'add': {
             $proId = (int)($_POST['pro_id'] ?? $_GET['pro_id'] ?? 0);
             $qty   = read_qty();
             if ($proId <= 0) err('validation', 'Produit invalide', 422);
 
-            // produit existe ?
-            $ck = $pdo->prepare("SELECT PRO_ID FROM PRODUIT WHERE PRO_ID=:id");
-            $ck->execute([':id'=>$proId]);
-            if (!$ck->fetchColumn()) err('not_found', 'Produit introuvable', 404);
+            // 1) Déterminer le sous-type à partir des tables
+            $cands = [
+                ['tbl'=>'FLEUR',   'stock'=>'FLE_QTE_STOCK', 'idcol'=>'PRO_ID', 'label'=>'fleur'],
+                ['tbl'=>'BOUQUET', 'stock'=>'BOU_QTE_STOCK', 'idcol'=>'PRO_ID', 'label'=>'bouquet'],
+                ['tbl'=>'COFFRET', 'stock'=>'COF_QTE_STOCK', 'idcol'=>'PRO_ID', 'label'=>'coffret'],
+            ];
+            $found = null; $stock = 0;
 
-            // vérifier qu'on est bien une fleur et lire le stock
-            $sf = $pdo->prepare("SELECT FLE_QTE_STOCK FROM FLEUR WHERE PRO_ID=:id");
-            $sf->execute([':id'=>$proId]);
-            $stock = $sf->fetchColumn();
-            if ($stock === false) err('not_fleur', 'Produit non présent dans FLEUR', 400);
+            foreach ($cands as $c) {
+                $q = $pdo->prepare("SELECT {$c['stock']} AS s FROM {$c['tbl']} WHERE {$c['idcol']}=:id LIMIT 1");
+                $q->execute(['id'=>$proId]);
+                $val = $q->fetchColumn();
+                if ($val !== false) {
+                    $found = $c;
+                    $stock = (int)$val;
+                    break;
+                }
+            }
+            if (!$found) err('not_found','Produit introuvable dans FLEUR/BOUQUET/COFFRET',404);
+            if ($stock < $qty) err('stock','Stock insuffisant',409);
 
-            $stock = (int)$stock;
-            if ($stock < $qty) err('stock', 'Stock insuffisant', 409);
+            // 2) Récupérer le nom produit (optionnel pour le retour / toasts)
+            $name = (function(PDO $pdo, int $id){
+                $s = $pdo->prepare("SELECT PRO_NOM FROM PRODUIT WHERE PRO_ID=:id");
+                $s->execute(['id'=>$id]);
+                return (string)($s->fetchColumn() ?: ("Produit #".$id));
+            })($pdo, $proId);
 
             $comId = getOpenOrderId($pdo, $perId);
 
-            // 1) décrément stock (simple)
-            $u = $pdo->prepare("
-    UPDATE SUPPLEMENT
-    SET SUP_QTE_STOCK = SUP_QTE_STOCK - :qdec
-    WHERE SUP_ID = :id AND SUP_QTE_STOCK >= :qmin
-");
-            $u->execute(['qdec'=>$qty, 'qmin'=>$qty, 'id'=>$supId]);
-            // 2) upsert ligne -> version *sans* ON DUPLICATE KEY (compat schémas sans index unique)
+            // 3) Décrément stock (placeholders uniques)
+            $sql = "UPDATE {$found['tbl']}
+            SET {$found['stock']} = {$found['stock']} - :qdec
+            WHERE {$found['idcol']} = :id AND {$found['stock']} >= :qmin";
+            $u = $pdo->prepare($sql);
+            $u->execute(['qdec'=>$qty, 'qmin'=>$qty, 'id'=>$proId]);
+            if ($u->rowCount() === 0) err('stock','Stock insuffisant (conflit)',409);
+
+            // 4) Upsert COMMANDE_PRODUIT (sans ON DUPLICATE)
             $sel = $pdo->prepare("SELECT CP_QTE_COMMANDEE FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:p");
-            $sel->execute([':c'=>$comId, ':p'=>$proId]);
+            $sel->execute(['c'=>$comId, 'p'=>$proId]);
             $cur = $sel->fetchColumn();
+
             if ($cur === false) {
                 $ins = $pdo->prepare("
-                    INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
-                    VALUES (:c, :p, :q, 'fleur')
-                ");
-                $ins->execute([':c'=>$comId, ':p'=>$proId, ':q'=>$qty]);
+            INSERT INTO COMMANDE_PRODUIT (COM_ID, PRO_ID, CP_QTE_COMMANDEE, CP_TYPE_PRODUIT)
+            VALUES (:c, :p, :q, :t)
+        ");
+                $ins->execute(['c'=>$comId, 'p'=>$proId, 'q'=>$qty, 't'=>$found['label']]);
             } else {
                 $newQ = (int)$cur + $qty;
                 $upd = $pdo->prepare("
-                    UPDATE COMMANDE_PRODUIT SET CP_QTE_COMMANDEE=:q
-                    WHERE COM_ID=:c AND PRO_ID=:p
-                ");
-                $upd->execute([':q'=>$newQ, ':c'=>$comId, ':p'=>$proId]);
+            UPDATE COMMANDE_PRODUIT SET CP_QTE_COMMANDEE=:q
+            WHERE COM_ID=:c AND PRO_ID=:p
+        ");
+                $upd->execute(['q'=>$newQ, 'c'=>$comId, 'p'=>$proId]);
             }
 
-            $items = listItems($pdo, $comId);
-            ok(['com_id'=>$comId, 'items'=>$items, 'subtotal'=>subtotal($items)]);
+            // 5) Réponse homogène (utile si tu veux afficher le stock restant)
+            $items  = listItems($pdo, $comId);
+            $left   = max(0, $stock - $qty);
+            ok([
+                'com_id'    => $comId,
+                'type'      => $found['label'],   // 'bouquet' | 'fleur' | 'coffret'
+                'proId'     => $proId,
+                'name'      => $name,
+                'stockLeft' => $left,
+                'items'     => $items,
+                'subtotal'  => subtotal($items),
+            ]);
         }
 
         /* ---------- ADD_SUPPLEMENT (décrémente stock + renvoie name/stockLeft) ---------- */
