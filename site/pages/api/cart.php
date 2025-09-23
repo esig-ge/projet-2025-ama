@@ -210,38 +210,67 @@ try {
             ]);
         }
 
-        /* ===== ADD_EMBALLAGE ===== */
+        /* ---------- ADD_EMBALLAGE (décrémente stock + renvoie name/stockLeft) ---------- */
         case 'add_emballage': {
             $embId = (int)($_POST['emb_id'] ?? $_GET['emb_id'] ?? 0);
             $qty   = read_qty();
             if ($embId <= 0) err('validation','Emballage invalide',422);
 
-            $ck = $pdo->prepare("SELECT EMB_ID FROM EMBALLAGE WHERE EMB_ID=:id");
-            $ck->execute([':id'=>$embId]);
-            if (!$ck->fetchColumn()) err('not_found','Emballage introuvable',404);
+            // 1) existe + lire stock + nom
+            $ck = $pdo->prepare("SELECT EMB_NOM, COALESCE(EMB_QTE_STOCK,0) AS stock FROM EMBALLAGE WHERE EMB_ID=:id");
+            $ck->execute(['id'=>$embId]);
+            $row = $ck->fetch(PDO::FETCH_ASSOC);
+            if (!$row) err('not_found','Emballage introuvable',404);
+
+            $name  = (string)$row['EMB_NOM'];
+            $stock = (int)$row['stock'];
+            if ($stock < $qty) err('insufficient_stock','Stock insuffisant',409);
 
             $comId = getOpenOrderId($pdo, $perId);
 
+            // 2) décrément stock (placeholders uniques)
+            $u = $pdo->prepare("
+        UPDATE EMBALLAGE
+        SET EMB_QTE_STOCK = EMB_QTE_STOCK - :qdec
+        WHERE EMB_ID = :id AND EMB_QTE_STOCK >= :qmin
+    ");
+            $u->execute(['qdec'=>$qty, 'qmin'=>$qty, 'id'=>$embId]);
+            if ($u->rowCount() === 0) err('insufficient_stock','Stock insuffisant (conflit)',409);
+
+            // 3) upsert COMMANDE_EMBALLAGE (sans ON DUPLICATE)
             $sel = $pdo->prepare("SELECT CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:e");
-            $sel->execute([':c'=>$comId, ':e'=>$embId]);
+            $sel->execute(['c'=>$comId, 'e'=>$embId]);
             $cur = $sel->fetchColumn();
+
             if ($cur === false) {
                 $ins = $pdo->prepare("
-                    INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE)
-                    VALUES (:c, :e, :q)
-                ");
-                $ins->execute([':c'=>$comId, ':e'=>$embId, ':q'=>$qty]);
+            INSERT INTO COMMANDE_EMBALLAGE (COM_ID, EMB_ID, CE_QTE)
+            VALUES (:c, :e, :q)
+        ");
+                $ins->execute(['c'=>$comId, 'e'=>$embId, 'q'=>$qty]);
             } else {
                 $newQ = (int)$cur + $qty;
                 $upd = $pdo->prepare("
-                    UPDATE COMMANDE_EMBALLAGE SET CE_QTE=:q
-                    WHERE COM_ID=:c AND EMB_ID=:e
-                ");
-                $upd->execute([':q'=>$newQ, ':c'=>$comId, ':e'=>$embId]);
+            UPDATE COMMANDE_EMBALLAGE SET CE_QTE=:q
+            WHERE COM_ID=:c AND EMB_ID=:e
+        ");
+                $upd->execute(['q'=>$newQ, 'c'=>$comId, 'e'=>$embId]);
             }
 
-            $items = listItems($pdo, $comId);
-            ok(['com_id'=>$comId, 'items'=>$items, 'subtotal'=>subtotal($items)]);
+            // 4) réponse JSON homogène
+            $left   = max(0, $stock - $qty);
+            $items  = listItems($pdo, $comId);
+            $subtot = subtotal($items);
+
+            ok([
+                'com_id'    => $comId,
+                'type'      => 'emballage',
+                'embId'     => $embId,
+                'name'      => $name,
+                'stockLeft' => $left,
+                'items'     => $items,
+                'subtotal'  => $subtot,
+            ]);
         }
 
         /* ===== LIST ===== */
