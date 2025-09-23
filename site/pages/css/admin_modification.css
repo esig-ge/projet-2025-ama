@@ -1,14 +1,12 @@
 /* --- Layout image gauche / infos droite --- */
 
-.adm{
-    background-color: #ffa0c4;
-}
 .product-details {
     display: grid;
     grid-template-columns: 280px 1fr; /* colonne image ~280px + colonne infos */
     gap: 1.25rem;
     align-items: start;
     margin: 1rem 0 2rem;
+    background-color: #ffa0c4;
 }
 
 /* Conteneur de l'image (ton <div>) */
