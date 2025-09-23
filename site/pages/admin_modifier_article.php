@@ -144,12 +144,13 @@ function recup_donnee_emballage(PDO $pdo): array {
     </figure>
 </section>
 
+
+<li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
 <!-- Détails (toutes les données) -->
 <section class="product-details">
     <h3>Données de l’article</h3>
 
     <table class="kv">
-          <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>
         <tbody>
         <?php
         $fleurs = recup_donnee_fleur($pdo);
@@ -180,9 +181,8 @@ function recup_donnee_emballage(PDO $pdo): array {
             </tr>
         <?php } ?>
         </tbody>
-
-
     </table>
+
 </section>
 
 <!-- Actions (affichage seulement pour l’instant) -->
