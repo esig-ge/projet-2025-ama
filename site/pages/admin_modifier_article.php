@@ -13,11 +13,7 @@ function recup_donnee_fleur(PDO $pdo): array {
     $sql = "SELECT
               p.PRO_ID,
               p.PRO_NOM,
-              p.PRO_DESCRIPTION,
               p.PRO_PRIX,
-              p.PRO_QTE_MAX,
-              p.PRO_IMAGE,
-              p.PRO_ACTIF,
               f.FLE_COULEUR,
               f.FLE_QTE_STOCK
             FROM PRODUIT p
@@ -27,7 +23,7 @@ function recup_donnee_fleur(PDO $pdo): array {
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
-
+/*
 function get_fleur_by_id(PDO $pdo, int $id): ?array {
     $sql = "SELECT
               p.PRO_ID,
@@ -47,8 +43,8 @@ function get_fleur_by_id(PDO $pdo, int $id): ?array {
     $st->execute([':id' => $id]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
     return $row ?: null;
-}
-/*---------- bouquet-----------*/
+}*/
+/*---------- bouquet-----------*//*
 function recup_donnee_bouquet(PDO $pdo): array {
     $sql = "SELECT
               p.PRO_ID,
@@ -66,9 +62,9 @@ function recup_donnee_bouquet(PDO $pdo): array {
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}
+}*/
 
-/*---------- coffret-----------*/
+/*---------- coffret-----------*//*
 function recup_donnee_coffret(PDO $pdo): array {
     $sql = "SELECT
               p.PRO_ID,
@@ -86,8 +82,8 @@ function recup_donnee_coffret(PDO $pdo): array {
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}
-/*---------- supplement-----------*/
+}*/
+/*---------- supplement-----------*//*
 function recup_donnee_supplement(PDO $pdo): array {
     $sql = "SELECT
               s.SUP_ID,
@@ -101,10 +97,10 @@ function recup_donnee_supplement(PDO $pdo): array {
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}
+}*/
 
 /*---------- emballage-----------*/
-
+/*
 function recup_donnee_emballage(PDO $pdo): array {
     $sql = "SELECT
               e.EMB_ID,
@@ -120,9 +116,10 @@ function recup_donnee_emballage(PDO $pdo): array {
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}
+}*/
 
 ?>
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -144,12 +141,21 @@ function recup_donnee_emballage(PDO $pdo): array {
     <figure class="product-cover">
         <!-- Remplacer src par l’URL de l’image de l’article -->
         <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />
-        <figcaption>Image actuelle</figcaption>
     </figure>
 
     <div class="product-summary">
         <h2 class="product-name"><span data-field="nom">Nom du produit</span></h2>
         <ul class="product-meta">
+            <?php
+            $fleurs = recup_donnee_fleur($pdo);
+            foreach ($fleurs as $fleur) {
+                echo "<h2>" . htmlspecialchars($fleur['PRO_NOM']) . "</h2>";
+                echo "<p>Prix : " . htmlspecialchars($fleur['PRO_PRIX']) . " CHF</p>";
+                echo "<p>Couleur : " . htmlspecialchars($fleur['FLE_COULEUR'] ?? '-') . "</p>";
+                echo "<p>Stock : " . htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? 0) . "</p>";
+                echo '<br>';
+            }
+            ?>
             <li><strong>ID :</strong> <span data-field="id">—</span></li>
             <li><strong>Type :</strong> <span data-field="type">fleur | bouquet | coffret | supplement | emballage</span></li>
             <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>

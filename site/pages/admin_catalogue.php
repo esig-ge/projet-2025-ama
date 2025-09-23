@@ -82,7 +82,7 @@ function recup_produit($pdo)
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>DK Bloom — Accueil</title>
+    <title>DK Bloom</title>
     <link rel="stylesheet" href="<?= $BASE ?>css/admin_catalogue.css">
 </head>
 <body>
@@ -110,49 +110,19 @@ function recup_produit($pdo)
 
             <tbody>
             <?php
-            $produits = recup_donnee_fleur($pdo); // en admin: on ne filtre pas, on montre tout
+            $produits = recup_donnee_fleur($pdo);
             foreach ($produits as $row) {
-                $id = (int)$row['PRO_ID'];
-                $isHidden = is_hidden_item('fleur', $id);
-
-                echo '<tr class="'.($isHidden ? 'row-hidden' : '').'">';
-                echo '<td>'.htmlspecialchars($row['PRO_NOM']).'</td>';
-                echo '<td>'.$id.'</td>';
-                echo '<td>'.htmlspecialchars($row['FLE_COULEUR'] ?? '-').'</td>';
-                echo '<td>'.htmlspecialchars($row['PRO_PRIX'] ?? '-').'</td>';
-                echo '<td>'.htmlspecialchars($row['PRO_QTE_MAX'] ?? '-').'</td>';
-                echo '<td>'.htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-').'</td>';
-
-                echo '<td><a href="admin_modifier_article.php?type=fleur&id='.$id.'">Modifier</a></td>';
-
-                if ($isHidden) {
-                    // Bouton "Remettre l'article"
-                    echo '<td>
-                <form method="post" action="'.$BASE.'admin_supprimer_article.php">
-                  <input type="hidden" name="type" value="fleur">
-                  <input type="hidden" name="id" value="'.$id.'">
-                  <input type="hidden" name="visible" value="1">
-                  <input type="hidden" name="return" value="'.htmlspecialchars($_SERVER['REQUEST_URI']).'">
-                  <button type="submit" class="link restore">Remettre l’article</button>
-                </form>
-              </td>';
-                } else {
-                    // Bouton "Supprimer" (cacher)
-                    echo '<td>
-                <form method="post" action="'.$BASE.'admin_supprimer_article.php"
-                      onsubmit="return confirm(\'Masquer cet article ? Vous pourrez le réactiver plus tard.\')">
-                  <input type="hidden" name="type" value="fleur">
-                  <input type="hidden" name="id" value="'.$id.'">
-                  <input type="hidden" name="visible" value="0">
-                  <input type="hidden" name="return" value="'.htmlspecialchars($_SERVER['REQUEST_URI']).'">
-                  <button type="submit" class="link danger">Supprimer</button>
-                </form>
-              </td>';
-                }
-
-                echo '</tr>';
+                echo '<td>' . htmlspecialchars($row['PRO_NOM']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['PRO_ID']) . '</td>';
+                echo '<td>' . htmlspecialchars($row['FLE_COULEUR'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($row['PRO_PRIX'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . '</td>';
+                echo '<td>' . htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-') . '</td>';
+                echo '<td><a href="admin_modifier_article.php?type=fleur&id=">Modifier</a></td>';
+                echo '<td><a href="admin_supprimer_article.php?type=fleur&id=">Supprimer</a></td>';
             }
             ?>
+
             </tbody>
 
         </table>
