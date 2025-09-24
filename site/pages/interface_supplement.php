@@ -16,11 +16,7 @@ $sql = "SELECT SUP_ID, SUP_NOM, SUP_PRIX_UNITAIRE AS PRICE, COALESCE(SUP_QTE_STO
 $supps = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 /* ============================================================
-   OPTION B — Résolution d'image « intelligente »
-   1) essaie: img/supplements/supp_<ID>.png
-   2) anciens fichiers (compat): img/<legacyName>
-   3) slug du nom: img/<slug>.(png|PNG|jpg|jpeg|webp)
-   -> retourne l’URL publique (BASE/…) ou null si rien trouvé
+   Résolution d'image « intelligente »
    ============================================================ */
 
 // anciens noms de fichiers que tu utilises déjà (compat)
@@ -37,7 +33,6 @@ $legacyMap = [
 ];
 
 function slugify_name(string $name): string {
-    // essaie iconv; fallback brut si indispo
     $slug = @iconv('UTF-8','ASCII//TRANSLIT//IGNORE',$name);
     if ($slug === false || $slug === null) $slug = $name;
     $slug = strtolower(preg_replace('/[^a-z0-9]+/i','_', $slug));
@@ -148,8 +143,8 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
                 <p class="price"><?= number_format($price, 2, '.', '\'') ?> CHF</p>
 
                 <span class="stock-badge <?= $disabled ? 'out':'' ?>" data-stock-badge>
-          <?= $disabled ? 'Rupture de stock' : ('En stock : '.$stock) ?>
-        </span>
+                    <?= $disabled ? 'Rupture de stock' : ('En stock : '.$stock) ?>
+                </span>
 
                 <div class="qty-wrap">
                     <label class="sr-only" for="qty-<?= $id ?>">Quantité</label>
@@ -202,8 +197,13 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
+<!-- Optionnel : si ton layout n'a pas déjà le conteneur de toast -->
+<div id="toast-root" aria-live="polite" aria-atomic="true" style="position:fixed;right:1rem;top:1rem;z-index:9999"></div>
+
 <script>
     (function(){
+        // Utilise le toast global si présent (comme sur la page bouquet).
+        // Sinon fallback minimal sur alert().
         function toast(msg, type){
             if (typeof window.toast === 'function') return window.toast(msg, type);
             if (typeof window.showToast === 'function') return window.showToast(msg, type);
@@ -276,7 +276,7 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
                 ['input','change','blur'].forEach(ev => qty.addEventListener(ev, () => clampQty(card)));
             }
 
-            // Ajouter (décrément stock côté API, gestion d'erreurs verbeuse)
+            // Ajouter (décrément stock côté API)
             const btn = card.querySelector('[data-add]');
             if (btn){
                 btn.addEventListener('click', async function(){
@@ -295,7 +295,7 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
                             body: new URLSearchParams({ action: 'add_supplement', sup_id: String(supId), qty: String(q) })
                         });
 
-                        const raw  = await res.text();           // <-- on lit le texte brut d'abord
+                        const raw  = await res.text();
                         let data; try { data = JSON.parse(raw); } catch { data = null; }
 
                         if (!res.ok || !data || data.ok === false) {
@@ -314,7 +314,9 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
                         // OK
                         const left = parseInt(data.stockLeft ?? '0', 10);
                         updateCardUI(card, isFinite(left) ? left : 0);
-                        toast(`${data.name} a bien été ajouté(e) au panier !`, 'success');
+
+                        // >>> MESSAGE STYLE "BOUQUET" (sans "(e)")
+                        toast(`${data.name} a bien été ajouté au panier !`, 'success');
 
                         // si tu as un résumé panier sur la page, on le rafraîchit (optionnel)
                         if (typeof window.renderCart === 'function') {
