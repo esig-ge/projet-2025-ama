@@ -36,6 +36,7 @@ $SITE_BASE = preg_replace('#/pages/?$#', '/', $BASE);
         <a class="nav-item<?= ($active ?? '')==='clients'?' active':'' ?>" href="<?= $BASE ?>adminClients.php"><span class="ico">👤</span> <span>Clients</span></a>
         <a class="nav-item<?= ($active ?? '')==='promos'?' active':'' ?>" href="<?= $BASE ?>adminPromos.php"><span class="ico">🏷️</span> <span>Promotions</span></a>
         <a class="nav-item<?= ($active ?? '')==='avis'?' active':'' ?>" href="<?= $BASE ?>adminAvis.php"><span class="ico">⭐</span> <span>Avis</span></a>
+        <a class="nav-item" href="<?= $BASE ?>admin_messages.php"><span class="ico">📩</span> <span>Messages</span></a>
         <a class="nav-item<?= ($active ?? '')==='params'?' active':'' ?>" href="<?= $BASE ?>adminParametres.php"><span class="ico">⚙️</span> <span>Paramètres</span></a>
     </nav>
     <div class="adm-footer">© <?= date('Y') ?> DK Bloom</div>

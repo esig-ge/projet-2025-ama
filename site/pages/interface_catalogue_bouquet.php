@@ -82,7 +82,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
     </script>
 
     <!-- JS panier (callApi/addToCart/resolveQty/toasts, etc.) -->
-    <script src="<?= $BASE ?>js/commande.js?v=bouquet-qty2" defer></script>
+    <script src="<?= $BASE ?>js/commande.js?v=bouquet-qty3" defer></script>
 
     <style>
         .catalogue{
@@ -113,6 +113,39 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
         .swatches{ display:flex; gap:8px; justify-content:center; margin:8px 0 10px; }
         .swatches .swatch{ width:16px; height:16px; border-radius:50%; display:inline-block; background:var(--c); border:1px solid #ccc; }
         .sr-only{ position:absolute; left:-9999px; }
+
+        /* ===== message custom façon “2e image” ===== */
+        .stock-message{
+            display:none;            /* caché par défaut */
+            align-items:flex-start;  /* icône + texte alignés en haut */
+            gap:10px;
+            margin:8px 0 10px;       /* espace sous l’input et au-dessus du bouton */
+            padding:10px 12px;
+            border-radius:12px;
+            background:#fff5f7;
+            border:1px solid #ffd6e0;
+            color:#7a0000;
+            line-height:1.35;
+            text-align:left;
+            max-width:100%;
+            word-break:break-word;
+        }
+        .stock-message.show{ display:flex; }
+        .stock-message.info{background:#eaf4ff;border-color:#b6d4fe;color:#084298}
+        .stock-message::before{
+            content:"";width:8px;height:8px;border-radius:50%;background:#d90429;display:inline-block
+        }
+        .stock-message.info{
+            background:#eaf4ff; border-color:#b6d4fe; color:#084298;
+        }
+        .stock-message .dot{
+            width:10px; height:10px; border-radius:50%;
+            background:#d90429; flex:0 0 10px; margin-top:4px;
+        }
+        .stock-message.info .dot{ background:#0d6efd; }
+        .stock-message .text{ flex:1; font-size:.92rem; }
+        .stock-message strong{ font-weight:700; }
+        .qty-input{margin:8px 0 4px;width:90px}
     </style>
 
     <script>
@@ -122,7 +155,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
 
             const proInput = form.querySelector('input[name="pro_id"]');
             const btn      = form.querySelector('button.add-to-cart');
-            const qtyInput = form.querySelector('.qty');
+            const qtyInput = form.querySelector('.qty-input');
 
             if(!proInput || !btn || !qtyInput) return false;
 
@@ -152,38 +185,94 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
             return false;
         }
 
-        // Quand on change de couleur: met à jour pro_id + max stock + bouton
+        // Init par carte : gestion couleur -> stock/max, messages, etc.
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.bouquet-card').forEach(card => {
                 const hiddenPro = card.querySelector('input[name="pro_id"]');
-                const qtyInput  = card.querySelector('.qty');
+                const qtyInput  = card.querySelector('.qty-input');
                 const stockSpan = card.querySelector('.stock-note .stock-badge');
                 const radios    = card.querySelectorAll('input[type="radio"][name^="couleur_"]');
                 const addBtn    = card.querySelector('.add-to-cart');
+                const msgBox    = card.querySelector('.stock-message');
 
-                radios.forEach(r => {
-                    r.addEventListener('change', () => {
-                        const proId = r.getAttribute('data-pro-id');
-                        const stock = parseInt(r.getAttribute('data-stock') || '0', 10);
-                        hiddenPro.value = proId;
+                const showMsg = (html, type='error') => {
+                    if(!msgBox) return;
+                    msgBox.innerHTML =
+                        `<span class="dot" aria-hidden="true"></span><span class="text">${html}</span>`;
+                    msgBox.classList.add('show');
+                    if (type === 'info') msgBox.classList.add('info'); else msgBox.classList.remove('info');
+                };
 
-                        if (stock > 0) {
-                            qtyInput.disabled = false;
-                            qtyInput.max = String(stock);
-                            if (+qtyInput.value < 1) qtyInput.value = '1';
-                            stockSpan.textContent = 'Stock : ' + stock;
-                            stockSpan.classList.remove('oos');
-                            addBtn.disabled = false;
-                        } else {
-                            qtyInput.value = '1';
-                            qtyInput.max = '1';
-                            qtyInput.disabled = true;
-                            stockSpan.textContent = 'Rupture de stock';
-                            stockSpan.classList.add('oos');
-                            addBtn.disabled = true;
+                const hideMsg = () => { if(msgBox){ msgBox.classList.remove('show','info'); msgBox.innerHTML=''; } };
+
+                // Click sur pastille: si disabled -> message rupture
+                card.querySelectorAll('.swatches label').forEach(lab=>{
+                    lab.addEventListener('click', e=>{
+                        const input = lab.querySelector('input[type="radio"]');
+                        if (input && input.disabled){
+                            const name = (lab.getAttribute('title') || 'Cette couleur');
+                            showMsg(`🌸 <strong>${name}</strong> est en <strong>rupture de stock</strong>.`, 'error');
+                            e.preventDefault();
                         }
                     });
                 });
+
+                function refreshFromRadio(r){
+                    const proId = r.getAttribute('data-pro-id');
+                    const stock = parseInt(r.getAttribute('data-stock') || '0', 10);
+                    const color = r.value || '';
+
+                    hiddenPro.value = proId;
+
+                    if (stock > 0) {
+                        qtyInput.disabled = false;
+                        qtyInput.max = String(stock);
+                        // ajuste si dépassement
+                        const v = Math.max(1, parseInt(qtyInput.value || '1', 10) || 1);
+                        if (v > stock) {
+                            qtyInput.value = String(stock);
+                            showMsg(`Il reste <strong>${stock}</strong> en stock. Quantité ajustée à <strong>${stock}</strong>.`, 'error');
+                        } else {
+                            hideMsg();
+                        }
+                        stockSpan.textContent = 'Stock : ' + stock;
+                        stockSpan.classList.remove('oos');
+                        addBtn.disabled = false;
+                    } else {
+                        qtyInput.value = '1';
+                        qtyInput.max = '1';
+                        qtyInput.disabled = true;
+                        stockSpan.textContent = 'Rupture de stock';
+                        stockSpan.classList.add('oos');
+                        addBtn.disabled = true;
+                        showMsg(`🌸 <strong>${color||'Cette couleur'}</strong> est en <strong>rupture de stock</strong>.`, 'error');
+                    }
+                }
+
+                // Changement de couleur
+                radios.forEach(r => {
+                    r.addEventListener('change', () => refreshFromRadio(r));
+                });
+
+                // Saisie quantité : borne vs stock de la COULEUR sélectionnée
+                ['input','change','blur'].forEach(ev=>{
+                    qtyInput && qtyInput.addEventListener(ev, () => {
+                        const sel = card.querySelector('input[type="radio"][name^="couleur_"]:checked');
+                        if(!sel) return;
+                        const stock = Math.max(1, parseInt(sel.dataset.stock || '1', 10));
+                        const v = Math.max(1, parseInt(qtyInput.value || '1', 10) || 1);
+                        if (v > stock){
+                            qtyInput.value = String(stock);
+                            showMsg(`Il reste <strong>${stock}</strong> en stock. Quantité ajustée à <strong>${stock}</strong>.`, 'error');
+                        } else {
+                            hideMsg();
+                        }
+                    });
+                });
+
+                // init (prend la couleur cochée par défaut)
+                const initial = card.querySelector('input[type="radio"][name^="couleur_"]:checked');
+                if (initial) refreshFromRadio(initial);
             });
         });
     </script>
@@ -231,13 +320,6 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                 <h3>Bouquet <?= (int)$nb ?></h3>
                 <p class="price"><?= number_format($prix, 2, '.', "'") ?> CHF</p>
 
-                <br>
-                <label class="sr-only" for="qty-<?= (int)$nb ?>">Quantité</label>
-                <input id="qty-<?= (int)$nb ?>" type="number" class="qty" name="qty"
-                       min="1" step="1" value="1"
-                    <?= $def['stock']>0 ? 'max="'.(int)$def['stock'].'"' : 'max="1" disabled' ?>
-                       aria-describedby="stock-<?= (int)$nb ?>">
-
                 <div class="swatches" role="group" aria-label="Couleur">
                     <?php foreach ($item['variants'] as $i => $v):
                         $c = $v['couleur']; $checked = ($v['pro_id'] === $def['pro_id']);
@@ -264,7 +346,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                     <?php endif; ?>
                 </p>
 
-                <!-- Ton input quantité -->
+                <!-- Quantité + message dynamique (comme la 2e image) -->
                 <input
                         type="number"
                         id="qty-<?= (int)$nb ?>"
@@ -272,9 +354,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                         max="<?= (int)$def['stock'] ?>"
                         value="1"
                         class="qty-input">
-
-                <!-- Zone pour message dynamique -->
-                <div id="msg-<?= (int)$nb ?>" class="stock-message"></div>
+                <div id="msg-<?= (int)$nb ?>" class="stock-message" aria-live="polite"></div>
 
                 <br>
                 <button type="submit"
@@ -292,26 +372,6 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
         <a href="<?= $BASE ?>interface_supplement.php?from=bouquet" class="button">Suivant</a>
     </div>
 </main>
-<script>
-    document.querySelectorAll(".qty-input").forEach(input => {
-        input.addEventListener("input", () => {
-            const max = parseInt(input.max, 10);
-            const val = parseInt(input.value, 10);
-            const id = input.id.split("-")[1];
-            const msg = document.getElementById("msg-" + id);
-
-            if (val > max) {
-                input.value = max;
-                msg.innerHTML = `🔴 Il reste <b>${max}</b> en stock. Quantité ajustée à <b>${max}</b>.`;
-                msg.className = "stock-message"; // rouge
-            } else {
-                msg.innerHTML = `ℹ️ Stock disponible : <b>${max}</b>`;
-                msg.className = "stock-message info"; // bleu
-            }
-        });
-    });
-
-</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
