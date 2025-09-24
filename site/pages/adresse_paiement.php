@@ -1,5 +1,5 @@
 <?php
-// /site/pages/adresse_paiement.php
+// /site/pages/adresse_paiement.php VF?
 session_start();
 
 /* ===== 0) Accès ===== */
@@ -15,14 +15,14 @@ $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 $SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);
 
 /* Détection checkout.php (à la racine du site ou dans /pages) */
-$co_fs_main  = __DIR__ . '/../checkout.php';   // /site/checkout.php
-$co_fs_pages = __DIR__ . '/checkout.php';      // /site/pages/checkout.php
+$co_fs_main  = __DIR__ . '/../create_checkout.php';   // /site/checkout.php
+$co_fs_pages = __DIR__ . '/create_checkout.php';      // /site/pages/checkout.php
 if (is_file($co_fs_main)) {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
+    $CHECKOUT_URL = $SITE_BASE . 'create_checkout.php';
 } elseif (is_file($co_fs_pages)) {
-    $CHECKOUT_URL = $PAGE_BASE . 'checkout.php';
+    $CHECKOUT_URL = $PAGE_BASE . 'create_heckout.php';
 } else {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php'; // fallback
+    $CHECKOUT_URL = $SITE_BASE . 'create_checkout.php'; // fallback
 }
 
 /* Détection API cart.php pour afficher le récap (si tu gardes l'API) */
@@ -508,7 +508,7 @@ $CSRF = $_SESSION['csrf_checkout'];
             const m = text.match(/https:\/\/checkout\.stripe\.com\/pay\/[A-Za-z0-9_%\-]+/);
             if (m) { window.location.href = m[0]; return; }
 
-            throw new Error('Réponse inattendue de checkout.php');
+            throw new Error('Réponse inattendue de create_checkout.php');
         } catch (err) {
             console.error(err);
             msg.textContent = "Oups, impossible de démarrer le paiement. Réessaie ou contacte-nous.";

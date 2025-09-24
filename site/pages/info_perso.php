@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_profile'])) {
                           WHERE PER_ID=:id")
         ->execute([':n'=>$nom, ':p'=>$pre, ':e'=>$email, ':t'=>$tel, ':id'=>$perId]);
 
-    // b) CLIENT (date de naissance — on accepte dd/mm/yyyy)
+    // b) CLIENT (date de naissance — accepte dd/mm/yyyy ou yyyy-mm-dd)
     $dnaiss = trim($_POST['dnaiss'] ?? '');
     if ($dnaiss && preg_match('#^\d{2}/\d{2}/\d{4}$#',$dnaiss)) {
         [$d,$m,$y] = explode('/',$dnaiss); $dnaiss = "$y-$m-$d";
@@ -89,6 +89,9 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_profile'])) {
                            SET ADR_RUE=:r, ADR_NUMERO=:num, ADR_NPA=:npa, ADR_VILLE=:v, ADR_PAYS=:p
                            WHERE ADR_ID=:id AND ADR_TYPE=:t")
                 ->execute([':r'=>$rue, ':num'=>$num, ':npa'=>$npa, ':v'=>$ville, ':p'=>$pays, ':id'=>$adrId, ':t'=>$type]);
+            // s’assurer du lien
+            $pdo->prepare("INSERT IGNORE INTO ADRESSE_CLIENT (PER_ID, ADR_ID) VALUES (:per, :adr)")
+                ->execute([':per'=>$perId, ':adr'=>$adrId]);
             return true;
         } else {
             if ($rue==='' && $num==='' && $npa==='' && $ville==='' && $pays==='') return true; // rien fourni
@@ -97,14 +100,34 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_profile'])) {
                            VALUES (:r, :num, :npa, :v, :p, :t)")
                 ->execute([':r'=>$rue, ':num'=>$num, ':npa'=>$npa, ':v'=>$ville, ':p'=>$pays, ':t'=>$type]);
             $newId = (int)$pdo->lastInsertId();
-            $pdo->prepare("INSERT IGNORE INTO CLIENT_ADRESSE (PER_ID, ADR_ID) VALUES (:per, :adr)")
+            // NOTE: le nom correct est ADRESSE_CLIENT
+            $pdo->prepare("INSERT IGNORE INTO ADRESSE_CLIENT (PER_ID, ADR_ID) VALUES (:per, :adr)")
                 ->execute([':per'=>$perId, ':adr'=>$newId]);
             return true;
         }
     };
 
-    $ok3 = $upsertAdr($pdo, $perId, $_POST['livraison']  ?? [], 'LIVRAISON');
-    $ok4 = $upsertAdr($pdo, $perId, $_POST['facturation'] ?? [], 'FACTURATION');
+    // d) Case “même adresse que la facturation” ?
+    $sameFacToLiv = isset($_POST['same_fac_to_liv']) && $_POST['same_fac_to_liv'] === '1';
+
+    // On normalise les tableaux reçus
+    $postLiv = $_POST['livraison']  ?? [];
+    $postFac = $_POST['facturation'] ?? [];
+
+    if ($sameFacToLiv) {
+        // On copie les valeurs de facturation vers livraison
+        // en conservant l’adr_id de livraison si présent (pour update propre du type LIVRAISON)
+        $postLiv = array_merge($postLiv, [
+            'rue'    => $postFac['rue']    ?? '',
+            'numero' => $postFac['numero'] ?? '',
+            'npa'    => $postFac['npa']    ?? '',
+            'ville'  => $postFac['ville']  ?? '',
+            'pays'   => $postFac['pays']   ?? '',
+        ]);
+    }
+
+    $ok3 = $upsertAdr($pdo, $perId, $postLiv, 'LIVRAISON');
+    $ok4 = $upsertAdr($pdo, $perId, $postFac, 'FACTURATION');
 
     $_SESSION['message'] = ($ok1 && $ok2 && $ok3 && $ok4)
         ? "Vos informations ont été mises à jour."
@@ -131,6 +154,10 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleInfoPerso.css">
+    <style>
+        .same-check { display:flex; align-items:center; gap:.5rem; margin:.5rem 0 1rem }
+        .field input[disabled] { background:#f6f6f6; color:#777; cursor:not-allowed }
+    </style>
 </head>
 <body>
 
@@ -147,7 +174,7 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
         <!-- Formulaire -->
         <section class="card" aria-label="Profil">
             <h2 class="section-title">Informations personnelles</h2>
-            <form method="post">
+            <form method="post" id="form-profile">
                 <div class="form-row">
                     <div class="field">
                         <label for="nom">Nom</label>
@@ -181,36 +208,9 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
 
                 <hr style="margin:16px 0;border:0;border-top:1px solid #eee">
 
-                <h2 class="section-title">Adresse de LIVRAISON</h2>
-                <input type="hidden" name="livraison[adr_id]" value="<?= h($adrLiv['ADR_ID']) ?>">
-                <div class="form-row-3">
-                    <div class="field">
-                        <label>Rue</label>
-                        <input name="livraison[rue]" value="<?= h($adrLiv['ADR_RUE']) ?>">
-                    </div>
-                    <div class="field">
-                        <label>N°</label>
-                        <input name="livraison[numero]" value="<?= h($adrLiv['ADR_NUMERO']) ?>">
-                    </div>
-                    <div class="field">
-                        <label>NPA</label>
-                        <input name="livraison[npa]" value="<?= h($adrLiv['ADR_NPA']) ?>">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="field">
-                        <label>Ville</label>
-                        <input name="livraison[ville]" value="<?= h($adrLiv['ADR_VILLE']) ?>">
-                    </div>
-                    <div class="field">
-                        <label>Pays</label>
-                        <input name="livraison[pays]" value="<?= h($adrLiv['ADR_PAYS']) ?>">
-                    </div>
-                </div>
-
-                <h2 class="section-title" style="margin-top:16px">Adresse de FACTURATION</h2>
+                <h2 class="section-title">Adresse de FACTURATION</h2>
                 <input type="hidden" name="facturation[adr_id]" value="<?= h($adrFac['ADR_ID']) ?>">
-                <div class="form-row-3">
+                <div class="form-row-3" id="fac-block">
                     <div class="field">
                         <label>Rue</label>
                         <input name="facturation[rue]" value="<?= h($adrFac['ADR_RUE']) ?>">
@@ -232,6 +232,38 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
                     <div class="field">
                         <label>Pays</label>
                         <input name="facturation[pays]" value="<?= h($adrFac['ADR_PAYS']) ?>">
+                    </div>
+                </div>
+
+                <div class="same-check">
+                    <input type="checkbox" id="same_fac_to_liv" name="same_fac_to_liv" value="1">
+                    <label for="same_fac_to_liv">Utiliser la même adresse pour la LIVRAISON</label>
+                </div>
+
+                <h2 class="section-title" style="margin-top:6px">Adresse de LIVRAISON</h2>
+                <input type="hidden" name="livraison[adr_id]" value="<?= h($adrLiv['ADR_ID']) ?>">
+                <div class="form-row-3" id="liv-block">
+                    <div class="field">
+                        <label>Rue</label>
+                        <input name="livraison[rue]" value="<?= h($adrLiv['ADR_RUE']) ?>">
+                    </div>
+                    <div class="field">
+                        <label>N°</label>
+                        <input name="livraison[numero]" value="<?= h($adrLiv['ADR_NUMERO']) ?>">
+                    </div>
+                    <div class="field">
+                        <label>NPA</label>
+                        <input name="livraison[npa]" value="<?= h($adrLiv['ADR_NPA']) ?>">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label>Ville</label>
+                        <input name="livraison[ville]" value="<?= h($adrLiv['ADR_VILLE']) ?>">
+                    </div>
+                    <div class="field">
+                        <label>Pays</label>
+                        <input name="livraison[pays]" value="<?= h($adrLiv['ADR_PAYS']) ?>">
                     </div>
                 </div>
 
@@ -270,5 +302,37 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+
+<script>
+    /* ==== UI: “Même adresse que la facturation” ==== */
+    (function(){
+        const same = document.getElementById('same_fac_to_liv');
+        const form = document.getElementById('form-profile');
+        const fac  = form.querySelectorAll('[name^="facturation["]');
+        const liv  = form.querySelectorAll('[name^="livraison["]:not([name$="[adr_id]"])');
+
+        function syncAndToggle(disable){
+            // copie des valeurs fac -> liv
+            fac.forEach(f => {
+                const key = f.name.match(/facturation\[(.+)\]/)?.[1];
+                if (!key) return;
+                const target = form.querySelector(`[name="livraison[${key}]"]`);
+                if (target && target.tagName === 'INPUT') {
+                    target.value = f.value;
+                    if(disable){ target.setAttribute('disabled','disabled'); }
+                    else { target.removeAttribute('disabled'); }
+                }
+            });
+        }
+
+        same.addEventListener('change', () => {
+            if (same.checked) syncAndToggle(true);
+            else syncAndToggle(false);
+        });
+
+        // Si utilisateur modifie facturation alors que la case est cochée, on resynchronise
+        fac.forEach(f => f.addEventListener('input', () => { if (same.checked) syncAndToggle(true); }));
+    })();
+</script>
 </body>
 </html>
