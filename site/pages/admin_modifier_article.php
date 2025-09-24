@@ -30,10 +30,8 @@ function recup_donnee_bouquet(PDO $pdo): array {
               p.PRO_ID,
               p.PRO_NOM,
               p.PRO_PRIX,
-              b.BOU_DESCRIPTION,
-              b.BOU_TYPE,
-              b.BOU_COULEUR,
               b.BOU_NB_ROSES,
+              b.BOU_COULEUR,
               b.BOU_QTE_STOCK
             FROM PRODUIT p
             INNER JOIN BOUQUET b ON b.PRO_ID = p.PRO_ID
@@ -100,7 +98,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <head>
     <meta charset="utf-8">
     <title>Admin — Modifier les articles</title>
-<!--    <link rel="stylesheet" href=--><?php //= $BASE ?><!--"css/admin_modification.css">-->
+
 
 
 </head>
@@ -109,7 +107,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <!-- En-tête / fil d’Ariane -->
 <header class="admin-header">
     <nav class="breadcrumb">
-        <a href="#">Dashboard</a> › <a href="#">Produits</a> › <span>Modifier</span>
+        <a href="adminAccueil.php">Dashboard</a> › <a href="admin_catalogue.php">Produits</a>
     </nav>
     <h1>Modifier les articles</h1>
 </header>
@@ -149,14 +147,42 @@ function recup_donnee_emballage(PDO $pdo): array {
                 <td><strong>Image</strong></td>
                 <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '---') ?></td>
             </tr>
-            <!--            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>-->
 
         <?php } ?>
         </tbody>
     </table>
-
 </section>
+<section class="product-details">
+    <table class="kv">
+        <tbody>
+        <?php
+           // Récupération des bouquets
+            $bouquets = recup_donnee_bouquet($pdo);
+            foreach ($bouquets as $b) { ?>
+        <tr>
+            <td><strong>Nom</strong></td>
+            <td><?php  htmlspecialchars($b['PRO_NOM']) ?></td>
+        </tr>
+        <tr>
+            <td><strong>Prix</strong></td>
+            <td><?php  htmlspecialchars($b['PRO_PRIX']) ?> CHF</td>
+        </tr>
+        <tr>
+            <td><strong>Nombre de rose du bouquet</strong></td>
+            <td><?php  htmlspecialchars($b['BOU_NB_ROSES'] ?? '—') ?></td>
+        </tr>
+        <tr>
+            <td><strong>Couleur</strong></td>
+            <td><?php  htmlspecialchars($b['BOU_COULEUR'] ?? '—') ?></td>
+        </tr>
+        <tr>
+            <td><strong>Stock</strong></td>
+            <td><?php  htmlspecialchars($b['BOU_QTE_STOCK'] ?? '—') ?></td>
+        </tr>
 
-
-
+        <tr><td colspan="2" style="border-bottom:1px solid #eee; height:6px;"></td></tr>
+        <?php }  ?>
+        </tbody>
+    </table>
+</section>
 <section class="product-actio
