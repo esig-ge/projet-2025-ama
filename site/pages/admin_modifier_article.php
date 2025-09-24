@@ -23,37 +23,16 @@ function recup_donnee_fleur(PDO $pdo): array {
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
-/*
-function get_fleur_by_id(PDO $pdo, int $id): ?array {
-    $sql = "SELECT
-              p.PRO_ID,
-              p.PRO_NOM,
-              p.PRO_DESCRIPTION,
-              p.PRO_PRIX,
-              p.PRO_QTE_MAX,
-              p.PRO_IMAGE,
-              p.PRO_ACTIF,
-              f.FLE_COULEUR,
-              f.FLE_QTE_STOCK
-            FROM PRODUIT p
-            INNER JOIN FLEUR f ON f.PRO_ID = p.PRO_ID
-            WHERE p.PRO_ID = :id
-            LIMIT 1";
-    $st = $pdo->prepare($sql);
-    $st->execute([':id' => $id]);
-    $row = $st->fetch(PDO::FETCH_ASSOC);
-    return $row ?: null;
-}*/
-/*---------- bouquet-----------*//*
+
+/*---------- bouquet-----------*/
 function recup_donnee_bouquet(PDO $pdo): array {
     $sql = "SELECT
               p.PRO_ID,
               p.PRO_NOM,
-              p.PRO_DESCRIPTION,
               p.PRO_PRIX,
-              p.PRO_QTE_MAX,
-              p.PRO_IMAGE,
-              p.PRO_ACTIF,
+              b.BOU_DESCRIPTION,
+              b.BOU_TYPE,
+              b.BOU_COULEUR,
               b.BOU_NB_ROSES,
               b.BOU_QTE_STOCK
             FROM PRODUIT p
@@ -62,27 +41,23 @@ function recup_donnee_bouquet(PDO $pdo): array {
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}*/
+}
 
-/*---------- coffret-----------*//*
+/*---------- coffret-----------*/
 function recup_donnee_coffret(PDO $pdo): array {
     $sql = "SELECT
               p.PRO_ID,
               p.PRO_NOM,
-              p.PRO_DESCRIPTION,
-              p.PRO_PRIX,
-              p.PRO_QTE_MAX,
-              p.PRO_IMAGE,
-              p.PRO_ACTIF,
+              c.COF_EVENEMENT,
+              c.COF_QTE_STOCK,
               c.COF_TAILLE,
-              c.COF_QTE_STOCK
             FROM PRODUIT p
             INNER JOIN COFFRET c ON c.PRO_ID = p.PRO_ID
             ORDER BY p.PRO_NOM ASC";
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}*/
+}
 /*---------- supplement-----------*//*
 function recup_donnee_supplement(PDO $pdo): array {
     $sql = "SELECT
@@ -125,7 +100,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <head>
     <meta charset="utf-8">
     <title>Admin — Modifier les articles</title>
-    <link rel="stylesheet" href=<?= $BASE ?>"css/admin_modification.css">
+<!--    <link rel="stylesheet" href=--><?php //= $BASE ?><!--"css/admin_modification.css">-->
 
 
 </head>
@@ -180,8 +155,8 @@ function recup_donnee_emballage(PDO $pdo): array {
             </tbody>
         </table>
 
-
 </section>
 
-<!-- Actions (affichage seulement pour l’instant) -->
+
+
 <section class="product-actio
