@@ -5,6 +5,9 @@ session_start();
 // Connexion DB
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
+
+
+
 /* Bases de chemins */
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
@@ -14,7 +17,7 @@ function recup_donnee_fleur($pdo)
         FROM PRODUIT p
         INNER JOIN FLEUR f ON p.PRO_ID = f.PRO_ID";
 
-    $stmt = $pdo->prepare($sql);$
+    $stmt = $pdo->prepare($sql);
 
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -112,14 +115,16 @@ function recup_produit($pdo)
             <?php
             $produits = recup_donnee_fleur($pdo);
             foreach ($produits as $row) {
+                echo "<tr>";
                 echo '<td>' . htmlspecialchars($row['PRO_NOM']) . '</td>';
                 echo '<td>' . htmlspecialchars($row['PRO_ID']) . '</td>';
                 echo '<td>' . htmlspecialchars($row['FLE_COULEUR'] ?? '-') . '</td>';
                 echo '<td>' . htmlspecialchars($row['PRO_PRIX'] ?? '-') . '</td>';
                 echo '<td>' . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . '</td>';
                 echo '<td>' . htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-') . '</td>';
-                echo '<td><a href="admin_modifier_article.php?type=fleur&id=">Modifier</a></td>';
+                echo "<td><a href='admin_modifier_article.php?type=fleur&id=" . urlencode((string)$row['PRO_ID']) . "'>Modifier</a></td>";
                 echo '<td><a href="admin_supprimer_article.php?type=fleur&id=">Supprimer</a></td>';
+                echo "<tr>";
             }
             ?>
 

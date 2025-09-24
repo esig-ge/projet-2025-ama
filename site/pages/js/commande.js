@@ -92,8 +92,8 @@ async function callApi(action, params = {}) {
         throw new Error(`Réponse non JSON (HTTP ${res.status}) depuis ${url}`);
     }
     if (!res.ok || data.ok === false) {
-        const msg = data?.error || data?.msg || `HTTP ${res.status}`;
-        throw new Error(`API "${action}" a échoué: ${msg}`);
+        const msg = data?.msg || data?.error || `HTTP ${res.status}`;
+        throw new Error(`API "${action}" a échoué: ${msg} (${res.status})`);
     }
     return data;
 }

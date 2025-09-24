@@ -119,41 +119,41 @@ function recup_donnee_emballage(PDO $pdo): array {
     <h3>Données de l’article</h3>
 
 
-        <table class="kv">
-            <tbody>
-            <?php
-            $fleurs = recup_donnee_fleur($pdo);
-            foreach ($fleurs as $fleur) { ?>
-<!--                <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />-->
-                <tr>
-                    <td><strong>Nom</strong></td>
-                    <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
-                </tr>
-                <tr>
-                    <td><strong>Prix</strong> </td>
-                    <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
-                </tr>
-                <tr>
-                    <td><strong>Couleur</strong></td>
-                    <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '---') ?></td>
-                </tr>
-                <tr>
-                    <td><strong>Stock</strong></td>
-                    <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '---') ?></td>
-                </tr>
-                <tr>
-                    <td><strong>Quantité max</strong></td>
-                    <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '---') ?></td>
-                </tr>
-                <tr>
-                    <td><strong>Image</strong></td>
-                    <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '---') ?></td>
-                </tr>
-                <!--            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>-->
+    <table class="kv">
+        <tbody>
+        <?php
+        $fleurs = recup_donnee_fleur($pdo);
+        foreach ($fleurs as $fleur) { ?>
+            <!--                <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />-->
+            <tr>
+                <td><strong>Nom</strong></td>
+                <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
+            </tr>
+            <tr>
+                <td><strong>Prix</strong> </td>
+                <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
+            </tr>
+            <tr>
+                <td><strong>Couleur</strong></td>
+                <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '---') ?></td>
+            </tr>
+            <tr>
+                <td><strong>Stock</strong></td>
+                <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '---') ?></td>
+            </tr>
+            <tr>
+                <td><strong>Quantité max</strong></td>
+                <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '---') ?></td>
+            </tr>
+            <tr>
+                <td><strong>Image</strong></td>
+                <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '---') ?></td>
+            </tr>
+            <!--            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>-->
 
-            <?php } ?>
-            </tbody>
-        </table>
+        <?php } ?>
+        </tbody>
+    </table>
 
 </section>
 

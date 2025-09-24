@@ -112,6 +112,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'U
         <a class="nav-item" href="<?= $BASE ?>adminClients.php"><span class="ico">👤</span> <span>Clients</span></a>
         <a class="nav-item" href="<?= $BASE ?>adminPromos.php"><span class="ico">🏷️</span> <span>Promotions</span></a>
         <a class="nav-item" href="<?= $BASE ?>adminAvis.php"><span class="ico">⭐</span> <span>Avis</span></a>
+        <a class="nav-item" href="<?= $BASE ?>admin_messages.php"><span class="ico">📩</span> <span>Messages</span></a>
         <a class="nav-item" href="<?= $BASE ?>adminParametres.php"><span class="ico">⚙️</span> <span>Paramètres</span></a>
     </nav>
     <div class="adm-footer">© <?= date('Y') ?> DK Bloom</div>

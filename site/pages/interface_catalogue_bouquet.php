@@ -9,32 +9,60 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
-// Récupération dynamique des bouquets
-$sql = "SELECT p.PRO_ID, p.PRO_NOM, p.PRO_PRIX, b.BOU_QTE_STOCK
+/* =========================
+   DATA: 9 tailles + variantes
+   ========================= */
+// 1) On récupère les tailles distinctes (BOU_NB_ROSES)
+$tailles = $pdo->query("
+    SELECT DISTINCT b.BOU_NB_ROSES AS nb
+    FROM BOUQUET b
+    ORDER BY nb ASC
+")->fetchAll(PDO::FETCH_COLUMN);
+
+// 2) Pour chaque taille, on charge ses 6 variantes (pro_id, couleur, stock, prix)
+$bouquets = []; // tableau [{nb, prix, variants: [{pro_id,couleur,stock,prix}]}]
+foreach ($tailles as $nb) {
+    $st = $pdo->prepare("
+        SELECT p.PRO_ID, p.PRO_PRIX, b.BOU_COULEUR, b.BOU_QTE_STOCK
         FROM BOUQUET b
         JOIN PRODUIT p ON p.PRO_ID = b.PRO_ID
-        ORDER BY p.PRO_PRIX ASC, p.PRO_NOM ASC";
-$bouquets = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        WHERE b.BOU_NB_ROSES = :nb
+        ORDER BY b.BOU_COULEUR
+    ");
+    $st->execute([':nb' => $nb]);
+    $variants = $st->fetchAll(PDO::FETCH_ASSOC);
+    if (!$variants) { continue; }
 
-// Mapping “intelligent” d’images selon le nombre de roses dans le nom du produit
-function img_for_bouquet(string $nom, string $base): string {
-    // Ex: “Bouquet 12”, “Bouquet 66”, “Bouquet 100”
-    if (preg_match('~(\d{2,3})~', $nom, $m)) {
-        $n = (int)$m[1];
-        $candidates = [
-            12 => '12Roses.png',
-            20 => '20Roses.png',
-            24 => '20Roses.png',  // fallback connu
-            36 => '36Roses.png',
-            50 => '50Roses.png',
-            66 => '66Roses.png',
-            99 => '100Roses.png', // fallback visuel correct
-            100 => '100Roses.png',
-            101 => '100Roses.png',
-        ];
-        if (isset($candidates[$n])) return $base . 'img/' . $candidates[$n];
-    }
-    return $base . 'img/100Roses.png';
+    $bouquets[] = [
+        'nb'       => (int)$nb,
+        'prix'     => (float)$variants[0]['PRO_PRIX'], // même prix pour toutes les couleurs
+        'variants' => array_map(function($v){
+            return [
+                'pro_id'  => (int)$v['PRO_ID'],
+                'couleur' => $v['BOU_COULEUR'],
+                'stock'   => (int)$v['BOU_QTE_STOCK'],
+                'prix'    => (float)$v['PRO_PRIX'],
+            ];
+        }, $variants)
+    ];
+}
+
+/* =========================
+   Utils: image par nombre de roses
+   ========================= */
+function img_for_bouquet_by_nb(int $nb, string $base): string {
+    $map = [
+        12  => '12Roses.png',
+        20  => '20Roses.png',
+        24  => '20Roses.png', // fallback visuel correct
+        36  => '36Roses.png',
+        50  => '50Roses.png',
+        66  => '66Roses.png',
+        99  => '100Roses.png',
+        100 => '100Roses.png',
+        101 => '100Roses.png',
+    ];
+    return $base . 'img/' . ($map[$nb] ?? '100Roses.png');
 }
 ?>
 <!DOCTYPE html>
@@ -88,7 +116,7 @@ function img_for_bouquet(string $nom, string $base): string {
     </style>
 
     <script>
-        // Interception submit -> vérifie stock, borne la quantité, envoie type='bouquet'
+        // Intercepte le submit : borne la qty / vérifie stock / envoie type='bouquet'
         function addBouquetForm(e, form){
             e.preventDefault();
 
@@ -100,38 +128,64 @@ function img_for_bouquet(string $nom, string $base): string {
 
             const stock = parseInt(qtyInput.getAttribute('max') || '999', 10);
             let   qty   = Math.max(1, parseInt(qtyInput.value || '1', 10) || 1);
-
-            const pname = btn.dataset.proName || 'Ce bouquet';
-
             if (stock >= 0 && qty > stock){
                 qty = stock > 0 ? stock : 1;
                 qtyInput.value = String(qty);
-                // message sympa (même style que rupture de stock)
+                const pname = btn.dataset.proName || 'Ce bouquet';
                 const msg = (stock > 0)
                     ? `${pname} — il reste ${stock} en stock, vous ne pouvez pas en commander davantage.`
-                    : `${pname} est momentanément en rupture de stock.`;
-                if (window.toast) window.toast(msg, stock>0 ? 'info' : 'error');
-                else alert(msg);
-                if (stock <= 0) return false; // on bloque carrément si 0
+                    : `${pname} est en rupture de stock.`;
+                if (window.toast) window.toast(msg, stock>0 ? 'info' : 'error'); else alert(msg);
+                if (stock <= 0) return false;
             }
 
-            // Rendre la qty dispo (comme sur fleur/supplément)
+            // rendre la qty dispo (comme sur fleur/supplément)
             btn.dataset.qty = String(qty);
             btn.setAttribute('data-qty', String(qty));
 
-            // Couleur (optionnelle). On suit le pattern couleur_<PRO_ID>
-            const pid   = proInput.value;
-            const color =
-                form.querySelector(`input[name="couleur_${pid}"]:checked`)?.value
-                || form.querySelector('input[name^="couleur_"]:checked')?.value
-                || form.querySelector('input[name="couleur"]:checked')?.value
-                || null;
+            // couleur sélectionnée (facultatif côté API car PRO_ID représente la variante)
+            const color = form.querySelector('input[type="radio"][name^="couleur_"]:checked')?.value || null;
 
-            // On force le type au backend pour respecter ENUM('bouquet','fleur','coffret')
-            const extra = { qty, color, type: 'bouquet' };
+            const pid   = proInput.value;
+            const extra = { qty, color, type: 'bouquet' }; // ENUM('bouquet','fleur','coffret')
             if (typeof addToCart === 'function') addToCart(pid, btn, extra);
             return false;
         }
+
+        // Quand on change de couleur: met à jour pro_id + max stock + bouton
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.bouquet-card').forEach(card => {
+                const hiddenPro = card.querySelector('input[name="pro_id"]');
+                const qtyInput  = card.querySelector('.qty');
+                const stockSpan = card.querySelector('.stock-note .stock-badge');
+                const radios    = card.querySelectorAll('input[type="radio"][name^="couleur_"]');
+                const addBtn    = card.querySelector('.add-to-cart');
+
+                radios.forEach(r => {
+                    r.addEventListener('change', () => {
+                        const proId = r.getAttribute('data-pro-id');
+                        const stock = parseInt(r.getAttribute('data-stock') || '0', 10);
+                        hiddenPro.value = proId;
+
+                        if (stock > 0) {
+                            qtyInput.disabled = false;
+                            qtyInput.max = String(stock);
+                            if (+qtyInput.value < 1) qtyInput.value = '1';
+                            stockSpan.textContent = 'Stock : ' + stock;
+                            stockSpan.classList.remove('oos');
+                            addBtn.disabled = false;
+                        } else {
+                            qtyInput.value = '1';
+                            qtyInput.max = '1';
+                            qtyInput.disabled = true;
+                            stockSpan.textContent = 'Rupture de stock';
+                            stockSpan.classList.add('oos');
+                            addBtn.disabled = true;
+                        }
+                    });
+                });
+            });
+        });
     </script>
 </head>
 <body>
@@ -146,61 +200,89 @@ function img_for_bouquet(string $nom, string $base): string {
     <?php endif; ?>
 
     <div id="produit_bouquet" class="catalogue" aria-label="Liste de bouquets">
-        <?php foreach ($bouquets as $b):
-            $proId   = (int)$b['PRO_ID'];
-            $nom     = $b['PRO_NOM'];
-            $prix    = (float)$b['PRO_PRIX'];
-            $stock   = max(0, (int)$b['BOU_QTE_STOCK']);
-            $img     = img_for_bouquet($nom, $BASE);
+        <?php
+        // Couleurs -> couleur CSS pour la pastille
+        $cssColor = [
+            'rouge' => 'red',
+            'rose clair' => 'pink',
+            'rose' => '#ff4d7a',
+            'blanc' => '#e9e9e9',
+            'bleu' => '#0418a5',
+            'noir' => '#111'
+        ];
+        ?>
 
-            // Accessibilité + swatches génériques (couleur visuelle seulement)
-            $colors = [
-                ['value'=>'rouge','css'=>'red'],
-                ['value'=>'rose','css'=>'pink'],
-                ['value'=>'blanc','css'=>'#e9e9e9'],
-                ['value'=>'bleu','css'=>'#0418a5'],
-                ['value'=>'noir','css'=>'#111'],
-            ];
-            $disabled = ($stock <= 0) ? 'disabled' : '';
+        <?php foreach ($bouquets as $item):
+            $nb   = $item['nb'];
+            $prix = $item['prix'];
+            $img  = img_for_bouquet_by_nb($nb, $BASE);
+
+            // Variante par défaut = première avec stock > 0 sinon la 1ère
+            $def = null;
+            foreach ($item['variants'] as $v) { if ($v['stock'] > 0) { $def = $v; break; } }
+            if (!$def) $def = $item['variants'][0];
             ?>
-            <form class="card product" method="POST" onsubmit="return addBouquetForm(event, this)">
-                <input type="hidden" name="pro_id" value="<?= $proId ?>">
-                <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($nom) ?>" loading="lazy">
-                <h3><?= htmlspecialchars($nom) ?></h3>
+            <form class="card product bouquet-card"
+                  onsubmit="return addBouquetForm(event, this)">
+                <!-- valeur mise à jour à chaque changement de radio -->
+                <input type="hidden" name="pro_id" value="<?= (int)$def['pro_id'] ?>">
+
+                <img src="<?= htmlspecialchars($img) ?>" alt="Bouquet <?= (int)$nb ?> roses" loading="lazy">
+                <h3>Bouquet <?= (int)$nb ?></h3>
                 <p class="price"><?= number_format($prix, 2, '.', "'") ?> CHF</p>
 
-                <label class="sr-only" for="qty-<?= $proId ?>">Quantité</label>
-                <input
-                        id="qty-<?= $proId ?>" type="number" class="qty" name="qty"
-                        min="1" step="1" value="1" inputmode="numeric" required
-                    <?= $disabled ?>
-                    <?= $stock > 0 ? 'max="'.(int)$stock.'"' : 'max="1"' ?>
-                        aria-describedby="stock-<?= $proId ?>"
-                >
+                <br>
+                <label class="sr-only" for="qty-<?= (int)$nb ?>">Quantité</label>
+                <input id="qty-<?= (int)$nb ?>" type="number" class="qty" name="qty"
+                       min="1" step="1" value="1"
+                    <?= $def['stock']>0 ? 'max="'.(int)$def['stock'].'"' : 'max="1" disabled' ?>
+                       aria-describedby="stock-<?= (int)$nb ?>">
 
                 <div class="swatches" role="group" aria-label="Couleur">
-                    <?php foreach ($colors as $i => $c): ?>
-                        <label title="<?= htmlspecialchars($c['value']) ?>">
-                            <input type="radio" name="couleur_<?= $proId ?>" value="<?= htmlspecialchars($c['value']) ?>" <?= $i===0?'required':'' ?> <?= $disabled ?>>
-                            <span class="swatch" style="--c:<?= htmlspecialchars($c['css']) ?>"></span>
+                    <?php foreach ($item['variants'] as $i => $v):
+                        $c = $v['couleur']; $checked = ($v['pro_id'] === $def['pro_id']);
+                        $stock = (int)$v['stock'];
+                        ?>
+                        <label title="<?= htmlspecialchars($c, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="radio"
+                                   name="couleur_<?= (int)$nb ?>"
+                                   value="<?= htmlspecialchars($c, ENT_QUOTES, 'UTF-8') ?>"
+                                   data-pro-id="<?= (int)$v['pro_id'] ?>"
+                                   data-stock="<?= $stock ?>"
+                                <?= $checked ? 'checked' : '' ?>
+                                <?= $stock<=0 ? 'disabled' : '' ?>>
+                            <span class="swatch" style="--c:<?= htmlspecialchars($cssColor[$c] ?? '#ccc') ?>"></span>
                         </label>
                     <?php endforeach; ?>
                 </div>
 
-                <p id="stock-<?= $proId ?>" class="stock-note">
-                    <?php if ($stock > 0): ?>
-                        <span class="stock-badge">Stock : <?= (int)$stock ?></span>
+                <p id="stock-<?= (int)$nb ?>" class="stock-note">
+                    <?php if ($def['stock'] > 0): ?>
+                        <span class="stock-badge">Stock : <?= (int)$def['stock'] ?></span>
                     <?php else: ?>
                         <span class="stock-badge oos">Rupture de stock</span>
                     <?php endif; ?>
                 </p>
 
-                <button
-                        type="submit"
+                <!-- Ton input quantité -->
+                <input
+                        type="number"
+                        id="qty-<?= (int)$nb ?>"
+                        min="1"
+                        max="<?= (int)$def['stock'] ?>"
+                        value="1"
+                        class="qty-input">
+
+                <!-- Zone pour message dynamique -->
+                <div id="msg-<?= (int)$nb ?>" class="stock-message"></div>
+
+                <br>
+                <button type="submit"
                         class="add-to-cart"
-                        data-pro-name="<?= htmlspecialchars($nom) ?>"
-                    <?= $disabled ?>
-                >Ajouter</button>
+                        data-pro-name="Bouquet <?= (int)$nb ?>"
+                    <?= $def['stock']<=0 ? 'disabled' : '' ?>>
+                    Ajouter
+                </button>
             </form>
         <?php endforeach; ?>
     </div>
@@ -210,6 +292,26 @@ function img_for_bouquet(string $nom, string $base): string {
         <a href="<?= $BASE ?>interface_supplement.php?from=bouquet" class="button">Suivant</a>
     </div>
 </main>
+<script>
+    document.querySelectorAll(".qty-input").forEach(input => {
+        input.addEventListener("input", () => {
+            const max = parseInt(input.max, 10);
+            const val = parseInt(input.value, 10);
+            const id = input.id.split("-")[1];
+            const msg = document.getElementById("msg-" + id);
+
+            if (val > max) {
+                input.value = max;
+                msg.innerHTML = `🔴 Il reste <b>${max}</b> en stock. Quantité ajustée à <b>${max}</b>.`;
+                msg.className = "stock-message"; // rouge
+            } else {
+                msg.innerHTML = `ℹ️ Stock disponible : <b>${max}</b>`;
+                msg.className = "stock-message info"; // bleu
+            }
+        });
+    });
+
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>

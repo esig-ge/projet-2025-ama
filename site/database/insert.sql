@@ -33,23 +33,88 @@ INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX) VALUES
                                             ('Rose Blanche', 5.00),
                                             ('Rose Bleue', 5.00),
                                             ('Rose Noire', 5.00),
-                                            ('Bouquet 12', 30.00),
-                                            ('Bouquet 20', 40.00),
-                                            ('Bouquet 24', 45.00),
-                                            ('Bouquet 36', 60.00),
-                                            ('Bouquet 50', 70.00),
-                                            ('Bouquet 66', 85.00),
-                                            ('Bouquet 99', 110.00),
-                                            ('Bouquet 100', 112.00),
-                                            ('Bouquet 101', 115.00),
-                                            ('Coffret ANV', 90.00),
-                                            ('Coffret SV', 90.00),
-                                            ('Coffret FdM', 100.00),
-                                            ('Coffret BPT', 100.00),
-                                            ('Coffret MRG', 100.00),
-                                            ('Coffret PAQ', 100.00),
-                                            ('Coffret NOE', 100.00),
-                                            ('Coffret NVA', 150.00);
+
+                                            -- Bouquets 12 (6 couleurs)
+                                            ('Bouquet 12 Rouge', 30.00),
+                                            ('Bouquet 12 Rose Clair', 30.00),
+                                            ('Bouquet 12 Rose', 30.00),
+                                            ('Bouquet 12 Blanc', 30.00),
+                                            ('Bouquet 12 Bleu', 30.00),
+                                            ('Bouquet 12 Noir', 30.00),
+
+                                            -- Bouquets 20
+                                            ('Bouquet 20 Rouge', 40.00),
+                                            ('Bouquet 20 Rose Clair', 40.00),
+                                            ('Bouquet 20 Rose', 40.00),
+                                            ('Bouquet 20 Blanc', 40.00),
+                                            ('Bouquet 20 Bleu', 40.00),
+                                            ('Bouquet 20 Noir', 40.00),
+
+                                            -- Bouquets 24
+                                            ('Bouquet 24 Rouge', 45.00),
+                                            ('Bouquet 24 Rose Clair', 45.00),
+                                            ('Bouquet 24 Rose', 45.00),
+                                            ('Bouquet 24 Blanc', 45.00),
+                                            ('Bouquet 24 Bleu', 45.00),
+                                            ('Bouquet 24 Noir', 45.00),
+
+                                            -- Bouquets 36
+                                            ('Bouquet 36 Rouge', 60.00),
+                                            ('Bouquet 36 Rose Clair', 60.00),
+                                            ('Bouquet 36 Rose', 60.00),
+                                            ('Bouquet 36 Blanc', 60.00),
+                                            ('Bouquet 36 Bleu', 60.00),
+                                            ('Bouquet 36 Noir', 60.00),
+
+                                            -- Bouquets 50
+                                            ('Bouquet 50 Rouge', 70.00),
+                                            ('Bouquet 50 Rose Clair', 70.00),
+                                            ('Bouquet 50 Rose', 70.00),
+                                            ('Bouquet 50 Blanc', 70.00),
+                                            ('Bouquet 50 Bleu', 70.00),
+                                            ('Bouquet 50 Noir', 70.00),
+
+                                            -- Bouquets 66
+                                            ('Bouquet 66 Rouge', 85.00),
+                                            ('Bouquet 66 Rose Clair', 85.00),
+                                            ('Bouquet 66 Rose', 85.00),
+                                            ('Bouquet 66 Blanc', 85.00),
+                                            ('Bouquet 66 Bleu', 85.00),
+                                            ('Bouquet 66 Noir', 85.00),
+
+                                            -- Bouquets 99
+                                            ('Bouquet 99 Rouge', 110.00),
+                                            ('Bouquet 99 Rose Clair', 110.00),
+                                            ('Bouquet 99 Rose', 110.00),
+                                            ('Bouquet 99 Blanc', 110.00),
+                                            ('Bouquet 99 Bleu', 110.00),
+                                            ('Bouquet 99 Noir', 110.00),
+
+                                            -- Bouquets 100
+                                            ('Bouquet 100 Rouge', 112.00),
+                                            ('Bouquet 100 Rose Clair', 112.00),
+                                            ('Bouquet 100 Rose', 112.00),
+                                            ('Bouquet 100 Blanc', 112.00),
+                                            ('Bouquet 100 Bleu', 112.00),
+                                            ('Bouquet 100 Noir', 112.00),
+
+                                            -- Bouquets 101
+                                            ('Bouquet 101 Rouge', 115.00),
+                                            ('Bouquet 101 Rose Clair', 115.00),
+                                            ('Bouquet 101 Rose', 115.00),
+                                            ('Bouquet 101 Blanc', 115.00),
+                                            ('Bouquet 101 Bleu', 115.00),
+                                            ('Bouquet 101 Noir', 115.00),
+
+                                            -- Coffrets
+                                            ('Coffret Anniversaire', 90.00),
+                                            ('Coffret Saint-Valentin', 90.00),
+                                            ('Coffret Fête des Mères', 100.00),
+                                            ('Coffret Baptême', 100.00),
+                                            ('Coffret Mariage', 100.00),
+                                            ('Coffret Pâques', 100.00),
+                                            ('Coffret Noël', 100.00),
+                                            ('Coffret Nouvel An', 150.00);
 
 -- SUPPLÉMENTS
 INSERT INTO SUPPLEMENT (SUP_NOM, SUP_DESCRIPTION, SUP_PRIX_UNITAIRE, SUP_QTE_STOCK) VALUES
@@ -78,25 +143,195 @@ INSERT INTO FLEUR (PRO_ID, FLE_TYPE, FLE_COULEUR)
 SELECT PRO_ID, 'Rose éternelle', 'noir'       FROM PRODUIT WHERE PRO_NOM='Rose Noire';
 
 -- BOUQUETS (type conforme à l’ENUM, couleur par défaut dans la table)
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 12 roses', 'standard'     FROM PRODUIT WHERE PRO_NOM='Bouquet 12';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 20 roses', 'anniversaire' FROM PRODUIT WHERE PRO_NOM='Bouquet 20';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 24 roses', 'mariage'      FROM PRODUIT WHERE PRO_NOM='Bouquet 24';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 36 roses', 'deuil'        FROM PRODUIT WHERE PRO_NOM='Bouquet 36';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 50 roses', 'luxe'         FROM PRODUIT WHERE PRO_NOM='Bouquet 50';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 66 roses', 'saisonnier'   FROM PRODUIT WHERE PRO_NOM='Bouquet 66';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 99 roses', 'naissance'    FROM PRODUIT WHERE PRO_NOM='Bouquet 99';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 100 roses', 'romantique'  FROM PRODUIT WHERE PRO_NOM='Bouquet 100';
-INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_TYPE)
-SELECT PRO_ID, 'Bouquet de 101 roses', 'personnalise' FROM PRODUIT WHERE PRO_NOM='Bouquet 101';
-                                                                                    ('Carte','Carte avec bords dorés pour un petit mot',3.00,30);
+-- =====================
+-- BOUQUETS DE 12 roses (stock 5)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 12 roses', 'rouge', 12, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 12 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 12 roses', 'rose clair', 12, 6 FROM PRODUIT WHERE PRO_NOM='Bouquet 12 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 12 roses', 'rose', 12, 9 FROM PRODUIT WHERE PRO_NOM='Bouquet 12 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 12 roses', 'blanc', 12, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 12 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 12 roses', 'bleu', 12, 0 FROM PRODUIT WHERE PRO_NOM='Bouquet 12 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 12 roses', 'noir', 12, 8 FROM PRODUIT WHERE PRO_NOM='Bouquet 12 Noir';
+
+-- =====================
+-- BOUQUETS DE 20 roses (stock 2)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 20 roses', 'rouge', 20, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 20 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 20 roses', 'rose clair', 20, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 20 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 20 roses', 'rose', 20, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 20 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 20 roses', 'blanc', 20, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 20 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 20 roses', 'bleu', 20, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 20 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 20 roses', 'noir', 20, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 20 Noir';
+
+-- =====================
+-- BOUQUETS DE 24 roses (stock 5)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 24 roses', 'rouge', 24, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 24 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 24 roses', 'rose clair', 24, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 24 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 24 roses', 'rose', 24, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 24 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 24 roses', 'blanc', 24, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 24 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 24 roses', 'bleu', 24, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 24 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 24 roses', 'noir', 24, 5 FROM PRODUIT WHERE PRO_NOM='Bouquet 24 Noir';
+
+-- =====================
+-- BOUQUETS DE 36 roses (stock 3)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 36 roses', 'rouge', 36, 3 FROM PRODUIT WHERE PRO_NOM='Bouquet 36 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 36 roses', 'rose clair', 36, 3 FROM PRODUIT WHERE PRO_NOM='Bouquet 36 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 36 roses', 'rose', 36, 3 FROM PRODUIT WHERE PRO_NOM='Bouquet 36 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 36 roses', 'blanc', 36, 3 FROM PRODUIT WHERE PRO_NOM='Bouquet 36 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 36 roses', 'bleu', 36, 3 FROM PRODUIT WHERE PRO_NOM='Bouquet 36 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 36 roses', 'noir', 36, 3 FROM PRODUIT WHERE PRO_NOM='Bouquet 36 Noir';
+
+-- =====================
+-- BOUQUETS DE 50 roses (stock 2)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 50 roses', 'rouge', 50, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 50 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 50 roses', 'rose clair', 50, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 50 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 50 roses', 'rose', 50, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 50 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 50 roses', 'blanc', 50, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 50 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 50 roses', 'bleu', 50, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 50 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 50 roses', 'noir', 50, 2 FROM PRODUIT WHERE PRO_NOM='Bouquet 50 Noir';
+
+-- =====================
+-- BOUQUETS DE 66 roses (stock 1)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 66 roses', 'rouge', 66, 1 FROM PRODUIT WHERE PRO_NOM='Bouquet 66 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 66 roses', 'rose clair', 66, 1 FROM PRODUIT WHERE PRO_NOM='Bouquet 66 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 66 roses', 'rose', 66, 1 FROM PRODUIT WHERE PRO_NOM='Bouquet 66 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 66 roses', 'blanc', 66, 1 FROM PRODUIT WHERE PRO_NOM='Bouquet 66 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 66 roses', 'bleu', 66, 1 FROM PRODUIT WHERE PRO_NOM='Bouquet 66 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 66 roses', 'noir', 66, 1 FROM PRODUIT WHERE PRO_NOM='Bouquet 66 Noir';
+
+-- =====================
+-- BOUQUETS DE 99 roses (stock 9)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 99 roses', 'rouge', 99, 9 FROM PRODUIT WHERE PRO_NOM='Bouquet 99 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 99 roses', 'rose clair', 99, 9 FROM PRODUIT WHERE PRO_NOM='Bouquet 99 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 99 roses', 'rose', 99, 9 FROM PRODUIT WHERE PRO_NOM='Bouquet 99 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 99 roses', 'blanc', 99, 9 FROM PRODUIT WHERE PRO_NOM='Bouquet 99 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 99 roses', 'bleu', 99, 9 FROM PRODUIT WHERE PRO_NOM='Bouquet 99 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 99 roses', 'noir', 99, 9 FROM PRODUIT WHERE PRO_NOM='Bouquet 99 Noir';
+
+-- =====================
+-- BOUQUETS DE 100 roses (stock 7)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 100 roses', 'rouge', 100, 7 FROM PRODUIT WHERE PRO_NOM='Bouquet 100 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 100 roses', 'rose clair', 100, 7 FROM PRODUIT WHERE PRO_NOM='Bouquet 100 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 100 roses', 'rose', 100, 7 FROM PRODUIT WHERE PRO_NOM='Bouquet 100 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 100 roses', 'blanc', 100, 7 FROM PRODUIT WHERE PRO_NOM='Bouquet 100 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 100 roses', 'bleu', 100, 7 FROM PRODUIT WHERE PRO_NOM='Bouquet 100 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 100 roses', 'noir', 100, 7 FROM PRODUIT WHERE PRO_NOM='Bouquet 100 Noir';
+
+-- =====================
+-- BOUQUETS DE 101 roses (stock 0)
+-- =====================
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 101 roses', 'rouge', 101, 0 FROM PRODUIT WHERE PRO_NOM='Bouquet 101 Rouge';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 101 roses', 'rose clair', 101, 0 FROM PRODUIT WHERE PRO_NOM='Bouquet 101 Rose Clair';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 101 roses', 'rose', 101, 0 FROM PRODUIT WHERE PRO_NOM='Bouquet 101 Rose';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 101 roses', 'blanc', 101, 0 FROM PRODUIT WHERE PRO_NOM='Bouquet 101 Blanc';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 101 roses', 'bleu', 101, 0 FROM PRODUIT WHERE PRO_NOM='Bouquet 101 Bleu';
+
+INSERT INTO BOUQUET (PRO_ID, BOU_DESCRIPTION, BOU_COULEUR, BOU_NB_ROSES, BOU_QTE_STOCK)
+SELECT PRO_ID, 'Bouquet de 101 roses', 'noir', 101, 0 FROM PRODUIT WHERE PRO_NOM='Bouquet 101 Noir';
+
 
 -- COFFRETS (ENUM avec accents selon ta table)
 INSERT INTO COFFRET (PRO_ID, COF_EVENEMENT)

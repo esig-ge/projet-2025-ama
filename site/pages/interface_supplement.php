@@ -276,7 +276,7 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
                 ['input','change','blur'].forEach(ev => qty.addEventListener(ev, () => clampQty(card)));
             }
 
-            // Ajouter (décrément stock côté API)
+            // Ajouter (décrément stock côté API, gestion d'erreurs verbeuse)
             const btn = card.querySelector('[data-add]');
             if (btn){
                 btn.addEventListener('click', async function(){
@@ -289,31 +289,44 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
                     const q        = Math.max(1, parseInt(qtyInput?.value || '1', 10));
 
                     try {
-                        const res = await fetch(window.API_URL, {
+                        const res  = await fetch(window.API_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                             body: new URLSearchParams({ action: 'add_supplement', sup_id: String(supId), qty: String(q) })
                         });
-                        const data = await res.json();
 
-                        if (!res.ok || !data.ok) {
-                            if (data?.error === 'insufficient_stock') {
+                        const raw  = await res.text();           // <-- on lit le texte brut d'abord
+                        let data; try { data = JSON.parse(raw); } catch { data = null; }
+
+                        if (!res.ok || !data || data.ok === false) {
+                            const code = data?.error || `HTTP ${res.status}`;
+                            const msg  = data?.msg || (raw && raw.length < 300 ? raw : 'Erreur serveur');
+                            if (code === 'insufficient_stock') {
                                 clampQty(card);
                                 showMsg(card, `ℹ️ Le stock disponible pour <strong>${card.dataset.name}</strong> ne permet pas cette quantité.`);
                                 return;
                             }
-                            throw new Error(data?.error || 'Erreur serveur');
+                            console.error('add_supplement failed:', {code, msg, raw});
+                            toast(`Échec: ${msg}`, 'error');
+                            throw new Error(`${code}: ${msg}`);
                         }
 
-                        updateCardUI(card, parseInt(data.stockLeft ?? '0', 10));
+                        // OK
+                        const left = parseInt(data.stockLeft ?? '0', 10);
+                        updateCardUI(card, isFinite(left) ? left : 0);
                         toast(`${data.name} a bien été ajouté(e) au panier !`, 'success');
 
+                        // si tu as un résumé panier sur la page, on le rafraîchit (optionnel)
+                        if (typeof window.renderCart === 'function') {
+                            try { await window.renderCart(); } catch {}
+                        }
                     } catch (err) {
                         console.error(err);
                         toast(`Impossible d'ajouter ${card.dataset.name}.`, 'error');
                     }
                 });
             }
+
         });
     })();
 </script>
