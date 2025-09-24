@@ -114,9 +114,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 
 
 <section class="product-details">
-    <h3>Données de l’article</h3>
-
-
+    <h3>Données de l’article des Roses</h3>
     <table class="kv">
         <tbody>
         <?php
@@ -152,7 +150,10 @@ function recup_donnee_emballage(PDO $pdo): array {
         </tbody>
     </table>
 </section>
+
+<br>
 <section class="product-details">
+    <h3>Données de l’article des Bouquets</h3>
     <table class="kv">
         <tbody>
         <?php
@@ -161,28 +162,61 @@ function recup_donnee_emballage(PDO $pdo): array {
             foreach ($bouquets as $b) { ?>
         <tr>
             <td><strong>Nom</strong></td>
-            <td><?php  htmlspecialchars($b['PRO_NOM']) ?></td>
+            <td><?= htmlspecialchars($b['PRO_NOM']) ?></td>
         </tr>
         <tr>
             <td><strong>Prix</strong></td>
-            <td><?php  htmlspecialchars($b['PRO_PRIX']) ?> CHF</td>
+            <td><?=  htmlspecialchars($b['PRO_PRIX']) ?> CHF</td>
         </tr>
         <tr>
             <td><strong>Nombre de rose du bouquet</strong></td>
-            <td><?php  htmlspecialchars($b['BOU_NB_ROSES'] ?? '—') ?></td>
+            <td><?=  htmlspecialchars($b['BOU_NB_ROSES'] ?? '—') ?></td>
         </tr>
         <tr>
             <td><strong>Couleur</strong></td>
-            <td><?php  htmlspecialchars($b['BOU_COULEUR'] ?? '—') ?></td>
+            <td><?=  htmlspecialchars($b['BOU_COULEUR'] ?? '—') ?></td>
         </tr>
         <tr>
             <td><strong>Stock</strong></td>
-            <td><?php  htmlspecialchars($b['BOU_QTE_STOCK'] ?? '—') ?></td>
+            <td><?=  htmlspecialchars($b['BOU_QTE_STOCK'] ?? '—') ?></td>
         </tr>
 
         <tr><td colspan="2" style="border-bottom:1px solid #eee; height:6px;"></td></tr>
         <?php }  ?>
         </tbody>
     </table>
+</section>
+
+<section class="product-details" >
+    <table class="kv">
+    <tbody><?php
+    $coffrets = recup_donnee_coffret($pdo);
+    foreach ($coffrets as $c) { ?>
+    <tr>
+        <td><strong>Nom</strong></td>
+        <td><?= htmlspecialchars($c['PRO_NOM']) ?></td>
+    </tr>
+    <tr>
+        <td><strong>Prix</strong></td>
+        <td><?= isset($c['PRO_PRIX']) ? htmlspecialchars($c['PRO_PRIX']).' CHF' : '—' ?></td>
+    </tr>
+    <tr>
+        <td><strong>Événement</strong></td>
+        <td><?= htmlspecialchars($c['COF_EVENEMENT'] ?? '—') ?></td>
+            </tr>
+            <tr>
+                <td><strong>Taille</strong></td>
+                <td><?= htmlspecialchars($c['COF_TAILLE'] ?? '—')?></td>
+            </tr>
+            <tr>
+                <td><strong>Stock</strong></td>
+                <td><?= htmlspecialchars($c['COF_QTE_STOCK'] ?? '—') ?></td>
+            </tr>
+
+            <tr><td colspan="2" style="border-bottom:1px solid #eee;height:8px;"></td></tr>
+        <?php } ?>
+    </tbody>
+</table>
+
 </section>
 <section class="product-actio
