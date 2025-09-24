@@ -264,6 +264,18 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                     <?php endif; ?>
                 </p>
 
+                <!-- Ton input quantité -->
+                <input
+                        type="number"
+                        id="qty-<?= (int)$nb ?>"
+                        min="1"
+                        max="<?= (int)$def['stock'] ?>"
+                        value="1"
+                        class="qty-input">
+
+                <!-- Zone pour message dynamique -->
+                <div id="msg-<?= (int)$nb ?>" class="stock-message"></div>
+
                 <br>
                 <button type="submit"
                         class="add-to-cart"
@@ -280,6 +292,26 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
         <a href="<?= $BASE ?>interface_supplement.php?from=bouquet" class="button">Suivant</a>
     </div>
 </main>
+<script>
+    document.querySelectorAll(".qty-input").forEach(input => {
+        input.addEventListener("input", () => {
+            const max = parseInt(input.max, 10);
+            const val = parseInt(input.value, 10);
+            const id = input.id.split("-")[1];
+            const msg = document.getElementById("msg-" + id);
+
+            if (val > max) {
+                input.value = max;
+                msg.innerHTML = `🔴 Il reste <b>${max}</b> en stock. Quantité ajustée à <b>${max}</b>.`;
+                msg.className = "stock-message"; // rouge
+            } else {
+                msg.innerHTML = `ℹ️ Stock disponible : <b>${max}</b>`;
+                msg.className = "stock-message info"; // bleu
+            }
+        });
+    });
+
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>

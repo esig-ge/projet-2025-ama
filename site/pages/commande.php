@@ -18,39 +18,74 @@ $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 /* ====== Utils: normalisation + image ====== */
 function norm_name(string $s): string {
     $s = strtolower(trim($s));
-    $s = iconv('UTF-8', 'ASCII//TRANSLIT', $s);
+    // iconv peut retourner false si le module n'est pas dispo ; préviens
+    $converted = @iconv('UTF-8', 'ASCII//TRANSLIT', $s);
+    if ($converted !== false) $s = $converted;
     $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s);
     $s = preg_replace('/\s+/', ' ', $s);
     return trim($s);
 }
+
 function getProductImage(string $name): string {
     $k = norm_name($name);
-    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) return 'emballage_'.$m[2].'.PNG';
-    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pâle)?$/', $k)) return 'emballage_rose.PNG';
-    if (preg_match('/paillet+e?s?/', $k)) return 'paillette_argent.PNG';
-    if (preg_match('/papillon/', $k)) return 'papillon_doree.PNG';
-    if (preg_match('/^rose.*clair$/', $k)) return 'rose_claire.png';
-    static $map = [
-        '12 roses'=>'12Roses.png','bouquet 12'=>'12Roses.png',
-        '20 roses'=>'20Roses.png','bouquet 20'=>'20Roses.png',
-        '24 roses'=>'20Roses.png','bouquet 24'=>'20Roses.png',
-        '36 roses'=>'36Roses.png','bouquet 36'=>'36Roses.png',
-        '50 roses'=>'50Roses.png','bouquet 50'=>'50Roses.png',
-        '66 roses'=>'66Roses.png','bouquet 66'=>'66Roses.png',
-        '99 roses'=>'100Roses.png','bouquet 99'=>'100Roses.png',
-        '100 roses'=>'100Roses.png','bouquet 100'=>'100Roses.png',
-        '101 roses'=>'100Roses.png','bouquet 101'=>'100Roses.png',
-        'rose rouge'=>'rouge.png','rose rose'=>'rose.png','rose blanche'=>'rosesBlanche.png',
-        'rose bleue'=>'bleu.png','rose noire'=>'noir.png',
-        'mini ourson'=>'ours_blanc.PNG','deco anniv'=>'happybirthday.PNG','decoration anniversaire'=>'happybirthday.PNG',
-        'baton coeur'=>'baton_coeur.PNG','diamant'=>'diamant.PNG','couronne'=>'couronne.PNG',
-        'lettre'=>'lettre.png','initiale'=>'lettre.png','carte pour mot'=>'carte.PNG','carte'=>'carte.PNG',
-        'panier vide'=>'panier_vide.png','panier rempli'=>'panier_rempli.png',
+
+    /* ---- EMBALLAGES (papier/emballage + couleur) ---- */
+    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) {
+        return 'emballage_' . $m[2] . '.PNG';
+    }
+    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k)) {
+        return 'emballage_rose.PNG';
+    }
+
+    /* ---- SUPPLÉMENTS ---- */
+    if (preg_match('/paillet+e?s?/', $k))   return 'paillette_argent.PNG';
+    if (preg_match('/papillon/', $k))       return 'papillon_doree.PNG';
+    if (preg_match('/baton\s*coeur|batt?on\s*coeur/', $k)) return 'baton_coeur.PNG';
+    if (preg_match('/diamant/', $k))        return 'diamant.PNG';
+    if (preg_match('/couronne/', $k))       return 'couronne.PNG';
+    if (preg_match('/(lettre|initiale)/', $k)) return 'lettre.png';
+    if (preg_match('/carte/', $k))          return 'carte.PNG';
+
+    /* ---- ROSES UNITAIRES (produits "Rose Rouge", etc.) ---- */
+    if (preg_match('/^rose.*clair$/', $k))  return 'rose_claire.png';
+    static $simpleMap = [
+        'rose rouge'   => 'rouge.png',
+        'rose rose'    => 'rose.png',
+        'rose blanche' => 'rosesBlanche.png',
+        'rose bleue'   => 'bleu.png',
+        'rose noire'   => 'noir.png',
+        'panier vide'  => 'panier_vide.png',
+        'panier rempli'=> 'panier_rempli.png',
     ];
-    if (isset($map[$k])) return $map[$k];
+    if (isset($simpleMap[$k])) return $simpleMap[$k];
+
+    /* ---- BOUQUETS : "Bouquet 12", "Bouquet 12 Rouge", "Bouquet de 12 roses", etc. ----
+       -> on choisit l'image par le NOMBRE, on ignore la couleur éventuelle
+    */
+    // Exemples qui matcheront:
+    // "bouquet 12", "bouquet 12 rouge", "bouquet de 12 roses"
+    if (preg_match('/\bbouquet\b(?:\s+de)?\s+([0-9]{2,3})\b/', $k, $m)) {
+        $nb = (int)$m[1];
+        switch ($nb) {
+            case 12:  return '12Roses.png';
+            case 20:  return '20Roses.png';
+            case 24:  return '20Roses.png';
+            case 36:  return '36Roses.png';
+            case 50:  return '50Roses.png';
+            case 66:  return '66Roses.png';
+            case 99:  return '100Roses.png';
+            case 100: return '100Roses.png';
+            case 101: return '100Roses.png';
+        }
+    }
+
+    /* ---- COFFRETS ---- */
     if (strpos($k, 'coffret') === 0) return 'coffret.png';
+
+    /* ---- fallback ---- */
     return 'placeholder.png';
 }
+
 
 /* ====== Couleurs (clé -> hex) ====== */
 function color_hex(?string $c): ?string {
