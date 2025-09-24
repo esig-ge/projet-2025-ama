@@ -3,7 +3,7 @@
     --bg:#ffffff;           /* fond principal */
     --card:#ffffff;         /* fond des cartes */
     --ink:#1a1a1a;          /* couleur du texte standard */
-    --muted:#6b6b6b;        /* texte secondaire/grisé */
+    --muted: rgb(255, 255, 255);        /* texte secondaire/grisé */
     --accent:#8d0e0e;       /* couleur principale (rouge foncé) */
     --accent-weak:#5e0808;  /* variante plus sombre de l’accent */
     --stroke:#e7e7ea;       /* couleur des bordures */

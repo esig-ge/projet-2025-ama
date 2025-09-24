@@ -40,7 +40,7 @@ if (!$client || !isset($client['CLI_DATENAISSANCE'])) {
 // --------- 2) Adresses LIVRAISON & FACTURATION ----------
 $sqlAdr = "SELECT A.ADR_ID, A.ADR_RUE, A.ADR_NUMERO, A.ADR_NPA, A.ADR_VILLE, A.ADR_PAYS, A.ADR_TYPE
            FROM ADRESSE A
-           JOIN CLIENT_ADRESSE CA ON CA.ADR_ID = A.ADR_ID
+           JOIN ADRESSE_CLIENT CA ON CA.ADR_ID = A.ADR_ID
            WHERE CA.PER_ID = :id AND A.ADR_TYPE = :type
            ORDER BY A.ADR_ID DESC LIMIT 1";
 

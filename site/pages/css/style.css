@@ -3,7 +3,7 @@
     --bg:#0b0b0b;           /* noir profond */
     --paper:#111;           /* noir doux */
     --ink:#f5f5f5;          /* blanc cassé */
-    --muted:#cfcfcf;        /* gris léger */
+    --muted: rgb(255, 255, 255);        /* gris léger */
     --accent:#e0112b;       /* rouge pétale */
     --accent-2:#ff3b53;     /* rouge clair */
     --ring:#ffffff22;       /* anneau discret */

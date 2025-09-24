@@ -3,7 +3,7 @@
     --brand-1:#7a001c;     /* bordeaux foncé */
     --brand-2:#a31d2b;     /* bordeaux plus clair */
     --ink:#ffffff;         /* texte global clair */
-    --muted:#f1c6c6;       /* gris rosé pour secondaires */
+    --muted: rgb(255, 228, 240);       /* gris rosé pour secondaires */
     --card:rgba(255,255,255,.08); /* cartes translucides */
     --stroke:rgba(255,255,255,.22);
     --ok:#12b886;
@@ -109,9 +109,13 @@ body.aside-closed .adm-main{ margin-left:0 }
     backdrop-filter:saturate(130%) blur(6px);
 }
 .burger{background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:10px; padding:8px 10px; cursor:pointer}
-.burger:hover{background:rgba(255,255,255,.22)}
+.burger:hover{background: rgb(255, 255, 255)
+}
 .welcome h1{margin:0 0 4px 0; font-size:22px}
-.welcome p{margin:0; opacity:.85; color:var(--muted)}
+welcome p {
+    color: #fff !important;
+    opacity: 1; /* enlève l’effet "grisé" */
+}
 
 .top-actions{margin-left:auto; display:flex; gap:10px}
 .btn{
@@ -192,7 +196,7 @@ body.aside-closed .adm-main{ margin-left:0 }
 .list li{padding:10px 0; border-bottom:1px solid rgba(255,255,255,.12)}
 .list li em{font-style:normal; color:#ffd0d0; font-weight:700}
 
-.adm-bottom{padding:14px 20px; color:var(--muted)}
+.adm-bottom{padding:14px 20px; color: #fff !important}
 
 /* ===== Responsive ===== */
 @media (max-width: 1200px){
@@ -210,3 +214,66 @@ body.aside-closed .adm-main{ margin-left:0 }
 
 /* ===== Animations ===== */
 @keyframes pop{from{transform:translateY(6px); opacity:0}to{transform:translateY(0); opacity:1}}
+
+
+/* === PATCH: blocs blancs + textes bordeaux sur fond bordeaux === */
+
+/* Fond général (tu gardes tes pétales/halos existants) */
+:root{
+    --brand-1:#7a001c;      /* bordeaux */
+    --brand-2:#a31d2b;
+    --ink:#7a001c;          /* texte bordeaux par défaut */
+    --muted:#6b7a90;
+    --card:#ffffff;         /* cartes/blocs blancs */
+    --stroke:rgba(122,0,28,.12); /* bordures très légères rosées */
+    --shadow:0 12px 28px rgba(0,0,0,.18);
+}
+
+/* Sidebar + topbar restent sombres */
+.adm-sidebar,
+.adm-topbar{ color:#fff; }
+
+/* Blocs blancs (KPI + cards) */
+.kpi-card,
+.card{
+    background:var(--card) !important;
+    color:var(--ink) !important;
+    border:1px solid var(--stroke);
+    box-shadow:var(--shadow);
+    backdrop-filter:none;           /* on enlève le glass si présent */
+}
+
+/* Titres & valeurs */
+.card-head h2{ color:var(--brand-1); }
+.kpi-label{ color: rgba(120, 4, 57, 0.17); }      /* gris lisible sur blanc */
+.kpi-value{ color:var(--brand-1); }
+
+/* Petits graphs/decors dans les KPI */
+.spark, .bar{
+    background:linear-gradient(90deg, rgba(243,128,128,.35), rgba(243,128,128,.18));
+    mask:repeating-linear-gradient(90deg,#000 0 6px,transparent 6px 10px);
+}
+
+/* Liens d’action dans les cards */
+.link{ color:var(--brand-1); }
+.link:hover{ text-decoration:underline; }
+
+/* Tableaux & séparateurs plus clairs */
+.table.like .row{ border-bottom:1px solid #eef1f6; }
+.list li{ border-bottom:1px solid #eef1f6; }
+
+/* Raccourcis (QA) blancs */
+.qa{
+    background:#fff;
+    color:var(--brand-1);
+    border:1px solid var(--stroke);
+}
+.qa:hover{ box-shadow:0 10px 20px rgba(0,0,0,.12); transform:translateY(-2px); }
+
+/* Boutons */
+.btn{ background:#fff; color:var(--brand-1); }
+.btn.ghost{ background:transparent; color:#fff; outline:2px solid rgba(255,255,255,.6); }
+
+/* Alertes badges (gardés) */
+.status-badge.status-oos{ background:#fde7e7; color:#a30000; }
+.status-badge.status-low{ background:#fff3e0; color:#9a5a00; }

@@ -1,5 +1,5 @@
 <?php
-// /site/pages/admin_stock.php
+// /site/pages/adminStocks.php
 session_start();
 
 /* ===== Accès simple ===== */
@@ -31,22 +31,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     try {
         switch ($type) {
             case 'Bouquet':
-                $st = $pdo->prepare("UPDATE BOUQUET SET BOU_QTE_STOCK=:s WHERE PRO_ID=:id");
-                break;
+                $st = $pdo->prepare("UPDATE BOUQUET SET BOU_QTE_STOCK=:s WHERE PRO_ID=:id"); break;
             case 'Fleur':
-                $st = $pdo->prepare("UPDATE FLEUR SET FLE_QTE_STOCK=:s WHERE PRO_ID=:id");
-                break;
+                $st = $pdo->prepare("UPDATE FLEUR SET FLE_QTE_STOCK=:s WHERE PRO_ID=:id"); break;
             case 'Supplément':
-                $st = $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=:s WHERE SUP_ID=:id");
-                break;
+                $st = $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=:s WHERE SUP_ID=:id"); break;
             case 'Emballage':
-                $st = $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK=:s WHERE EMB_ID=:id");
-                break;
+                $st = $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK=:s WHERE EMB_ID=:id"); break;
             case 'Coffret':
-                $st = $pdo->prepare("UPDATE COFFRET SET COF_QTE_STOCK=:s WHERE PRO_ID=:id");
-                break;
-            default:
-                throw new RuntimeException('Type inconnu.');
+                $st = $pdo->prepare("UPDATE COFFRET SET COF_QTE_STOCK=:s WHERE PRO_ID=:id"); break;
+            default: throw new RuntimeException('Type inconnu.');
         }
         $st->execute([':s'=>$stock, ':id'=>$id]);
         $_SESSION['flash'] = "Stock mis à jour.";
@@ -63,14 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 $bind = [':t'=>$threshold];
 
 $whereView = " WHERE CAST(t.stock AS SIGNED) <= :t ";
-if ($view === 'oos')       $whereView = " WHERE CAST(t.stock AS SIGNED) = 0 ";
-elseif ($view === 'low')   $whereView = " WHERE CAST(t.stock AS SIGNED) BETWEEN 1 AND :t ";
+if ($view === 'oos')     $whereView = " WHERE CAST(t.stock AS SIGNED) = 0 ";
+elseif ($view === 'low') $whereView = " WHERE CAST(t.stock AS SIGNED) BETWEEN 1 AND :t ";
 
 $whereSearch = "";
-if ($q !== '') {
-    $whereSearch = " AND t.nom LIKE :q ";
-    $bind[':q'] = '%'.$q.'%';
-}
+if ($q !== '') { $whereSearch = " AND t.nom LIKE :q "; $bind[':q'] = '%'.$q.'%'; }
 
 $sqlBase = "
   FROM (
@@ -92,21 +83,13 @@ $sqlBase = "
 ";
 
 $sqlCount = "SELECT COUNT(*) ".$sqlBase.$whereView.$whereSearch;
-$stc = $pdo->prepare($sqlCount);
-$stc->execute($bind);
-$total = (int)$stc->fetchColumn();
+$stc = $pdo->prepare($sqlCount); $stc->execute($bind); $total = (int)$stc->fetchColumn();
 
-$sqlRows = "
-  SELECT type, nom, stock, id
-  ".$sqlBase.$whereView.$whereSearch."
-  ORDER BY CAST(t.stock AS SIGNED) ASC, t.nom ASC
-  LIMIT {$limit} OFFSET {$off}
-";
-$str = $pdo->prepare($sqlRows);
-$str->execute($bind);
-$rows = $str->fetchAll(PDO::FETCH_ASSOC);
+$sqlRows = "SELECT type, nom, stock, id ".$sqlBase.$whereView.$whereSearch."
+            ORDER BY CAST(t.stock AS SIGNED) ASC, t.nom ASC
+            LIMIT {$limit} OFFSET {$off}";
+$str = $pdo->prepare($sqlRows); $str->execute($bind); $rows = $str->fetchAll(PDO::FETCH_ASSOC);
 
-/* ===== Pagination ===== */
 $pages = max(1, (int)ceil($total / $limit));
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
@@ -118,107 +101,166 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     <title>Gestion des stocks — DK Bloom</title>
     <link rel="stylesheet" href="<?= $BASE ?>css/style_admin.css">
     <style>
-        /* ===== Mise en page ===== */
-        .toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:12px 0}
-        .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-        .flash{margin:8px 0;padding:10px 12px;border-radius:8px;background: #ffffff;border:1px solid #cfe6ff;color:#064a7a}
-        .pagination{display:flex;gap:6px;justify-content:flex-end;margin-top:10px}
-        .pagination a,.pagination span{padding:6px 10px;border-radius:6px;border:1px solid #eee;text-decoration:none}
-        .pagination .current{background:#f5f5f5;font-weight:600}
+        :root{
+            --bg:#ffffff;
+            --text: rgba(97, 2, 2, 0.71);
+            --muted:#6b7280;
+            --brand:#8b1c1c;         /* bordeaux */
+            --brand-600:#6e1515;
+            --brand-050:#fdeeee;
+            --ok:#0b8f5a;
+            --warn:#b46900;          /* badge bientôt rupture */
+            --warn-bg:#fff4e5;
+            --danger:#b11226;        /* badge rupture */
+            --danger-bg:#ffe8ea;
+            --line:#e5e7eb;
+            --card:#ffffff;
+            --shadow:0 10px 24px rgba(0,0,0,.08);
+            --radius:14px;
+        }
+        body{background:var(--bg); color:var(--text);}
+        .wrap{max-width:1150px;margin:26px auto;padding:0 16px;}
+        h1{font-size:clamp(24px,2.4vw,34px);margin:0 0 16px;font-weight:800;color:#111}
+        .sub{color:var(--muted);margin-bottom:18px}
 
-        /* ===== Thème bordeaux pour le tableau ===== */
-        .table.like {width:100%;border-collapse:collapse;margin-top:20px;border-radius:8px;overflow:hidden}
-        .table.like .row{display:grid;grid-template-columns:1fr 2fr 1fr 2fr 2fr;padding:10px;border-bottom:1px solid #fff;background:#800000;color:#fff}
-        .table.like .row.head{background:#5c0000;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-        .table.like .row:nth-child(even):not(.head){background:#990000}
-        .table.like .row.empty{background:#800000;text-align:center;font-style:italic}
-        .table.like .row div{padding:6px 10px}
+        /* card */
+        .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);}
+        .card-head{padding:14px 16px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .card-body{padding:14px 16px 6px}
 
-        /* ===== Statuts ===== */
-        .status-badge{border-radius:6px;padding:3px 10px;font-size:.85em;font-weight:700;white-space:nowrap}
-        .status-oos{background:#ffebeb;color:#a30000}
-        .status-low{background:#fff2e0;color:#9a5a00}
+        /* toolbar */
+        .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+        .toolbar .spacer{flex:1}
+        select,input[type=text],input[type=number]{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;background:#fff;color:var(--text)}
+        input[type=text]{min-width:220px}
 
-        /* ===== Formulaire ligne ===== */
-        .stock-input{width:90px}
-        .btn, button{background:#fff;color:#800000;border:1px solid #fff;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:700;white-space:nowrap}
-        .btn:hover, button:hover{background:#f5f5f5;color:#5c0000}
-        .btn.ghost{background:transparent;border-color:#fff;color:#fff}
-        .btn.update{min-width:170px;} /* bouton plus long */
+        /* table */
+        .table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:12px;border:1px solid var(--line)}
+        .table thead th{
+            position:sticky; top:0; z-index:1;
+            background:#fafafa; color:#111; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:.3px;
+            padding:10px 12px; border-bottom:1px solid var(--line);
+        }
+        .table tbody td{padding:12px;border-top:1px solid var(--line);vertical-align:middle;}
+        .table tbody tr:nth-child(odd){background: rgb(255, 255, 255)
+        }
+        .table tbody tr:nth-child(even){background:#fcfcfc}
+        .table tbody tr:hover{background: rgba(120, 4, 57, 0.17)
+        }
+
+        /* badges */
+        .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+        .badge-warn{background:var(--warn-bg);color:var(--warn)}
+        .badge-danger{background:var(--danger-bg);color:var(--danger)}
+
+        /* stock color */
+        .stock-0{color:var(--danger);font-weight:800}
+
+        /* buttons */
+        .btn{appearance:none;border:1px solid var(--brand);color:#fff;background:var(--brand);padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+        .btn:hover{background:var(--brand-600);border-color:var(--brand-600)}
+        .btn.ghost{background:#fff;color:var(--brand);border-color:var(--brand)}
+        .btn.ghost:hover{background:#f9f5f5}
+        .btn.update{min-width:175px}
+
+        /* inline form */
+        .row-form{display:flex;gap:8px;align-items:center}
+        .row-form{display:flex;gap:8px;align-items:center}
+        .row-form .stock-input{width:90px}
+
+        /* flash */
+        .flash{margin:14px 0 0;background:#eef7ff;border:1px solid #cfe6ff;color:#0c4a6e;padding:10px 12px;border-radius:10px}
+
+        /* pagination */
+        .pagination{display:flex;gap:6px;justify-content:flex-end;margin:14px 2px 6px}
+        .pagination a,.pagination span{padding:7px 12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--text);font-weight:600}
+        .pagination .current{background:#f3f4f6}
     </style>
 </head>
-<body class="adm">
-<main class="container" style="padding:16px 20px">
+<body>
+<div class="wrap">
 
     <h1>Gestion des produits en alerte stock</h1>
+    <p class="sub">Surveillez et ajustez rapidement les stocks critiques (≤ <?= (int)$threshold ?>).</p>
 
     <?php if(!empty($_SESSION['flash'])): ?>
         <div class="flash"><?= h($_SESSION['flash']); unset($_SESSION['flash']); ?></div>
     <?php endif; ?>
 
-    <form class="toolbar" method="get">
-        <div class="filters">
-            <select name="view">
-                <option value="all" <?= $view==='all'?'selected':'' ?>>Tous (≤ <?= (int)$threshold ?>)</option>
-                <option value="oos" <?= $view==='oos'?'selected':'' ?>>Rupture (= 0)</option>
-                <option value="low" <?= $view==='low'?'selected':'' ?>>Bientôt en rupture (1…<?= (int)$threshold ?>)</option>
-            </select>
-            <label>Seuil
-                <input type="number" min="1" name="t" value="<?= (int)$threshold ?>" disabled style="width:60px">
-            </label>
-            <input type="text" name="q" placeholder="Recherche produit…" value="<?= h($q) ?>" />
-            <button class="btn" type="submit">Filtrer</button>
-            <a class="btn ghost" href="<?= h($_SERVER['PHP_SELF']) ?>">Réinit.</a>
+    <div class="card" style="margin-top:16px">
+        <div class="card-head">
+            <form class="toolbar" method="get">
+                <select name="view">
+                    <option value="all" <?= $view==='all'?'selected':'' ?>>Tous (≤ <?= (int)$threshold ?>)</option>
+                    <option value="oos" <?= $view==='oos'?'selected':'' ?>>Rupture (= 0)</option>
+                    <option value="low" <?= $view==='low'?'selected':'' ?>>Bientôt en rupture (1…<?= (int)$threshold ?>)</option>
+                </select>
+                <span style="color:var(--muted)">Seuil</span>
+                <input type="number" min="1" value="<?= (int)$threshold ?>" disabled style="width:70px">
+                <input type="text" name="q" placeholder="Recherche produit…" value="<?= h($q) ?>">
+                <button class="btn" type="submit">Filtrer</button>
+                <a class="btn ghost" href="<?= h($_SERVER['PHP_SELF']) ?>">Réinit.</a>
+            </form>
+            <div class="muted" style="color:var(--muted)"><?= (int)$total ?> résultat(s)</div>
         </div>
-        <div><?= (int)$total ?> résultat(s)</div>
-    </form>
 
-    <div class="table like">
-        <div class="row head"><div>Type</div><div>Produit</div><div>Stock</div><div>Statut</div><div>Action</div></div>
+        <div class="card-body" style="padding:0">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th style="width:14%">Type</th>
+                    <th>Produit</th>
+                    <th style="width:10%">Stock</th>
+                    <th style="width:18%">Statut</th>
+                    <th style="width:26%">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (!$rows): ?>
+                    <tr><td colspan="5" style="text-align:center;padding:22px">Aucun article à afficher.</td></tr>
+                <?php else: foreach ($rows as $r):
+                    $type  = $r['type'];
+                    $nom   = $r['nom'];
+                    $stock = (int)$r['stock'];
+                    $id    = (int)$r['id'];
+                    $isOOS = ($stock <= 0);
+                    $badge = $isOOS
+                        ? '<span class="badge badge-danger">Rupture de stock</span>'
+                        : '<span class="badge badge-warn">Bientôt en rupture</span>';
+                    ?>
+                    <tr>
+                        <td><?= h($type) ?></td>
+                        <td><?= h($nom) ?></td>
+                        <td class="<?= $isOOS ? 'stock-0':'' ?>"><?= $stock ?></td>
+                        <td><?= $badge ?></td>
+                        <td>
+                            <form method="post" class="row-form">
+                                <input type="hidden" name="action" value="update_stock">
+                                <input type="hidden" name="type" value="<?= h($type) ?>">
+                                <input type="hidden" name="id"   value="<?= $id ?>">
+                                <input class="stock-input" type="number" name="stock" min="0" value="<?= max(0,$stock) ?>">
+                                <button class="btn update" type="submit">Mettre à jour</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        </div>
 
-        <?php if (!$rows): ?>
-            <div class="row empty">Aucun article à afficher.</div>
-        <?php else: foreach ($rows as $r):
-            $type  = $r['type'];
-            $nom   = $r['nom'];
-            $stock = (int)$r['stock'];
-            $id    = (int)$r['id'];
-            $isOOS = ($stock <= 0);
-            $badge = $isOOS ? '<span class="status-badge status-oos">Rupture de stock</span>'
-                : '<span class="status-badge status-low">Bientôt en rupture</span>';
-            $stockStyle = $isOOS ? ' style="color:#ffcccc;font-weight:700"' : '';
-            ?>
-            <div class="row">
-                <div><?= h($type) ?></div>
-                <div><?= h($nom) ?></div>
-                <div<?= $stockStyle ?>><?= $stock ?></div>
-                <div><?= $badge ?></div>
-                <div>
-                    <form method="post" style="display:flex;gap:8px;align-items:center">
-                        <input type="hidden" name="action" value="update_stock">
-                        <input type="hidden" name="type" value="<?= h($type) ?>">
-                        <input type="hidden" name="id"   value="<?= $id ?>">
-                        <input class="stock-input" type="number" name="stock" min="0" value="<?= max(0,$stock) ?>">
-                        <button class="btn update" type="submit">Mettre à jour</button>
-                    </form>
-                </div>
+        <?php if ($pages > 1): ?>
+            <div class="pagination">
+                <?php for ($i=1; $i<=$pages; $i++):
+                    $params = $_GET; $params['page']=$i; $url = $_SERVER['PHP_SELF'].'?'.http_build_query($params); ?>
+                    <?= $i === $page ? '<span class="current">'.$i.'</span>' : '<a href="'.h($url).'">'.$i.'</a>' ?>
+                <?php endfor; ?>
             </div>
-        <?php endforeach; endif; ?>
+        <?php endif; ?>
     </div>
-
-    <?php if ($pages > 1): ?>
-        <div class="pagination">
-            <?php for ($i=1; $i<=$pages; $i++):
-                $params = $_GET; $params['page']=$i; $url = $_SERVER['PHP_SELF'].'?'.http_build_query($params);
-                ?>
-                <?= $i === $page ? '<span class="current">'.$i.'</span>' : '<a href="'.h($url).'">'.$i.'</a>' ?>
-            <?php endfor; ?>
-        </div>
-    <?php endif; ?>
 
     <p style="margin-top:16px">
         <a class="btn ghost" href="<?= $BASE ?>adminAccueil.php">← Retour au dashboard</a>
     </p>
-</main>
+</div>
 </body>
 </html>

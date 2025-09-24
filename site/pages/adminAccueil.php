@@ -243,6 +243,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'U
         <article class="card">
             <div class="card-head">
                 <h2>Ventes du mois (placeholder)</h2>
+                <h2>Ventes du mois (placeholder)</h2>
             </div>
             <div class="chart-placeholder">Graphique à ajouter ici</div>
         </article>

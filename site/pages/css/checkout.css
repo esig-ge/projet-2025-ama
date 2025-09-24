@@ -3,7 +3,7 @@
     --bg:#ffffff;
     --card:#ffffff;
     --ink:#1a1a1a;
-    --muted:#6b6b6b;
+    --muted: rgb(255, 255, 255);
     --accent:#8d0e0e;      /* bordeaux */
     --accent-weak:#5e0808; /* hover bordeaux foncé */
     --stroke:#e7e7ea;
