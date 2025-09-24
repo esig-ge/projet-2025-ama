@@ -91,7 +91,7 @@ function recup_donnee_emballage(PDO $pdo): array {
     <meta charset="utf-8">
     <title>Admin — Modifier les articles</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <style>
+    <style>/*  a ajouter sur le css plus tard*/
         body { font-family: system-ui, Arial, sans-serif; margin: 0; background:#fafafa; color:#111; }
         .admin-header { padding:16px 20px; background:#fff; border-bottom:1px solid #eee; }
         .breadcrumb a { color:#a00; text-decoration:none; }

@@ -74,7 +74,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
                 <h1>
                     Bienvenu<?php if (!empty($_SESSION['per_prenom'])): ?>e <?= htmlspecialchars($_SESSION['per_prenom']) ?>
                     <?php else: ?>
-                        <span class="accent">élégance</span>
+                        <span class="accent">cher client</span>
                     <?php endif; ?>
                 </h1>
 
