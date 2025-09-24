@@ -106,7 +106,7 @@ function recup_produit($pdo)
                 <th>Prix</th>
                 <th>Qté max</th>
                 <th>Quantité actuelle</th>
-                <th><a href='admin_modifier_article.php?type=fleur&id='>Modifier</a>
+                <th class="modif"><a href='admin_modifier_article.php?type=fleur&id='>Modifier</a>
                 </th>
                 <th> </th>
             </tr>
