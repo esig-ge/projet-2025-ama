@@ -35,7 +35,7 @@ table thead {
     background-color: #660000; /* Bordeaux encore plus foncé */
 }
 
-table thead th {
+table thead th a{
     padding: 12px 15px;
     text-align: left;
     font-size: 0.95em;

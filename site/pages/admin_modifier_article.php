@@ -30,10 +30,8 @@ function recup_donnee_bouquet(PDO $pdo): array {
               p.PRO_ID,
               p.PRO_NOM,
               p.PRO_PRIX,
-              b.BOU_DESCRIPTION,
-              b.BOU_TYPE,
-              b.BOU_COULEUR,
               b.BOU_NB_ROSES,
+              b.BOU_COULEUR,
               b.BOU_QTE_STOCK
             FROM PRODUIT p
             INNER JOIN BOUQUET b ON b.PRO_ID = p.PRO_ID
@@ -49,8 +47,7 @@ function recup_donnee_coffret(PDO $pdo): array {
               p.PRO_ID,
               p.PRO_NOM,
               c.COF_EVENEMENT,
-              c.COF_QTE_STOCK,
-              c.COF_TAILLE,
+              c.COF_QTE_STOCK
             FROM PRODUIT p
             INNER JOIN COFFRET c ON c.PRO_ID = p.PRO_ID
             ORDER BY p.PRO_NOM ASC";
@@ -58,40 +55,35 @@ function recup_donnee_coffret(PDO $pdo): array {
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
-/*---------- supplement-----------*//*
+/*---------- supplement-----------*/
 function recup_donnee_supplement(PDO $pdo): array {
     $sql = "SELECT
               s.SUP_ID,
               s.SUP_NOM,
               s.SUP_DESCRIPTION,
               s.SUP_PRIX_UNITAIRE,
-              s.SUP_QTE_STOCK,
-              s.SUP_ACTIF
+              s.SUP_QTE_STOCK
             FROM SUPPLEMENT s
             ORDER BY s.SUP_NOM ASC";
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}*/
+}
 
 /*---------- emballage-----------*/
-/*
+
 function recup_donnee_emballage(PDO $pdo): array {
     $sql = "SELECT
               e.EMB_ID,
               e.EMB_NOM,
-              e.EMB_DESCRIPTION,
               e.EMB_COULEUR,
-              e.EMB_PRIX_UNITAIRE,
-              e.EMB_QTE_STOCK,
-              e.EMB_IMAGE,
-              e.EMB_ACTIF
+              e.EMB_QTE_STOCK
             FROM EMBALLAGE e
             ORDER BY e.EMB_NOM ASC";
     $st = $pdo->prepare($sql);
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
-}*/
+}
 
 ?>
 
@@ -100,7 +92,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <head>
     <meta charset="utf-8">
     <title>Admin — Modifier les articles</title>
-<!--    <link rel="stylesheet" href=--><?php //= $BASE ?><!--"css/admin_modification.css">-->
+
 
 
 </head>
@@ -109,16 +101,14 @@ function recup_donnee_emballage(PDO $pdo): array {
 <!-- En-tête / fil d’Ariane -->
 <header class="admin-header">
     <nav class="breadcrumb">
-        <a href="#">Dashboard</a> › <a href="#">Produits</a> › <span>Modifier</span>
+        <a href="adminAccueil.php">Dashboard</a> › <a href="admin_catalogue.php">Produits</a>
     </nav>
     <h1>Modifier les articles</h1>
 </header>
 
 
 <section class="product-details">
-    <h3>Données de l’article</h3>
-
-
+    <h3>Données de l’article des Roses</h3>
     <table class="kv">
         <tbody>
         <?php
@@ -149,14 +139,130 @@ function recup_donnee_emballage(PDO $pdo): array {
                 <td><strong>Image</strong></td>
                 <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '---') ?></td>
             </tr>
-            <!--            <li><strong>Statut :</strong> <span data-field="actif">Actif / Inactif</span></li>-->
 
         <?php } ?>
         </tbody>
     </table>
-
 </section>
 
+<br>
+<section class="product-details">
+    <h3>Données de l’article des Bouquets</h3>
+    <table class="kv">
+        <tbody>
+        <?php
+           // Récupération des bouquets
+            $bouquets = recup_donnee_bouquet($pdo);
+            foreach ($bouquets as $b) { ?>
+        <tr>
+            <td><strong>Nom</strong></td>
+            <td><?= htmlspecialchars($b['PRO_NOM']) ?></td>
+        </tr>
+        <tr>
+            <td><strong>Prix</strong></td>
+            <td><?=  htmlspecialchars($b['PRO_PRIX']) ?> CHF</td>
+        </tr>
+        <tr>
+            <td><strong>Nombre de rose du bouquet</strong></td>
+            <td><?=  htmlspecialchars($b['BOU_NB_ROSES'] ?? '—') ?></td>
+        </tr>
+        <tr>
+            <td><strong>Couleur</strong></td>
+            <td><?=  htmlspecialchars($b['BOU_COULEUR'] ?? '—') ?></td>
+        </tr>
+        <tr>
+            <td><strong>Stock</strong></td>
+            <td><?=  htmlspecialchars($b['BOU_QTE_STOCK'] ?? '—') ?></td>
+        </tr>
 
+        <tr><td colspan="2" style="border-bottom:1px solid #eee; height:6px;"></td></tr>
+        <?php }  ?>
+        </tbody>
+    </table>
+</section>
+
+<section class="product-details" >
+    <h3>Données de l’article des Coffrets</h3>
+    <table class="kv">
+        <tbody>
+        <?php
+        $coffrets = recup_donnee_coffret($pdo);
+        foreach ($coffrets as $c) { ?>
+            <tr>
+                <td><strong>Nom</strong></td>
+                <td><?= htmlspecialchars($c['PRO_NOM']) ?></td>
+            </tr>
+            <tr>
+                <td><strong>Prix</strong></td>
+                <td><?= isset($c['PRO_PRIX']) ? htmlspecialchars($c['PRO_PRIX']).' CHF' : '—' ?></td>
+            </tr>
+            <tr>
+                <td><strong>Événement</strong></td>
+                <td><?= htmlspecialchars($c['COF_EVENEMENT'] ?? '—') ?></td>
+            </tr>
+            <tr>
+                <td><strong>Stock</strong></td>
+                <td><?= htmlspecialchars($c['COF_QTE_STOCK'] ?? '—') ?></td>
+            </tr>
+
+            <tr><td colspan="2" style="border-bottom:1px solid #eee;height:8px;"></td></tr>
+        <?php } ?>
+        </tbody>
+    </table>
+</section>
+<section class="product-details">
+    <h3>Données de l’article des Suppléments</h3>
+    <table class="kv">
+        <tbody>
+        <?php
+        $supps = recup_donnee_supplement($pdo);
+        foreach ($supps as $s) { ?>
+            <tr>
+                <td><strong>Nom</strong></td>
+                <td><?= htmlspecialchars($s['SUP_NOM']) ?></td>
+            </tr>
+            <tr>
+                <td><strong>Description</strong></td>
+                <td><?= htmlspecialchars($s['SUP_DESCRIPTION'] ?? '—') ?></td>
+            </tr>
+            <tr>
+                <td><strong>Prix</strong></td>
+                <td><?= isset($s['SUP_PRIX_UNITAIRE']) ? htmlspecialchars($s['SUP_PRIX_UNITAIRE']).' CHF' : '—' ?></td>
+            </tr>
+            <tr>
+                <td><strong>Stock</strong></td>
+                <td><?= htmlspecialchars($s['SUP_QTE_STOCK'] ?? '—') ?></td>
+            </tr>
+
+            <tr><td colspan="2" style="border-bottom:1px solid #eee;height:8px;"></td></tr>
+        <?php } ?>
+        </tbody>
+    </table>
+</section>
+<section class="product-details">
+    <h3>Données de l’article des Emballages</h3>
+    <table class="kv">
+        <tbody>
+        <?php
+        $embs = recup_donnee_emballage($pdo);
+        foreach ($embs as $e) { ?>
+            <tr>
+                <td><strong>Nom</strong></td>
+                <td><?= htmlspecialchars($e['EMB_NOM']) ?></td>
+            </tr>
+            <tr>
+                <td><strong>Couleur</strong></td>
+                <td><?= htmlspecialchars($e['EMB_COULEUR'] ?? '—') ?></td>
+            </tr>
+            <tr>
+                <td><strong>Stock</strong></td>
+                <td><?= htmlspecialchars($e['EMB_QTE_STOCK'] ?? '—') ?></td>
+            </tr>
+
+            <tr><td colspan="2" style="border-bottom:1px solid #eee;height:8px;"></td></tr>
+        <?php } ?>
+        </tbody>
+    </table>
+</section>
 
 <section class="product-actio
