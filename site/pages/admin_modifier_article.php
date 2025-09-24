@@ -109,6 +109,14 @@ function recup_donnee_emballage(PDO $pdo): array {
 
 <section class="product-details">
     <h3>Données de l’article des Roses</h3>
+    <thead>
+    <td><strong>Image</strong></td>
+    <td><strong>Nom</strong></td>
+    <td><strong>Prix</strong> </td>
+    <td><strong>Couleur</strong></td>
+    <td><strong>Stock</strong></td>
+    <td><strong>Quantité max</strong></td>
+    </thead>
     <table class="kv">
         <tbody>
         <?php
@@ -116,28 +124,12 @@ function recup_donnee_emballage(PDO $pdo): array {
         foreach ($fleurs as $fleur) { ?>
             <!--                <img data-field="image_url" src="/img/placeholder.png" alt="Image de l’article" />-->
             <tr>
-                <td><strong>Nom</strong></td>
-                <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
-            </tr>
-            <tr>
-                <td><strong>Prix</strong> </td>
-                <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
-            </tr>
-            <tr>
-                <td><strong>Couleur</strong></td>
-                <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '---') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Stock</strong></td>
-                <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '---') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Quantité max</strong></td>
-                <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '---') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Image</strong></td>
                 <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '---') ?></td>
+                <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
+                <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
+                <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '---') ?></td>
+                <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '---') ?></td>
+                <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '---') ?></td>
             </tr>
 
         <?php } ?>
@@ -145,122 +137,151 @@ function recup_donnee_emballage(PDO $pdo): array {
     </table>
 </section>
 
-<br>
+<br><section class="product-details">
+    <h3>Données de l’article des Roses</h3>
+    <table class="kv">
+        <thead>
+        <tr>
+            <td><strong>Image</strong></td>
+            <td><strong>Nom</strong></td>
+            <td><strong>Prix</strong></td>
+            <td><strong>Couleur</strong></td>
+            <td><strong>Stock</strong></td>
+            <td><strong>Quantité max</strong></td>
+        </tr>
+        </thead>
+        <tbody>
+        <?php
+        $fleurs = recup_donnee_fleur($pdo);
+        if (empty($fleurs)) { ?>
+            <tr><td colspan="6">Aucun article trouvé</td></tr>
+        <?php } else {
+            foreach ($fleurs as $fleur) { ?>
+                <tr>
+                    <td><?= htmlspecialchars($fleur['PRO_IMAGE'] ?? '---') ?></td>
+                    <td><?= htmlspecialchars($fleur['PRO_NOM']) ?></td>
+                    <td><?= htmlspecialchars($fleur['PRO_PRIX']) ?> CHF</td>
+                    <td><?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '---') ?></td>
+                    <td><?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? '---') ?></td>
+                    <td><?= htmlspecialchars($fleur['PRO_QTE_MAX'] ?? '---') ?></td>
+                </tr>
+            <?php } } ?>
+        </tbody>
+    </table>
+</section>
+
 <section class="product-details">
     <h3>Données de l’article des Bouquets</h3>
     <table class="kv">
-        <tbody>
-        <?php
-           // Récupération des bouquets
-            $bouquets = recup_donnee_bouquet($pdo);
-            foreach ($bouquets as $b) { ?>
+        <thead>
         <tr>
             <td><strong>Nom</strong></td>
-            <td><?= htmlspecialchars($b['PRO_NOM']) ?></td>
-        </tr>
-        <tr>
             <td><strong>Prix</strong></td>
-            <td><?=  htmlspecialchars($b['PRO_PRIX']) ?> CHF</td>
-        </tr>
-        <tr>
-            <td><strong>Nombre de rose du bouquet</strong></td>
-            <td><?=  htmlspecialchars($b['BOU_NB_ROSES'] ?? '—') ?></td>
-        </tr>
-        <tr>
+            <td><strong>Nb Roses</strong></td>
             <td><strong>Couleur</strong></td>
-            <td><?=  htmlspecialchars($b['BOU_COULEUR'] ?? '—') ?></td>
-        </tr>
-        <tr>
             <td><strong>Stock</strong></td>
-            <td><?=  htmlspecialchars($b['BOU_QTE_STOCK'] ?? '—') ?></td>
         </tr>
-
-        <tr><td colspan="2" style="border-bottom:1px solid #eee; height:6px;"></td></tr>
-        <?php }  ?>
+        </thead>
+        <tbody>
+        <?php
+        $bouquets = recup_donnee_bouquet($pdo);
+        if (empty($bouquets)) { ?>
+            <tr><td colspan="5">Aucun article trouvé</td></tr>
+        <?php } else {
+            foreach ($bouquets as $b) { ?>
+                <tr>
+                    <td><?= htmlspecialchars($b['PRO_NOM']) ?></td>
+                    <td><?= htmlspecialchars($b['PRO_PRIX']) ?> CHF</td>
+                    <td><?= htmlspecialchars($b['BOU_NB_ROSES'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($b['BOU_COULEUR'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($b['BOU_QTE_STOCK'] ?? '—') ?></td>
+                </tr>
+            <?php } } ?>
         </tbody>
     </table>
 </section>
 
-<section class="product-details" >
+<section class="product-details">
     <h3>Données de l’article des Coffrets</h3>
     <table class="kv">
+        <thead>
+        <tr>
+            <td><strong>Nom</strong></td>
+            <td><strong>Prix</strong></td>
+            <td><strong>Événement</strong></td>
+            <td><strong>Stock</strong></td>
+        </tr>
+        </thead>
         <tbody>
         <?php
         $coffrets = recup_donnee_coffret($pdo);
-        foreach ($coffrets as $c) { ?>
-            <tr>
-                <td><strong>Nom</strong></td>
-                <td><?= htmlspecialchars($c['PRO_NOM']) ?></td>
-            </tr>
-            <tr>
-                <td><strong>Prix</strong></td>
-                <td><?= isset($c['PRO_PRIX']) ? htmlspecialchars($c['PRO_PRIX']).' CHF' : '—' ?></td>
-            </tr>
-            <tr>
-                <td><strong>Événement</strong></td>
-                <td><?= htmlspecialchars($c['COF_EVENEMENT'] ?? '—') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Stock</strong></td>
-                <td><?= htmlspecialchars($c['COF_QTE_STOCK'] ?? '—') ?></td>
-            </tr>
-
-            <tr><td colspan="2" style="border-bottom:1px solid #eee;height:8px;"></td></tr>
-        <?php } ?>
+        if (empty($coffrets)) { ?>
+            <tr><td colspan="4">Aucun article trouvé</td></tr>
+        <?php } else {
+            foreach ($coffrets as $c) { ?>
+                <tr>
+                    <td><?= htmlspecialchars($c['PRO_NOM']) ?></td>
+                    <td><?= isset($c['PRO_PRIX']) ? htmlspecialchars($c['PRO_PRIX']).' CHF' : '—' ?></td>
+                    <td><?= htmlspecialchars($c['COF_EVENEMENT'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($c['COF_QTE_STOCK'] ?? '—') ?></td>
+                </tr>
+            <?php } } ?>
         </tbody>
     </table>
 </section>
+
 <section class="product-details">
     <h3>Données de l’article des Suppléments</h3>
     <table class="kv">
+        <thead>
+        <tr>
+            <td><strong>Nom</strong></td>
+            <td><strong>Description</strong></td>
+            <td><strong>Prix</strong></td>
+            <td><strong>Stock</strong></td>
+        </tr>
+        </thead>
         <tbody>
         <?php
         $supps = recup_donnee_supplement($pdo);
-        foreach ($supps as $s) { ?>
-            <tr>
-                <td><strong>Nom</strong></td>
-                <td><?= htmlspecialchars($s['SUP_NOM']) ?></td>
-            </tr>
-            <tr>
-                <td><strong>Description</strong></td>
-                <td><?= htmlspecialchars($s['SUP_DESCRIPTION'] ?? '—') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Prix</strong></td>
-                <td><?= isset($s['SUP_PRIX_UNITAIRE']) ? htmlspecialchars($s['SUP_PRIX_UNITAIRE']).' CHF' : '—' ?></td>
-            </tr>
-            <tr>
-                <td><strong>Stock</strong></td>
-                <td><?= htmlspecialchars($s['SUP_QTE_STOCK'] ?? '—') ?></td>
-            </tr>
-
-            <tr><td colspan="2" style="border-bottom:1px solid #eee;height:8px;"></td></tr>
-        <?php } ?>
+        if (empty($supps)) { ?>
+            <tr><td colspan="4">Aucun article trouvé</td></tr>
+        <?php } else {
+            foreach ($supps as $s) { ?>
+                <tr>
+                    <td><?= htmlspecialchars($s['SUP_NOM']) ?></td>
+                    <td><?= htmlspecialchars($s['SUP_DESCRIPTION'] ?? '—') ?></td>
+                    <td><?= isset($s['SUP_PRIX_UNITAIRE']) ? htmlspecialchars($s['SUP_PRIX_UNITAIRE']).' CHF' : '—' ?></td>
+                    <td><?= htmlspecialchars($s['SUP_QTE_STOCK'] ?? '—') ?></td>
+                </tr>
+            <?php } } ?>
         </tbody>
     </table>
 </section>
+
 <section class="product-details">
     <h3>Données de l’article des Emballages</h3>
     <table class="kv">
+        <thead>
+        <tr>
+            <td><strong>Nom</strong></td>
+            <td><strong>Couleur</strong></td>
+            <td><strong>Stock</strong></td>
+        </tr>
+        </thead>
         <tbody>
         <?php
         $embs = recup_donnee_emballage($pdo);
-        foreach ($embs as $e) { ?>
-            <tr>
-                <td><strong>Nom</strong></td>
-                <td><?= htmlspecialchars($e['EMB_NOM']) ?></td>
-            </tr>
-            <tr>
-                <td><strong>Couleur</strong></td>
-                <td><?= htmlspecialchars($e['EMB_COULEUR'] ?? '—') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Stock</strong></td>
-                <td><?= htmlspecialchars($e['EMB_QTE_STOCK'] ?? '—') ?></td>
-            </tr>
-
-            <tr><td colspan="2" style="border-bottom:1px solid #eee;height:8px;"></td></tr>
-        <?php } ?>
+        if (empty($embs)) { ?>
+            <tr><td colspan="3">Aucun article trouvé</td></tr>
+        <?php } else {
+            foreach ($embs as $e) { ?>
+                <tr>
+                    <td><?= htmlspecialchars($e['EMB_NOM']) ?></td>
+                    <td><?= htmlspecialchars($e['EMB_COULEUR'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($e['EMB_QTE_STOCK'] ?? '—') ?></td>
+                </tr>
+            <?php } } ?>
         </tbody>
     </table>
 </section>
