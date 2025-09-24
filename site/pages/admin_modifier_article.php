@@ -48,7 +48,6 @@ function recup_donnee_coffret(PDO $pdo): array {
               p.PRO_NOM,
               c.COF_EVENEMENT,
               c.COF_QTE_STOCK,
-              c.COF_TAILLE,
             FROM PRODUIT p
             INNER JOIN COFFRET c ON c.PRO_ID = p.PRO_ID
             ORDER BY p.PRO_NOM ASC";
@@ -188,6 +187,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 </section>
 
 <section class="product-details" >
+    <h3>Données de l’article des Coffrets</h3>
     <table class="kv">
     <tbody><?php
     $coffrets = recup_donnee_coffret($pdo);
@@ -203,10 +203,6 @@ function recup_donnee_emballage(PDO $pdo): array {
     <tr>
         <td><strong>Événement</strong></td>
         <td><?= htmlspecialchars($c['COF_EVENEMENT'] ?? '—') ?></td>
-            </tr>
-            <tr>
-                <td><strong>Taille</strong></td>
-                <td><?= htmlspecialchars($c['COF_TAILLE'] ?? '—')?></td>
             </tr>
             <tr>
                 <td><strong>Stock</strong></td>
