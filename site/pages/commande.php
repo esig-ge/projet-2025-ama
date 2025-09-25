@@ -511,6 +511,9 @@ $total = $subtotal + $shipping;
                 <p class="muted">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
             <?php endif; ?>
         </div>
+        <textarea>
+            Veuillez ajouter des détails précis...
+        </textarea>
     </section>
 </main>
 
