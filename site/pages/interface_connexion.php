@@ -171,7 +171,7 @@ if (empty($_SESSION['csrf'])) {
 
     <!-- Visiteur -->
     <div class="visitor">
-        <a href="<?= $BASE ?>interface_catalogue.php">Continuer en tant que visiteur</a>
+        <a href="<?= $BASE ?>index.php">Continuer en tant que visiteur</a>
     </div>
 </main>
 
