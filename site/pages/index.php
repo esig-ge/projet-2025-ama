@@ -73,6 +73,8 @@ if (!function_exists('isAdmin')) {
     });
 </script>
 
+
+
 <body class="corps">
 <?php if (isAdmin()): ?>
     <a class="btn-retour-admin" href="<?= $BASE ?>adminAccueil.php" title="Retour au dashboard admin">← Retour admin</a>
