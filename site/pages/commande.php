@@ -525,5 +525,53 @@ $total = $subtotal + $shipping;
         });
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btn-checkout');
+        if (!btn) return;
+
+        btn.addEventListener('click', async function (e) {
+            // Ne pas suivre directement le href, on upsert d'abord la commande
+            e.preventDefault();
+
+            // Si le panier est vide, on ne fait rien
+            if (btn.getAttribute('aria-disabled') === 'true') return;
+
+            // Petite protection anti-double-clic
+            btn.setAttribute('aria-disabled', 'true');
+            const oldText = btn.textContent;
+            btn.textContent = 'Préparation de la commande…';
+
+            try {
+                // Appelle ton endpoint API situé dans /site/pages/api/
+                const res = await fetch('<?= $BASE ?>api/upsert_from_cart.php', { method: 'POST' });
+
+                // Vérification d'authentification
+                if (res.status === 401) {
+                    window.location.href = '<?= $BASE ?>interface_connexion.php';
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (!res.ok || !data.ok) {
+                    throw new Error(data?.error || 'Échec de la création de la commande');
+                }
+
+                // Redirection vers l’étape adresse/paiement en emportant l’order_id
+                const orderId = encodeURIComponent(data.order_id);
+                window.location.href = '<?= $BASE ?>adresse_paiement.php?order_id=' + orderId;
+
+            } catch (err) {
+                alert('Désolé, impossible de préparer la commande.\n' + (err.message || 'Erreur inconnue'));
+                btn.setAttribute('aria-disabled', 'false');
+                btn.textContent = oldText;
+            }
+
+        });
+    });
+</script>
+
 </body>
 </html>

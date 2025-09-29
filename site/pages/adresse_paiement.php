@@ -46,7 +46,7 @@ $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
 /** Récupère la commande "en préparation" **/
 $st = $pdo->prepare("SELECT COM_ID FROM COMMANDE
-                     WHERE PER_ID=:p AND COM_STATUT='en préparation'
+                     WHERE PER_ID=:p AND COM_STATUT='en preparation'
                      ORDER BY COM_ID DESC LIMIT 1");
 $st->execute([':p' => $perId]);
 $comId = (int)$st->fetchColumn();
