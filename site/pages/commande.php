@@ -361,6 +361,33 @@ $total = $subtotal + $shipping;
         .btn-ghost.small{font-size:.9rem;padding:.35rem .7rem}
         .sum-row,.sum-total{display:flex;justify-content:space-between;padding:10px 16px}
         .sum-total{font-weight:700;border-top:1px solid #eee}
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical; /* autorise l’agrandissement seulement en hauteur */
+            padding: 12px 14px;
+            font-size: 14px;
+            font-family: "Segoe UI", Arial, sans-serif;
+            line-height: 1.4;
+            border: 1.5px solid #ccc;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* Effet focus */
+        textarea:focus {
+            border-color: #8A1B2E; /* ton bordeaux DK Bloom */
+            box-shadow: 0 0 6px rgba(138, 27, 46, 0.3);
+        }
+
+        /* Placeholder stylisé */
+        textarea::placeholder {
+            color: #999;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -479,8 +506,9 @@ $total = $subtotal + $shipping;
                     <li>Paiement sécurisé via Stripe</li>
                 </ul>
             </div>
-            <textarea placeholder="Veuillez ajouter des détails précis...">
-Veuillez ajouter des détails précis...
+            <br>
+            <label> Informations supplémentaires : </label>
+            <textarea placeholder="Veuillez ajouter des détails précis..." class="comment-box">
         </textarea>
         </aside>
     </div>

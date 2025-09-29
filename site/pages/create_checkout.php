@@ -6,35 +6,31 @@ session_start();
 header('Content-Type: application/json');
 
 try {
-    /* 0) Stripe + DB */
-    // ==> IMPORTANT : ce fichier doit inclure /app/libs/stripe/init.php
-    // via: require_once __DIR__ . '/../../../app/libs/stripe/init.php';
-    // cf. /site/database/config/stripe.php
+    /* 0) Stripe + DB (les clés & autoload sont faits dans ce fichier) */
     require_once __DIR__ . '/../database/config/stripe.php';
 
     /** @var PDO $pdo */
     $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    /* 1) URLs de redirection */
-    // 1) Construire des URLs ABSOLUES pour Stripe
+    /* 1) URLs absolues (Stripe exige des URLs complètes) */
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $origin = $scheme . '://' . $host;
 
-// /site/pages/… -> /site/
+    // /site/pages/… -> /site/
     $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? ''), '/\\');   // ex: /site/pages
     $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: /site/pages/
     $SITE_BASE = preg_replace('#/pages/$#', '/', $PAGE_BASE);         // ex: /site/
-
-// Base absolue (avec domaine)
-    $BASE_URL  = rtrim($origin, '/') . $SITE_BASE;                    // ex: https://esig-sandbox.ch/2526_grep/t25_6_v21/site/
+    $BASE_URL  = rtrim($origin, '/') . $SITE_BASE;                    // ex: https://…/site/
 
     $successUrl = $BASE_URL . 'pages/success.php?session_id={CHECKOUT_SESSION_ID}';
     $cancelUrl  = $BASE_URL . 'pages/adresse_paiement.php?canceled=1';
 
-
-    /* 2) Vérifs requête */
+    /* 2) Garde-fous requête */
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        throw new RuntimeException('Méthode interdite.');
+    }
     if (($_POST['action'] ?? '') !== 'create_checkout') {
         throw new RuntimeException('Action invalide.');
     }
@@ -44,7 +40,7 @@ try {
     $perId = (int)($_SESSION['per_id'] ?? 0);
     if ($perId <= 0) throw new RuntimeException('Non authentifié.');
 
-    // COMMANDE courante
+    // COMMANDE en préparation
     $comId = (int)($_SESSION['current_com_id'] ?? 0);
     if ($comId <= 0) {
         $st = $pdo->prepare("
@@ -69,7 +65,7 @@ try {
     $chk->execute([':c' => $comId, ':p' => $perId]);
     if (!$chk->fetchColumn()) throw new RuntimeException('Commande non valide.');
 
-    /* 3) Récup des lignes facturables */
+    /* 3) Charger les lignes facturables */
     $rows = [];
 
     // Produits
@@ -98,39 +94,56 @@ try {
 
     if (!$rows) throw new RuntimeException('Votre panier est vide.');
 
-    /* 4) Construire les line_items Stripe (ignorer prix <= 0) */
+    /* 4) Construire les line_items (ignorer prix <= 0) */
     $currency  = 'chf';
     $lineItems = [];
+    $totalCents = 0;
+
     foreach ($rows as $r) {
         $name = (string)($r['name'] ?? 'Article');
         $qty  = max(1, (int)($r['qty']  ?? 1));
         $prc  = (float)($r['price'] ?? 0.0);
 
-        if ($prc <= 0) continue; // pas d’emballages gratuits
+        if ($prc <= 0) continue; // ex. emballage gratuit/0 CHF → on ne l’envoie pas à Stripe
+
+        $unit = (int) round($prc * 100); // CHF → centimes
+        $totalCents += $unit * $qty;
 
         $lineItems[] = [
             'quantity'   => $qty,
             'price_data' => [
                 'currency'     => $currency,
-                'unit_amount'  => (int) round($prc * 100),
+                'unit_amount'  => $unit,
                 'product_data' => ['name' => $name],
             ],
         ];
     }
-    if (!$lineItems) throw new RuntimeException('Aucun article facturable.');
 
-    /* 5) Créer la Session Checkout */
+    if (!$lineItems) {
+        throw new RuntimeException('Aucun article facturable.');
+    }
+    if ($totalCents <= 0) {
+        throw new RuntimeException('Montant total invalide (0).');
+    }
+
+    /* 5) Déterminer les moyens de paiement (optionnel) */
+    // On lit l’option choisie côté UI si elle existe, sinon on force 'card'
+    $uiMethod = $_POST['pay_method'] ?? 'card';
+    $allowed  = ['card', 'twint', 'revolut_pay']; // NB: twint/revolut_pay doivent être activés sur ton compte Stripe
+    $methods  = in_array($uiMethod, $allowed, true) ? [$uiMethod] : ['card'];
+
+    /* 6) Créer la Session Checkout — CORRECTION: on supprime automatic_payment_methods */
     $session = \Stripe\Checkout\Session::create([
-        'mode'        => 'payment',
-        'line_items'  => $lineItems,
-        'success_url' => $successUrl,
-        'cancel_url'  => $cancelUrl,
-        'metadata'    => [
+        'mode'                   => 'payment',
+        'payment_method_types'   => $methods, // <-- on utilise ce champ, pas automatic_payment_methods
+        'line_items'             => $lineItems,
+        'success_url'            => $successUrl,
+        'cancel_url'             => $cancelUrl,
+        'client_reference_id'    => (string)$comId,
+        'metadata'               => [
             'per_id' => (string)$perId,
             'com_id' => (string)$comId,
         ],
-        'client_reference_id'       => (string)$comId,
-        'automatic_payment_methods' => ['enabled' => true],
     ]);
 
     echo json_encode(['ok' => true, 'url' => $session->url], JSON_UNESCAPED_SLASHES);
@@ -138,5 +151,7 @@ try {
 
 } catch (Throwable $e) {
     http_response_code(400);
+    // En dev, tu peux aussi logger pour traque rapide :
+    // error_log('CHECKOUT ERROR: ' . $e->getMessage());
     echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }
