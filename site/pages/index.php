@@ -6,7 +6,17 @@ $showCookieBanner = !isset($_COOKIE['accept_cookies']);
 
 // Prefixe URL qui marche depuis n'importe quelle page de /site/pages
 $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
+
+
+// /site/pages/includes/auth.php
+if (!function_exists('isAdmin')) {
+    function isAdmin(): bool
+    {
+        return !empty($_SESSION['is_admin']) || !empty($_SESSION['adm_id']);
+    }
+}
 ?>
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -64,7 +74,9 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/';
 </script>
 
 <body class="corps">
-
+<?php if (isAdmin()): ?>
+    <a class="btn-retour-admin" href="<?= $BASE ?>adminAccueil.php" title="Retour au dashboard admin">← Retour admin</a>
+<?php endif; ?>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <main>

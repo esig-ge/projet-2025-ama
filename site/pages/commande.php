@@ -479,6 +479,9 @@ $total = $subtotal + $shipping;
                     <li>Paiement sécurisé via Stripe</li>
                 </ul>
             </div>
+            <textarea placeholder="Veuillez ajouter des détails précis...">
+Veuillez ajouter des détails précis...
+        </textarea>
         </aside>
     </div>
 
@@ -511,9 +514,7 @@ $total = $subtotal + $shipping;
                 <p class="muted">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
             <?php endif; ?>
         </div>
-        <textarea>
-            Veuillez ajouter des détails précis...
-        </textarea>
+
     </section>
 </main>
 
