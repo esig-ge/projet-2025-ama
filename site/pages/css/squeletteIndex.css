@@ -155,5 +155,6 @@ h1{
 }
 .btn-retour-admin{
     display: flex;
-    background-color: #ff6b6b;
+    color: #5e0808;
+    font-weight: bold;
 }
