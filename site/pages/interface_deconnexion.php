@@ -131,15 +131,13 @@ session_start();
         .btn-home:hover{ transform: translateY(-1px); filter: brightness(1.03); }
         .btn-home:active{ transform: translateY(0); box-shadow: 0 6px 18px rgba(255,255,255,.15); }
 
-        /* Option: auto-retour après 5s (désactivé par défaut) */
-        /*
         @media (prefers-reduced-motion: no-preference){
           .logout-card[data-autoback="true"]::after{
             content:"Retour automatique dans quelques secondes…";
             display:block; margin-top:10px; font-size:12px; opacity:.85;
           }
         }
-        */
+
     </style>
 </head>
 <body class="logout">

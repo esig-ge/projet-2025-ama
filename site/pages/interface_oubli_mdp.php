@@ -176,7 +176,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <?php if (!$IS_DEV): ?>
                     <p style="margin-top:8px;color:#aaa;font-size:0.9em">
-                        (Astuce : ajoute <code>?dev=1</code> à l’URL en test pour afficher le code.)
                     </p>
                 <?php endif; ?>
             </section>
