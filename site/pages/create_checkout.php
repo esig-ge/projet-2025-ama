@@ -24,7 +24,7 @@ try {
     $SITE_BASE = preg_replace('#/pages/$#', '/', $PAGE_BASE);         // ex: /site/
     $BASE_URL  = rtrim($origin, '/') . $SITE_BASE;                    // ex: https://…/site/
 
-    $successUrl = $BASE_URL . 'pages/success.php?session_id={CHECKOUT_SESSION_ID}';
+    $successUrl = $BASE_URL . 'pages/success_paiement.php?session_id={CHECKOUT_SESSION_ID}';
     $cancelUrl  = $BASE_URL . 'pages/adresse_paiement.php?canceled=1';
 
     /* 2) Garde-fous requête */

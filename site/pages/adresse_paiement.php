@@ -381,11 +381,11 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
                         Carte
                     </label>
                     <label class="pay-option" title="Bientôt">
-                        <input type="radio" name="pay_method" value="twint" disabled>
+                        <input type="radio" name="pay_method" value="twint">
                         TWINT
                     </label>
                     <label class="pay-option" title="Bientôt">
-                        <input type="radio" name="pay_method" value="bank" disabled>
+                        <input type="radio" name="pay_method" value="bank">
                         Revolut
                     </label>
                 </div>
