@@ -463,12 +463,7 @@ $total = $subtotal + $shipping;
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
                             <input type="hidden" name="item_id" value="<?= $id ?>">
                             <input type="hidden" name="kind"    value="<?= htmlspecialchars($kind, ENT_QUOTES) ?>">
-
-                            <button type="button" class="qty-step" data-step="-1" aria-label="Diminuer">−</button>
                             <input class="qty-input" type="number" name="qty" min="1" value="<?= $q ?>">
-                            <button type="button" class="qty-step" data-step="1" aria-label="Augmenter">+</button>
-
-                            <button type="submit">OK</button>
                         </form>
 
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
