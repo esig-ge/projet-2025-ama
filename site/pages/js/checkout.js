@@ -70,7 +70,7 @@ export async function onPay(form) {
         elements,
         confirmParams: {
             // URLs absolues en prod:
-            return_url: window.location.origin + '/site/pages/success.php',
+            return_url: window.location.origin + '/site/pages/success_paiement.php',
         },
     });
 

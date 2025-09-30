@@ -29,10 +29,10 @@ if (!isset($BASE)) {
     <div class="grid">
         <!-- Formulaire -->
         <section class="card" aria-labelledby="titre-contact" style="max-width:760px; margin:auto;">
-            <h2 id="titre-contact">Écris-nous</h2>
+<!--            <h2 id="titre-contact">Écris-nous</h2>
             <p class="muted">Une question, un événement ? Remplis le formulaire et nous te répondons rapidement.</p>
 
-            <form id="contactForm" method="post" action="<?= $BASE ?>traitement_page_contact.php" novalidate>
+            <form id="contactForm" method="post" action="<?php /*= $BASE */?>traitement_page_contact.php" novalidate>
                 <div>
                     <label for="nom">Nom <span class="req">*</span></label>
                     <input id="nom" name="nom" required autocomplete="family-name" />
@@ -80,7 +80,7 @@ if (!isset($BASE)) {
                     <button id="sendBtn" type="submit">Envoyer la demande</button>
                     <span class="note" id="formNote" aria-live="polite"></span>
                 </div>
-            </form>
+            </form>-->
 
             <div id="formMsg" class="alert ok" style="display:none;margin-top:12px;"></div>
             <div id="formErr" class="alert err" style="display:none;margin-top:12px;"></div>

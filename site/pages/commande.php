@@ -361,6 +361,33 @@ $total = $subtotal + $shipping;
         .btn-ghost.small{font-size:.9rem;padding:.35rem .7rem}
         .sum-row,.sum-total{display:flex;justify-content:space-between;padding:10px 16px}
         .sum-total{font-weight:700;border-top:1px solid #eee}
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical; /* autorise l’agrandissement seulement en hauteur */
+            padding: 12px 14px;
+            font-size: 14px;
+            font-family: "Segoe UI", Arial, sans-serif;
+            line-height: 1.4;
+            border: 1.5px solid #ccc;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        /* Effet focus */
+        textarea:focus {
+            border-color: #8A1B2E; /* ton bordeaux DK Bloom */
+            box-shadow: 0 0 6px rgba(138, 27, 46, 0.3);
+        }
+
+        /* Placeholder stylisé */
+        textarea::placeholder {
+            color: #999;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -479,6 +506,10 @@ $total = $subtotal + $shipping;
                     <li>Paiement sécurisé via Stripe</li>
                 </ul>
             </div>
+            <br>
+            <label> Informations supplémentaires : </label>
+            <textarea placeholder="Veuillez ajouter des détails précis..." class="comment-box">
+        </textarea>
         </aside>
     </div>
 
@@ -511,6 +542,7 @@ $total = $subtotal + $shipping;
                 <p class="muted">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
             <?php endif; ?>
         </div>
+
     </section>
 </main>
 
@@ -525,5 +557,53 @@ $total = $subtotal + $shipping;
         });
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btn-checkout');
+        if (!btn) return;
+
+        btn.addEventListener('click', async function (e) {
+            // Ne pas suivre directement le href, on upsert d'abord la commande
+            e.preventDefault();
+
+            // Si le panier est vide, on ne fait rien
+            if (btn.getAttribute('aria-disabled') === 'true') return;
+
+            // Petite protection anti-double-clic
+            btn.setAttribute('aria-disabled', 'true');
+            const oldText = btn.textContent;
+            btn.textContent = 'Préparation de la commande…';
+
+            try {
+                // Appelle ton endpoint API situé dans /site/pages/api/
+                const res = await fetch('<?= $BASE ?>api/upsert_from_cart.php', { method: 'POST' });
+
+                // Vérification d'authentification
+                if (res.status === 401) {
+                    window.location.href = '<?= $BASE ?>interface_connexion.php';
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (!res.ok || !data.ok) {
+                    throw new Error(data?.error || 'Échec de la création de la commande');
+                }
+
+                // Redirection vers l’étape adresse/paiement en emportant l’order_id
+                const orderId = encodeURIComponent(data.order_id);
+                window.location.href = '<?= $BASE ?>adresse_paiement.php?order_id=' + orderId;
+
+            } catch (err) {
+                alert('Désolé, impossible de préparer la commande.\n' + (err.message || 'Erreur inconnue'));
+                btn.setAttribute('aria-disabled', 'false');
+                btn.textContent = oldText;
+            }
+
+        });
+    });
+</script>
+
 </body>
 </html>

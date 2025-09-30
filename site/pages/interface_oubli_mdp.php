@@ -7,7 +7,6 @@ $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
 /* ---------- Secret serveur pour signer le token ---------- */
-/* ⚠️ Mets une longue chaîne aléatoire; garde-la secrète (env/config). */
 const RESET_SECRET = 'CHANGE-MOI-EN-LONGUE-CHAINE-TRES-SECRETE-ET-ALEATOIRE';
 
 /* ---------- Helpers ---------- */
@@ -22,15 +21,17 @@ function make_code(string $email, int $exp, string $nonce): string {
     $msg  = $email . '|' . $exp . '|' . $nonce;
     $hmac = hash_hmac('sha256', $msg, RESET_SECRET, true);
     $int  = unpack('N', substr($hmac, 0, 4))[1];
-    return str_pad((string)($int % 1000000), 6, '0', STR_PAD_LEFT);
+    $code = str_pad((string) ($int % 1000000), 6, '0', STR_PAD_LEFT);
+    return $code;
 }
 
-$IS_DEV  = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) || isset($_GET['dev']);
+$IS_DEV = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) || isset($_GET['dev']);
 $message = '';
-$token   = '';
+$dev_code = '';
+$token = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email   = trim($_POST['email'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $message = "Si un compte existe, un e-mail avec un code a été envoyé.";
 
     if ($email !== '') {
@@ -39,23 +40,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $st = $pdo->prepare("SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL=:em LIMIT 1");
-            $st->execute([':em'=>$email]);
-            if ($st->fetch(PDO::FETCH_ASSOC)) {
-                $exp     = time() + 15*60;           // 15 minutes
-                $nonce   = bin2hex(random_bytes(16));
-                $payload = ['e'=>$email, 'x'=>$exp, 'n'=>$nonce];
-                $token   = b64url_encode(json_encode($payload, JSON_UNESCAPED_SLASHES));
+            $st = $pdo->prepare("SELECT PER_ID, PER_PRENOM FROM PERSONNE WHERE PER_EMAIL = :em LIMIT 1");
+            $st->execute([':em' => $email]);
+            $u = $st->fetch(PDO::FETCH_ASSOC);
 
-                $code = make_code($email, $exp, $nonce);
+            if ($u) {
+                $exp   = time() + 15*60; // 15 minutes
+                $nonce = bin2hex(random_bytes(16));
+                $payload = ['e' => $email, 'x' => $exp, 'n' => $nonce];
+                $token   = b64url_encode(json_encode($payload, JSON_UNESCAPED_SLASHES));
+                $dev_code = make_code($email, $exp, $nonce);
+
                 if ($IS_DEV) {
-                    $message = "DEV: votre code est {$code} (15 min).";
+                    $message = "DEV: votre code est {$dev_code} (15 min).";
                 } else {
-                    $sujet = "Votre code de réinitialisation DK Bloom";
-                    $contenu = "Voici votre code : {$code}\n\nIl est valable 15 minutes.";
-                    $headers = "From: noreply@dkbloom.ch\r\n".
-                        "Content-Type: text/plain; charset=utf-8";
-                    mail($email, $sujet, $contenu, $headers);
+                    error_log("[OTP-STATELESS] Code {$dev_code} pour {$email}");
                 }
             }
         } catch (Throwable $e) {
@@ -73,19 +72,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>DK Bloom — Mot de passe oublié</title>
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/style_connexion_inscription.css">
+
     <style>
         :root{ --dk-bg-1:#5C0012; --dk-bg-2:#8A1B2E; }
 
-        /* Page centrée, fond bordeaux lisse */
         body.logout{
             min-height:100vh; margin:0;
             display:flex; justify-content:center; align-items:center;
             background:linear-gradient(120deg, var(--dk-bg-1), var(--dk-bg-2));
-            font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-            color:#3d0020;
+            font-family:system-ui, sans-serif;
         }
 
-        /* Carte split */
         .card{
             position:relative;
             width:min(940px,96vw);
@@ -94,22 +91,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background:#fff;
             box-shadow:0 20px 60px rgba(0,0,0,.25);
         }
-        .split{ display:grid; grid-template-columns:1.05fr 0.95fr; min-height:480px; }
+        .split{ display:grid; grid-template-columns:1.05fr 0.95fr; min-height:500px; }
 
-        /* Colonne gauche = formulaire */
         .left{ padding:32px clamp(20px,4vw,40px); background:#fff; }
         .left h2{ margin:0 0 6px; font-size:clamp(22px,2.6vw,28px); color:#5C0012; font-weight:900; }
         .left p.desc{ margin:0 0 18px; color:#7a2350; }
-        form.form-forgot{ display:grid; gap:14px; }
 
+        form.form-forgot{ display:grid; gap:14px; }
         label{ font-size:14px; font-weight:600; color:#5C0012; }
+
         .input{
             display:flex; align-items:center; gap:10px;
             border:1px solid #e9d5dd; background:#fdf7f9;
             border-radius:12px; padding:10px 12px;
-            transition:border .2s, box-shadow .2s, background .2s;
         }
-        .input:focus-within{ border-color:#b46178; box-shadow:0 0 0 4px #b4617830; background:#fff; }
         .input input{ flex:1; border:0; outline:0; background:transparent; font-size:15px; color:#3d0020; }
 
         .btn-primary{
@@ -119,9 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow:0 12px 26px #8A1B2E55;
         }
         .btn-primary:hover{ filter:brightness(1.05); }
+
         .info{ color:#5C0012; font-size:.95rem; }
 
-        /* Colonne droite = panneau bordeaux pétales */
         .right{
             position:relative;
             background:
@@ -135,36 +130,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .right::after{
             content:""; position:absolute; inset:0;
-            background:
-                    radial-gradient(60% 60% at 70% 50%, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 60%),
-                    linear-gradient(0deg, rgba(0,0,0,.14), rgba(0,0,0,0) 28%, rgba(0,0,0,.12) 100%);
-            pointer-events:none;
+            background:linear-gradient(0deg, rgba(0,0,0,.18), rgba(0,0,0,0) 40%, rgba(0,0,0,.18) 100%);
         }
+
         .right .welcome h3{ font-size:clamp(22px,2.6vw,28px); margin:0 0 12px; }
         .right .welcome p{ max-width:32ch; line-height:1.5; margin:0 auto; }
 
-        @media (max-width:800px){
+        @media(max-width:800px){
             .split{ grid-template-columns:1fr; }
             .right{ min-height:240px; }
-            .right .welcome{ padding:32px; }
         }
     </style>
 </head>
-
 <body class="logout">
 
 <main>
     <article class="card">
         <div class="split">
-            <!-- Formulaire -->
             <section class="left">
                 <h2>Mot de passe oublié</h2>
-                <p class="desc">Entrez votre e-mail pour recevoir un code de réinitialisation.</p>
+                <p class="desc">Entrez votre adresse e-mail pour recevoir un code de réinitialisation.</p>
 
-                <form method="POST" action="" class="form-forgot" novalidate>
+                <form method="POST" action="" class="form-forgot">
                     <label for="email">Adresse e-mail</label>
                     <div class="input">
-                        <input type="email" id="email" name="email" required maxlength="50" placeholder="prenom.nom@email.com" autocomplete="email">
+                        <input type="email" id="email" name="email" required placeholder="prenom.nom@email.com">
                     </div>
                     <button type="submit" class="btn-primary">Recevoir un code</button>
                 </form>
@@ -183,14 +173,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p style="margin-top:12px">
                     J’ai déjà un code → <a href="<?= $BASE ?>modification_mdp_verif.php">Saisir le code</a>
                 </p>
+
+                <?php if (!$IS_DEV): ?>
+                    <p style="margin-top:8px;color:#aaa;font-size:0.9em">
+                    </p>
+                <?php endif; ?>
             </section>
 
-            <!-- Panneau droit -->
             <aside class="right">
                 <div class="welcome">
                     <div>
                         <h3>Réinitialisez votre accès</h3>
-                        <p>Nous vous envoyons un code à usage unique pour sécuriser la réinitialisation.</p>
+                        <p>Saisissez votre e-mail et suivez les étapes pour retrouver vos identifiants DK Bloom.</p>
                     </div>
                 </div>
             </aside>

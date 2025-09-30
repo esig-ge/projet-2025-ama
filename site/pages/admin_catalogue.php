@@ -111,7 +111,6 @@ function recup_produit($pdo)
                 <th> </th>
             </tr>
             </thead>
-
             <tbody>
             <?php
             $produits = recup_donnee_fleur($pdo);

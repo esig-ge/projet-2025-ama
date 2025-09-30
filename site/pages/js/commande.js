@@ -31,35 +31,29 @@ function normImgPath(p) {
 
 /** Récupère une quantité valide (>=1 entier) depuis toutes les sources possibles. */
 function resolveQty(btn, optsOrQty) {
-    // 0) si 3e arg est un nombre
     if (typeof optsOrQty === 'number') {
         const n = Math.max(1, optsOrQty | 0);
         if (n) return n;
     }
-    // 1) si 3e arg est un objet avec qty
     if (optsOrQty && typeof optsOrQty === 'object') {
         const q = parseInt(optsOrQty.qty, 10);
         if (Number.isFinite(q) && q > 0) return q;
     }
-    // 2) data-qty (attribut) sur le bouton
     const fromAttr = parseInt(btn?.getAttribute?.('data-qty'), 10);
     if (Number.isFinite(fromAttr) && fromAttr > 0) return fromAttr;
 
-    // 3) dataset.qty
     const fromDataset = parseInt(btn?.dataset?.qty, 10);
     if (Number.isFinite(fromDataset) && fromDataset > 0) return fromDataset;
 
-    // 4) input .qty dans le même form / carte
     const form = btn?.closest?.('form, .product, .card, .produit-info');
     const input = form?.querySelector?.('.qty');
     const fromInput = parseInt(input?.value, 10);
     if (Number.isFinite(fromInput) && fromInput > 0) return fromInput;
 
-    // 5) défaut
     return 1;
 }
 
-/** Récupère une couleur (si utilisée) ; supporte name="couleur_ID" ou "couleur". */
+/** Récupère une couleur (si utilisée). */
 function resolveColor(btn, optsOrQty) {
     if (optsOrQty && typeof optsOrQty === 'object' && optsOrQty.color) {
         return String(optsOrQty.color);
@@ -77,17 +71,23 @@ async function callApi(action, params = {}) {
     const url  = `${API_URL}?action=${encodeURIComponent(action)}`;
     const body = new URLSearchParams({ action, ...params });
 
-    const res  = await fetch(url, {
+    const res = await fetch(url, {
         method: 'POST',
         body,
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
     });
 
+    if (res.status === 401) {
+        window.location.href = SITE_BASE + 'pages/interface_connexion.php';
+        return;
+    }
+
     const text = await res.text();
     let data;
-    try { data = JSON.parse(text); }
-    catch {
+    try {
+        data = JSON.parse(text);
+    } catch {
         console.error('Réponse brute:', text);
         throw new Error(`Réponse non JSON (HTTP ${res.status}) depuis ${url}`);
     }
@@ -122,7 +122,7 @@ async function renderCart() {
 
     wrap.innerHTML = 'Chargement…';
     try {
-        const resp = await callApi('list');
+        const resp  = await callApi('list');
         const items = resp.items || [];
 
         if (!items.length) {
@@ -137,7 +137,7 @@ async function renderCart() {
             const prix  = Number(it.PRO_PRIX ?? it.prix_unitaire ?? it.price ?? 0);
             const total = prix * qte;
             const img   = normImgPath(it.PRO_IMG || it.image || 'img/placeholder.png');
-            const type  = it.item_type || 'produit'; // produit | emballage | supplement
+            const type  = it.item_type || 'produit';
             const id    = it.id ?? it.PRO_ID ?? 0;
 
             return `
@@ -172,28 +172,28 @@ async function renderCart() {
 
 /* =============== 6) Ajouter au panier =============== */
 /**
- * Signature tolérante :
- *   addToCart(proId, btn, 3eArg)
- * - 3eArg peut être un nombre (qty) OU un objet { qty, color, ... }
- * - si absent, la quantité est résolue via data-qty / input .qty proches.
+ * addToCart(proId, btn, thirdArg)
+ * thirdArg peut être un nombre (qty) ou un objet { qty, color, ... }.
  */
 async function addToCart(proId, btn, thirdArg) {
     const pid = Number(proId);
-    if (!pid) { console.debug('[DKBloom:addToCart] proId invalide:', proId); return; }
+    if (!pid) {
+        console.debug('[DKBloom:addToCart] proId invalide:', proId);
+        return;
+    }
 
     const qty   = resolveQty(btn, thirdArg);
-    const color = resolveColor(btn, thirdArg); // utilisé seulement si ton API gère la couleur
+    const color = resolveColor(btn, thirdArg); // si ton API le gère
 
-    // Prépare payload pour l’API
     const payload = { pro_id: pid, qty };
-    if (color) payload.color = color; // garde ou retire selon ton PHP
+    if (color) payload.color = color;
 
     if (btn) btn.disabled = true;
     try {
         await callApi('add', payload);
         if (document.getElementById('cart-list')) await renderCart();
         toastAdded(btn, `Produit #${pid}`);
-        if (btn){
+        if (btn) {
             const old = btn.textContent;
             btn.textContent = 'Ajouté ✓';
             setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
@@ -207,16 +207,18 @@ async function addToCart(proId, btn, thirdArg) {
 }
 
 /* === Sélection de rose (fleurs) === */
-function selectedRoseRadio(){
+function selectedRoseRadio() {
     return document.querySelector('input[name="rose-color"]:checked');
 }
 
-async function selectRose(btn){
+async function selectRose(btn) {
     const r = selectedRoseRadio();
-    if (!r) { alert('Choisis une couleur de rose.'); return; }
+    if (!r) {
+        alert('Choisis une couleur de rose.');
+        return;
+    }
     const proId = r.dataset.proId;
 
-    // pour compat avec d’autres scripts/toasts
     const qty = resolveQty(btn);
     btn.dataset.qty = String(qty);
 
@@ -224,7 +226,7 @@ async function selectRose(btn){
 }
 
 /* === Emballage === */
-async function addEmballage(embId, btn){
+async function addEmballage(embId, btn) {
     const id = Number(embId);
     if (!id) return;
 
@@ -236,12 +238,12 @@ async function addEmballage(embId, btn){
         const name = btn?.dataset?.embName || `Emballage #${id}`;
         showToast(`${name} a bien été ajouté au panier !`, 'success');
 
-        if (btn){
+        if (btn) {
             const old = btn.textContent;
             btn.textContent = 'Ajouté ✓';
             setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
         }
-    } catch (e){
+    } catch (e) {
         toastError(btn, `Emballage #${id}`, e);
         console.error(e);
     } finally {
@@ -250,27 +252,26 @@ async function addEmballage(embId, btn){
 }
 
 /* === Supplément === */
-async function addSupplement(supId, btn){
+async function addSupplement(supId, btn) {
     const id = Number(supId);
     if (!id) return;
 
-    // ← NOUVEAU : on lit la quantité comme sur fleurs/bouquets
     const qty = resolveQty(btn) || 1;
 
     if (btn) btn.disabled = true;
     try {
-        await callApi('add_supplement', { sup_id: id, qty }); // ← qty dynamique
+        await callApi('add_supplement', { sup_id: id, qty });
         if (document.getElementById('cart-list')) await renderCart();
 
         const name = btn?.dataset?.supName || `Supplément #${id}`;
         showToast(`${name} a bien été ajouté au panier !`, 'success');
 
-        if (btn){
+        if (btn) {
             const old = btn.textContent;
             btn.textContent = 'Ajouté ✓';
             setTimeout(() => { btn.textContent = old || 'Ajouter'; }, 900);
         }
-    } catch (e){
+    } catch (e) {
         toastError(btn, `Supplément #${id}`, e);
         console.error(e);
     } finally {
@@ -285,7 +286,7 @@ async function removeFromCart(itemType, id) {
         if (!id) return;
 
         const params = {};
-        if (itemType === 'produit')       params.pro_id = id;
+        if (itemType === 'produit')    params.pro_id = id;
         else if (itemType === 'emballage') params.emb_id = id;
         else if (itemType === 'supplement') params.sup_id = id;
 
@@ -311,14 +312,15 @@ function getToastRoot() {
     return root;
 }
 
-function toastAdded(btn, fallback){
+function toastAdded(btn, fallback) {
     const label = btn?.dataset?.proName
         || btn?.dataset?.embName
         || btn?.dataset?.suppName
         || fallback;
     showToast(`${label} a bien été ajouté au panier !`, 'success');
 }
-function toastError(btn, fallback, err){
+
+function toastError(btn, fallback, err) {
     const label = btn?.dataset?.proName
         || btn?.dataset?.embName
         || btn?.dataset?.suppName
@@ -335,8 +337,8 @@ function toastError(btn, fallback, err){
  * @param {number} [timeout=2600]
  * @param {string} [title]
  */
-function showToast(message, type = 'success', timeout = 2600, title){
-    if(!document.getElementById('dkb-toast-css')){
+function showToast(message, type = 'success', timeout = 2600, title) {
+    if (!document.getElementById('dkb-toast-css')) {
         const s = document.createElement('style');
         s.id = 'dkb-toast-css';
         s.textContent = `
@@ -374,13 +376,13 @@ function showToast(message, type = 'success', timeout = 2600, title){
         document.head.appendChild(s);
     }
 
-    const root = getToastRoot();
+    const root  = getToastRoot();
     const toast = document.createElement('div');
     toast.className = `dkb-toast ${type}`;
     toast.role = 'status';
 
     const content = document.createElement('div');
-    if (title){
+    if (title) {
         const strong = document.createElement('span');
         strong.className = 'title';
         strong.textContent = title;
@@ -391,7 +393,7 @@ function showToast(message, type = 'success', timeout = 2600, title){
     const closeBtn = document.createElement('button');
     closeBtn.className = 'dkb-close';
     closeBtn.type = 'button';
-    closeBtn.setAttribute('aria-label','Fermer');
+    closeBtn.setAttribute('aria-label', 'Fermer');
     closeBtn.textContent = '×';
     closeBtn.addEventListener('click', () => removeToast(toast));
 
@@ -400,20 +402,20 @@ function showToast(message, type = 'success', timeout = 2600, title){
 
     void toast.offsetHeight;
     toast.classList.add('show');
-    setTimeout(()=>toast.classList.add('show'), 50);
 
-    if (timeout > 0){
-        toast._timer = setTimeout(()=>removeToast(toast), timeout);
-        toast.addEventListener('mouseenter', ()=>clearTimeout(toast._timer));
-        toast.addEventListener('mouseleave', ()=>{
-            if (timeout > 0) toast._timer = setTimeout(()=>removeToast(toast), 900);
+    if (timeout > 0) {
+        toast._timer = setTimeout(() => removeToast(toast), timeout);
+        toast.addEventListener('mouseenter', () => clearTimeout(toast._timer));
+        toast.addEventListener('mouseleave', () => {
+            if (timeout > 0) toast._timer = setTimeout(() => removeToast(toast), 900);
         });
     }
 }
-function removeToast(toast){
+
+function removeToast(toast) {
     if (!toast) return;
     toast.classList.remove('show');
-    setTimeout(()=>toast.remove(), 200);
+    setTimeout(() => toast.remove(), 200);
 }
 
 /* =============== 9) Expose global =============== */

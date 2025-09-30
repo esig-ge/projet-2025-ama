@@ -14,15 +14,16 @@ $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\
 $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 $SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);
 
-/* Détection checkout.php (à la racine du site ou dans /pages) */
-$co_fs_main  = __DIR__ . '/../checkout.php';   // /site/checkout.php
-$co_fs_pages = __DIR__ . '/checkout.php';      // /site/pages/checkout.php
+/* Détection create_checkout.php (à la racine du site ou dans /pages) */
+$co_fs_main  = __DIR__ . '/../create_checkout.php';   // /site/create_checkout.php
+$co_fs_pages = __DIR__ . '/create_checkout.php';      // /site/pages/create_checkout.php
 if (is_file($co_fs_main)) {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php';
+    $CREATE_CHECKOUT_URL = $SITE_BASE . 'create_checkout.php';
 } elseif (is_file($co_fs_pages)) {
-    $CHECKOUT_URL = $PAGE_BASE . 'checkout.php';
+    $CREATE_CHECKOUT_URL = $PAGE_BASE . 'create_checkout.php';
 } else {
-    $CHECKOUT_URL = $SITE_BASE . 'checkout.php'; // fallback
+    // fallback logique : on vise la racine
+    $CREATE_CHECKOUT_URL = $SITE_BASE . 'create_checkout.php';
 }
 
 /* Détection API cart.php pour afficher le récap (si tu gardes l'API) */
@@ -45,7 +46,7 @@ $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
 /** Récupère la commande "en préparation" **/
 $st = $pdo->prepare("SELECT COM_ID FROM COMMANDE
-                     WHERE PER_ID=:p AND COM_STATUT='en préparation'
+                     WHERE PER_ID=:p AND COM_STATUT='en preparation'
                      ORDER BY COM_ID DESC LIMIT 1");
 $st->execute([':p' => $perId]);
 $comId = (int)$st->fetchColumn();
@@ -54,41 +55,38 @@ if (!$comId) {
     header('Location: commande.php'); exit;
 }
 
-/* (Conservées si tu veux côté PHP) */
-function norm_name(string $s): string {
-    $s = strtolower(trim($s));
-    $s = iconv('UTF-8', 'ASCII//TRANSLIT', $s); // accents -> ascii
-    $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s); // retire ponctuation
-    $s = preg_replace('/\s+/', ' ', $s);         // espaces multiples -> 1
-    return trim($s);
-}
-function getProductImage(string $name): string {
-    $k = norm_name($name);
-    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) return 'emballage_' . $m[2] . '.PNG';
-    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k)) return 'emballage_rose.PNG';
-    if (preg_match('/paillet+e?s?/', $k)) return 'paillette_argent.PNG';
-    if (preg_match('/papillon/', $k)) return 'papillon_doree.PNG';
-    if (preg_match('/^rose.*clair$/', $k)) return 'rose_claire.png';
-    static $map = [
-        '12 roses'=>'12Roses.png','bouquet 12'=>'12Roses.png',
-        '20 roses'=>'20Roses.png','bouquet 20'=>'20Roses.png',
-        '36 roses'=>'36Roses.png','bouquet 36'=>'36Roses.png',
-        '50 roses'=>'50Roses.png','bouquet 50'=>'50Roses.png',
-        '66 roses'=>'66Roses.png','bouquet 66'=>'66Roses.png',
-        '100 roses'=>'100Roses.png','bouquet 100'=>'100Roses.png',
-        'rose rouge'=>'rouge.png','rose rose'=>'rose.png','rose blanche'=>'rosesBlanche.png',
-        'rose bleue'=>'bleu.png','rose noire'=>'noir.png',
-        'mini ourson'=>'ours_blanc.PNG','deco anniv'=>'happybirthday.PNG',
-        'decoration anniversaire'=>'happybirthday.PNG','baton coeur'=>'baton_coeur.PNG',
-        'diamant'=>'diamant.PNG','couronne'=>'couronne.PNG',
-        'lettre'=>'lettre.png','initiale'=>'lettre.png',
-        'carte pour mot'=>'carte.PNG','carte'=>'carte.PNG',
-        'panier vide'=>'panier_vide.png','panier rempli'=>'panier_rempli.png',
-    ];
-    if (isset($map[$k])) return $map[$k];
-    if (strpos($k,'coffret') === 0) return 'coffret.png';
-    return 'placeholder.png';
-}
+/* ===== 2bis) Données compte & adresses par défaut ===== */
+function fetchOne(PDO $pdo, string $sql, array $p){ $st=$pdo->prepare($sql); $st->execute($p); return $st->fetch(PDO::FETCH_ASSOC) ?: null; }
+
+$personne = fetchOne($pdo,
+    "SELECT PER_NOM, PER_PRENOM, PER_EMAIL, PER_NUM_TEL FROM PERSONNE WHERE PER_ID=:id",
+    [':id'=>$perId]
+) ?: ['PER_NOM'=>'','PER_PRENOM'=>'','PER_EMAIL'=>'','PER_NUM_TEL'=>''];
+
+$sqlAdr = "SELECT A.ADR_ID, A.ADR_RUE, A.ADR_NUMERO, A.ADR_NPA, A.ADR_VILLE, A.ADR_PAYS, A.ADR_TYPE
+           FROM ADRESSE A
+           JOIN ADRESSE_CLIENT AC ON AC.ADR_ID = A.ADR_ID
+           WHERE AC.PER_ID = :id AND A.ADR_TYPE = :type
+           ORDER BY A.ADR_ID DESC LIMIT 1";
+
+$defFac = fetchOne($pdo, $sqlAdr, [':id'=>$perId, ':type'=>'FACTURATION']) ?: [
+    'ADR_ID'=>null,'ADR_RUE'=>'','ADR_NUMERO'=>'','ADR_NPA'=>'','ADR_VILLE'=>'','ADR_PAYS'=>'Suisse','ADR_TYPE'=>'FACTURATION'
+];
+$defLiv = fetchOne($pdo, $sqlAdr, [':id'=>$perId, ':type'=>'LIVRAISON']) ?: [
+    'ADR_ID'=>null,'ADR_RUE'=>'','ADR_NUMERO'=>'','ADR_NPA'=>'','ADR_VILLE'=>'','ADR_PAYS'=>'Suisse','ADR_TYPE'=>'LIVRAISON'
+];
+
+/* Heuristique: case “même adresse” cochée par défaut si livraison absente ou identique à facturation */
+$prefCheckSame = (
+    (!$defLiv['ADR_RUE'] && !$defLiv['ADR_VILLE'] && !$defLiv['ADR_NPA'])
+    || (
+        $defLiv['ADR_RUE']   === $defFac['ADR_RUE']   &&
+        $defLiv['ADR_NUMERO']=== $defFac['ADR_NUMERO']&&
+        $defLiv['ADR_NPA']   === $defFac['ADR_NPA']   &&
+        $defLiv['ADR_VILLE'] === $defFac['ADR_VILLE'] &&
+        $defLiv['ADR_PAYS']  === $defFac['ADR_PAYS']
+    )
+);
 
 /* ===== 3) Règle métier : bouquet => emballage obligatoire ===== */
 function getOrderType(PDO $pdo, int $comId): string {
@@ -116,9 +114,12 @@ try {
     header('Location: commande.php'); exit;
 }
 
-/* ===== 4) CSRF pour POST → checkout.php ===== */
+/* ===== 4) CSRF pour POST → create_checkout.php ===== */
 $_SESSION['csrf_checkout'] = bin2hex(random_bytes(16));
 $CSRF = $_SESSION['csrf_checkout'];
+
+// Helpers affichage
+function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 ?>
 <!doctype html>
 <html lang="fr">
@@ -154,8 +155,6 @@ $CSRF = $_SESSION['csrf_checkout'];
             background:#8b0000; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:700; }
         .btn-primary[aria-disabled="true"] { opacity:.6; pointer-events:none; }
         .note { background:#fff8e5; border:1px solid #ffecb3; padding:10px 12px; border-radius:8px; }
-
-        /* ===== mini-cart ===== */
         .mini-title { font-size:1.15rem; font-weight:800; margin-bottom:8px; }
         .mini-cart-list { display:flex; flex-direction:column; gap:10px; }
         .mini-row { display:grid; grid-template-columns: 56px 1fr auto; gap:10px; align-items:center; }
@@ -164,19 +163,43 @@ $CSRF = $_SESSION['csrf_checkout'];
         .mini-meta { font-size:.9rem; color:#666; }
         .mini-total { display:flex; justify-content:space-between; padding-top:10px; border-top:1px solid #eee; margin-top:10px; font-weight:700; }
         .mini-empty { color:#666; font-style:italic; }
+        .same-note { margin-top:6px; font-size:.9rem; color:#666; }
     </style>
 
     <script>
         // Expose au JS
-        window.CHECKOUT_URL = <?= json_encode($CHECKOUT_URL) ?>;
-        window.API_URL      = <?= json_encode($API_URL) ?>;
-        window.CSRF_CHECKOUT= <?= json_encode($CSRF) ?>;
-        window.PLACEHOLDER  = <?= json_encode($PLACEHOLDER) ?>;
+        window.CREATE_CHECKOUT_URL = <?= json_encode($CREATE_CHECKOUT_URL) ?>;
+        window.API_URL            = <?= json_encode($API_URL) ?>;
+        window.CSRF_CHECKOUT      = <?= json_encode($CSRF) ?>;
+        window.PLACEHOLDER        = <?= json_encode($PLACEHOLDER) ?>;
+        window.IMG_BASE           = <?= json_encode($SITE_BASE . 'img/') ?>;
 
-        // Dossier des images (pour le fallback)
-        window.IMG_BASE     = <?= json_encode($SITE_BASE . 'img/') ?>;
+        // Pré-remplissage depuis le compte
+        window.PREFILL = {
+            person: {
+                last:  <?= json_encode($personne['PER_NOM'] ?? '') ?>,
+                first: <?= json_encode($personne['PER_PRENOM'] ?? '') ?>,
+                email: <?= json_encode($personne['PER_EMAIL'] ?? '') ?>,
+                phone: <?= json_encode($personne['PER_NUM_TEL'] ?? '') ?>
+            },
+            billing: {
+                rue:    <?= json_encode($defFac['ADR_RUE'] ?? '') ?>,
+                numero: <?= json_encode($defFac['ADR_NUMERO'] ?? '') ?>,
+                npa:    <?= json_encode($defFac['ADR_NPA'] ?? '') ?>,
+                ville:  <?= json_encode($defFac['ADR_VILLE'] ?? '') ?>,
+                pays:   <?= json_encode($defFac['ADR_PAYS'] ?? 'Suisse') ?>
+            },
+            shipping: {
+                rue:    <?= json_encode($defLiv['ADR_RUE'] ?? '') ?>,
+                numero: <?= json_encode($defLiv['ADR_NUMERO'] ?? '') ?>,
+                npa:    <?= json_encode($defLiv['ADR_NPA'] ?? '') ?>,
+                ville:  <?= json_encode($defLiv['ADR_VILLE'] ?? '') ?>,
+                pays:   <?= json_encode($defLiv['ADR_PAYS'] ?? 'Suisse') ?>
+            },
+            sameAsBillingDefault: <?= $prefCheckSame ? 'true' : 'false' ?>
+        };
 
-        // ===== Helpers: normalisation + mapping nom → fichier image (fallback si l’API n’envoie pas d’URL) =====
+        // ===== Helpers image (idem ta version) =====
         function normName(s){
             s = (s||'').toLowerCase().trim();
             const map = {'à':'a','â':'a','ä':'a','é':'e','è':'e','ê':'e','ë':'e','î':'i','ï':'i','ô':'o','ö':'o','ù':'u','û':'u','ü':'u','ç':'c'};
@@ -186,85 +209,45 @@ $CSRF = $_SESSION['csrf_checkout'];
         }
         function getProductImageFile(name){
             const k = normName(name);
-
-            // 1) Emballages
             if (/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/.test(k)) {
                 const color = k.replace(/^(papier|emballage)s?\s+/, '');
                 return `emballage_${color}.PNG`;
             }
-            if (/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/.test(k)) {
-                return 'emballage_rose.PNG';
-            }
-
-            // 2) Paillettes
+            if (/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/.test(k)) return 'emballage_rose.PNG';
             if (/paillet+e?s?/.test(k)) return 'paillette_argent.PNG';
-
-            // 3) Papillon(s)
             if (/papillon/.test(k)) return 'papillon_doree.PNG';
-
-            // 4) Cas particuliers roses
             if (/^rose.*clair$/.test(k)) return 'rose_claire.png';
-
-            // 5) Table standard
             const map = {
-                // Bouquets
                 '12 roses':'12Roses.png','bouquet 12':'12Roses.png',
                 '20 roses':'20Roses.png','bouquet 20':'20Roses.png',
                 '36 roses':'36Roses.png','bouquet 36':'36Roses.png',
                 '50 roses':'50Roses.png','bouquet 50':'50Roses.png',
                 '66 roses':'66Roses.png','bouquet 66':'66Roses.png',
                 '100 roses':'100Roses.png','bouquet 100':'100Roses.png',
-
-                // Roses unitaires
-                'rose rouge':'rouge.png',
-                'rose rose':'rose.png',
-                'rose blanche':'rosesBlanche.png',
-                'rose bleue':'bleu.png',
-                'rose noire':'noir.png',
-
-                // Suppléments
-                'mini ourson':'ours_blanc.PNG',
-                'deco anniv':'happybirthday.PNG',
-                'decoration anniversaire':'happybirthday.PNG',
-                'baton coeur':'baton_coeur.PNG',
-                'diamant':'diamant.PNG',
-                'couronne':'couronne.PNG',
-                'lettre':'lettre.png',
-                'initiale':'lettre.png',
-                'carte pour mot':'carte.PNG',
-                'carte':'carte.PNG',
-
-                // Paniers
-                'panier vide':'panier_vide.png',
-                'panier rempli':'panier_rempli.png',
+                'rose rouge':'rouge.png','rose rose':'rose.png','rose blanche':'rosesBlanche.png',
+                'rose bleue':'bleu.png','rose noire':'noir.png',
+                'mini ourson':'ours_blanc.PNG','deco anniv':'happybirthday.PNG',
+                'decoration anniversaire':'happybirthday.PNG','baton coeur':'baton_coeur.PNG',
+                'diamant':'diamant.PNG','couronne':'couronne.PNG',
+                'lettre':'lettre.png','initiale':'lettre.png',
+                'carte pour mot':'carte.PNG','carte':'carte.PNG',
+                'panier vide':'panier_vide.png','panier rempli':'panier_rempli.png',
             };
             if (map[k]) return map[k];
-
-            // 6) Coffrets
             if (k.startsWith('coffret')) return 'coffret.png';
-
             return 'placeholder.png';
         }
-        function imageUrlFromName(name){
-            return window.IMG_BASE + getProductImageFile(name);
-        }
-
-        /* === Fallback robuste: variations d’extensions et sous-dossiers === */
         const IMG_SUBFOLDERS = ["", "roses/", "bouquets/", "emballages/", "supplements/", "coffrets/"];
         function buildImageCandidates(fileBase){
             const base = fileBase.replace(/\.(png|jpg|jpeg)$/i, '');
             const exts = ["png","PNG","jpg","JPG","jpeg","JPEG"];
             const files = new Set();
-
             files.add(fileBase);
             files.add(fileBase.toLowerCase());
             exts.forEach(ext => files.add(`${base}.${ext}`));
-
             const urls = [];
-            files.forEach(fname => {
-                IMG_SUBFOLDERS.forEach(sub => urls.push(window.IMG_BASE + sub + fname));
-            });
-            urls.push(window.PLACEHOLDER);
+            files.forEach(fname => { IMG_SUBFOLDERS.forEach(sub => urls.push(window.IMG_BASE + sub + fname)); });
+            urls.push(<?= json_encode($PLACEHOLDER) ?>);
             return urls;
         }
         function tryNextImage(imgEl){
@@ -275,11 +258,9 @@ $CSRF = $_SESSION['csrf_checkout'];
                     imgEl.dataset.srcs = JSON.stringify(rest);
                     imgEl.src = next;
                 } else {
-                    imgEl.src = window.PLACEHOLDER;
+                    imgEl.src = <?= json_encode($PLACEHOLDER) ?>;
                 }
-            }catch(e){
-                imgEl.src = window.PLACEHOLDER;
-            }
+            }catch(e){ imgEl.src = <?= json_encode($PLACEHOLDER) ?>; }
         }
     </script>
 </head>
@@ -291,7 +272,7 @@ $CSRF = $_SESSION['csrf_checkout'];
     <h1 class="page-title">Adresses & paiement</h1>
 
     <?php if (!empty($_SESSION['message'])): ?>
-        <div class="flash" role="status"><?= htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8') ?></div>
+        <div class="flash" role="status"><?= h($_SESSION['message']); ?></div>
         <?php unset($_SESSION['message']); ?>
     <?php endif; ?>
 
@@ -344,9 +325,10 @@ $CSRF = $_SESSION['csrf_checkout'];
 
                 <div class="field">
                     <label class="pay-option" style="cursor:pointer">
-                        <input type="checkbox" id="same_as_billing" checked>
+                        <input type="checkbox" id="same_as_billing">
                         Utiliser cette adresse aussi pour la livraison
                     </label>
+                    <div class="same-note" id="same-note" aria-live="polite"></div>
                 </div>
             </section>
 
@@ -399,11 +381,11 @@ $CSRF = $_SESSION['csrf_checkout'];
                         Carte
                     </label>
                     <label class="pay-option" title="Bientôt">
-                        <input type="radio" name="pay_method" value="twint" disabled>
+                        <input type="radio" name="pay_method" value="twint">
                         TWINT
                     </label>
                     <label class="pay-option" title="Bientôt">
-                        <input type="radio" name="pay_method" value="bank" disabled>
+                        <input type="radio" name="pay_method" value="bank">
                         Revolut
                     </label>
                 </div>
@@ -440,12 +422,46 @@ $CSRF = $_SESSION['csrf_checkout'];
 
 <script>
     /* ==========================
+       0) Pré-remplissage depuis le compte
+       ========================== */
+    (function prefill(){
+        const P = window.PREFILL || {person:{},billing:{},shipping:{}};
+
+        // Billing
+        document.getElementById('bill_lastname').value = P.person.last || '';
+        document.getElementById('bill_firstname').value= P.person.first || '';
+        document.getElementById('bill_email').value    = P.person.email || '';
+        document.getElementById('bill_phone').value    = P.person.phone || '';
+
+        const billAddr = [P.billing.rue, P.billing.numero].filter(Boolean).join(' ');
+        document.getElementById('bill_address').value  = billAddr || '';
+        document.getElementById('bill_postal').value   = P.billing.npa   || '';
+        document.getElementById('bill_city').value     = P.billing.ville || '';
+        document.getElementById('bill_country').value  = (P.billing.pays === 'Suisse' ? 'CH' : 'CH');
+
+        // Shipping
+        const shipAddr = [P.shipping.rue, P.shipping.numero].filter(Boolean).join(' ');
+        document.getElementById('ship_lastname').value = P.person.last || '';
+        document.getElementById('ship_firstname').value= P.person.first || '';
+        document.getElementById('ship_phone').value    = P.person.phone || '';
+        document.getElementById('ship_address').value  = shipAddr || '';
+        document.getElementById('ship_postal').value   = P.shipping.npa   || '';
+        document.getElementById('ship_city').value     = P.shipping.ville || '';
+        document.getElementById('ship_country').value  = (P.shipping.pays === 'Suisse' ? 'CH' : 'CH');
+
+        // Case “même adresse” par défaut selon l’heuristique
+        const same = document.getElementById('same_as_billing');
+        same.checked = !!P.sameAsBillingDefault;
+    })();
+
+    /* ==========================
        1) Copier facturation → livraison
        ========================== */
     const form = document.getElementById('checkout-form');
     const same = document.getElementById('same_as_billing');
     const shipFields = document.querySelectorAll('#ship-fields input, #ship-fields select');
     const msg  = document.getElementById('form-msg');
+    const sameNote = document.getElementById('same-note');
 
     function copyBillingToShipping() {
         const map = [
@@ -470,15 +486,17 @@ $CSRF = $_SESSION['csrf_checkout'];
             if (el.required) el.dataset.wasRequired = '1';
             if (disabled) el.required = false; else if (el.dataset.wasRequired) el.required = true;
         });
+        sameNote.textContent = disabled ? "Les champs de livraison sont verrouillés car vous utilisez l'adresse de facturation." : "";
         if (disabled) copyBillingToShipping();
     }
+
     same.addEventListener('change', () => setShippingDisabled(same.checked));
     ['bill_lastname','bill_firstname','bill_phone','bill_address','bill_postal','bill_city','bill_country']
         .forEach(id => document.getElementById(id)?.addEventListener('input', () => { if (same.checked) copyBillingToShipping(); }));
-    setShippingDisabled(same.checked);
+    setShippingDisabled(same.checked); // état initial
 
     /* ==========================
-       2) Soumission → checkout.php
+       2) Soumission → create_checkout.php
        ========================== */
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -490,7 +508,7 @@ $CSRF = $_SESSION['csrf_checkout'];
         fd.append('csrf', window.CSRF_CHECKOUT);
 
         try {
-            const res  = await fetch(window.CHECKOUT_URL, {
+            const res  = await fetch(window.CREATE_CHECKOUT_URL, {
                 method: 'POST',
                 body: fd,
                 credentials: 'same-origin'
@@ -508,7 +526,7 @@ $CSRF = $_SESSION['csrf_checkout'];
             const m = text.match(/https:\/\/checkout\.stripe\.com\/pay\/[A-Za-z0-9_%\-]+/);
             if (m) { window.location.href = m[0]; return; }
 
-            throw new Error('Réponse inattendue de checkout.php');
+            throw new Error('Réponse inattendue de create_checkout.php');
         } catch (err) {
             console.error(err);
             msg.textContent = "Oups, impossible de démarrer le paiement. Réessaie ou contacte-nous.";
@@ -517,8 +535,6 @@ $CSRF = $_SESSION['csrf_checkout'];
 
     /* ==========================
        3) Mini-récap du panier (lecture seule)
-          → récupère via API cart.php ; si pas d’URL d’image, on déduit depuis le nom,
-            puis on teste plusieurs variantes (extensions & sous-dossiers).
        ========================== */
     async function renderMiniCart(){
         const box = document.getElementById('mini-cart-list');
@@ -551,13 +567,8 @@ $CSRF = $_SESSION['csrf_checkout'];
                 const line  = qty * price;
                 subtotal += line;
 
-                // 1) URL de l'API si fournie
                 let apiUrl = it.img || it.image || '';
-
-                // 2) Fichier deviné depuis le nom
                 const guessFile = getProductImageFile(name);
-
-                // 3) Pile de candidates: API (si existe) puis variantes locales puis placeholder
                 const candidates = [];
                 if (apiUrl) candidates.push(apiUrl);
                 buildImageCandidates(guessFile).forEach(u => candidates.push(u));
@@ -572,8 +583,7 @@ $CSRF = $_SESSION['csrf_checkout'];
               alt=""
               class="mini-thumb"
               onerror="tryNextImage(this)"
-              data-srcs='${restJson}'
-            >
+              data-srcs='${restJson}'>
             <div>
                 <div class="mini-name">${name}</div>
                 <div class="mini-meta">x ${qty} · ${price.toFixed(2)} CHF</div>
@@ -587,8 +597,7 @@ $CSRF = $_SESSION['csrf_checkout'];
             totalBox.style.display = '';
         } catch (err) {
             console.error(err);
-            document.getElementById('mini-cart-list').innerHTML =
-                '<div class="mini-empty">Impossible de charger le récap pour le moment.</div>';
+            box.innerHTML = '<div class="mini-empty">Impossible de charger le récap pour le moment.</div>';
             document.getElementById('mini-total').style.display = 'none';
         }
     }

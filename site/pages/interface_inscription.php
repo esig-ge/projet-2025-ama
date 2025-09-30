@@ -17,141 +17,149 @@ if (!isset($BASE)) {
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/style_connexion_inscription.css">
 
-    <!--
-    ======================================================================================
-    [NOUVEAU DESIGN — EN ATTENTE DE VALIDATION]
-    Pour ACTIVER ce design :
-      1) Dé-commentez ce <style> CI-DESSOUS
-      2) Dans <body>, ajoutez class="logout"
-      3) Remplacez le <main> "ANCIEN DESIGN" par le <main> "NOUVEAU DESIGN" plus bas
-    ======================================================================================
-
     <style>
-      :root{
-        --dk-bg-1:#5C0012;   /* bordeaux foncé validé */
-        --dk-bg-2:#8A1B2E;   /* bordeaux rosé pour le dégradé */
-        --card-bg:rgba(255,255,255,.10);
-        --card-bd:rgba(255,255,255,.28);
-        --glass-blur:16px;
-        --accent:#ffffff;
-      }
-      body.logout{
-        min-height:100vh; margin:0; color:#fff; display:flex; flex-direction:column;
-        background:
-          radial-gradient(1200px 600px at 10% -10%, #ffb3c9 0%, transparent 60%),
-          radial-gradient(900px 500px at 110% 110%, #ffcfe0 0%, transparent 60%),
-          linear-gradient(120deg, var(--dk-bg-1), var(--dk-bg-2));
-      }
-      .logout-wrap{ flex:1; display:grid; place-items:center; padding:clamp(20px,6vw,64px); position:relative; overflow:hidden; }
-      .bubble{ position:absolute; border-radius:50%; opacity:.25; filter:blur(2px);
-               background: radial-gradient(closest-side,#fff,rgba(255,255,255,.15));
-               animation: float 12s ease-in-out infinite; }
-      .b1{ width:220px; height:220px; top:8%;  left:8%;  animation-delay:0s; }
-      .b2{ width:160px; height:160px; bottom:12%; right:14%; animation-delay:1.2s; }
-      .b3{ width:120px; height:120px; top:18%; right:28%; animation-delay:.6s; }
-      @keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-
-      .logout-card{
-        width:min(620px,92vw);
-        background:var(--card-bg); border:1px solid var(--card-bd);
-        border-radius:22px; backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
-        box-shadow:0 18px 50px rgba(0,0,0,.25);
-        padding:clamp(22px,3.8vw,36px); color:#fff; text-align:left;
-      }
-      .logout-card h1{ margin:.2rem 0 1rem; font-size:clamp(24px,2.8vw,32px); font-weight:800; text-align:center; }
-      .subtitle{ margin:-6px auto 18px; opacity:.95; text-align:center; font-size:clamp(14px,1.4vw,16px); }
-
-      form.form-inscription{ display:grid; gap:14px; }
-      .logout-card label{ font-size:14px; opacity:.95; }
-      .logout-card input[type="text"],
-      .logout-card input[type="email"],
-      .logout-card input[type="tel"],
-      .logout-card input[type="password"]{
-        width:100%; padding:12px 14px; border-radius:12px;
-        border:1px solid rgba(255,255,255,.35);
-        background:rgba(255,255,255,.12); color:#fff; outline:none;
-      }
-      .logout-card input::placeholder{ color:rgba(255,255,255,.75); }
-      .logout-card input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,255,255,.22); }
-
-      .password-wrapper{ position:relative; display:flex; align-items:center; }
-      .password-wrapper input{ flex:1; padding-right:44px; }
-      .toggle-password{ position:absolute; right:10px; top:50%; transform:translateY(-50%);
-        background:none; border:0; cursor:pointer; font-size:1.2rem; line-height:1; color:#fff; opacity:.85; }
-      .toggle-password:hover{ opacity:1; }
-
-      .actions{ display:flex; align-items:center; gap:12px; margin-top:6px; flex-wrap:wrap; }
-      .btn-primary{
-        display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; text-decoration:none;
-        padding:12px 20px; border-radius:999px; font-weight:700;
-        background:#fff; color:#5C0012;
-        box-shadow:0 10px 24px rgba(255,255,255,.18);
-        transition:transform .15s ease, box-shadow .2s ease, filter .2s ease;
-      }
-      .btn-primary:hover{ transform:translateY(-1px); filter:brightness(1.03); }
-      .link{ color:#ffd7de; text-decoration:none; font-size:14px; }
-      .link:hover{ text-decoration:underline; }
-    </style>
-    -->
-
-    <!-- ====== styles MINIMAUX de l'ANCIEN DESIGN (actifs) ====== -->
-    <style>
-        .password-wrapper {
-            position: relative; display: flex; align-items: center;
+        :root{
+            --dk-bg-1:#5C0012;
+            --dk-bg-2:#8A1B2E;
         }
-        .password-wrapper input {
-            flex: 1; padding-right: 45px; font-size: 1rem;
+
+        body.logout{
+            min-height:100vh;
+            margin:0;
+            display:flex;
+            justify-content:center;
+            align-items:center; /* ajoute ça */
+            background:linear-gradient(120deg, var(--dk-bg-1), var(--dk-bg-2));
         }
-        .toggle-password {
-            position: absolute; right: 10px; cursor: pointer;
-            background: none; border: none; font-size: 1.4rem; line-height: 1; padding: 4px;
+
+
+        .card{
+            position:relative;
+            width:min(940px,96vw);
+            border-radius:24px;
+            overflow:hidden;
+            background:#fff;
+            box-shadow:0 20px 60px rgba(0,0,0,.25);
         }
+
+        .split{
+            display:grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            min-height: 520px;
+        }
+
+        /* gauche */
+        .left{
+            padding:32px clamp(20px,4vw,40px);
+            background:#fff;
+            position:relative;
+            z-index:2;
+        }
+        .left h2{ margin:0 0 6px; font-size:clamp(22px,2.6vw,28px); color:#5C0012; font-weight:900; }
+        .left p.desc{ margin:0 0 18px; color:#7a2350; }
+
+        .form-inscription{ display:grid; gap:14px; }
+        .input{ display:flex; align-items:center; gap:10px; border:1px solid #e9d5dd;
+            background:#fdf7f9; border-radius:12px; padding:10px 12px; }
+        .input:focus-within{ border-color:#b46178; box-shadow:0 0 0 4px #b4617830; background:#fff; }
+        .input input{ flex:1; border:0; outline:0; background:transparent; color:#3d0020; font-size:15px; }
+
+        .actions{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+        .btn-primary{
+            padding:12px 22px; border-radius:999px; border:0; cursor:pointer;
+            font-weight:800; color:#fff;
+            background:linear-gradient(120deg,#8A1B2E,#5C0012);
+            box-shadow:0 12px 26px #8A1B2E55;
+        }
+        .btn-primary:hover{ filter:brightness(1.05); }
+        .link{ color:#8A1B2E; text-decoration:none; font-weight:600; }
+        .link:hover{ text-decoration:underline; }
+
+        /* droite */
+        .right{
+            position:relative;
+            background:
+                    radial-gradient(90% 140% at 110% 10%, #ef70ab 0%, transparent 60%),
+                    radial-gradient(80% 120% at 10% 100%, #ae3664 0%, transparent 60%),
+                    linear-gradient(135deg, #8A1B2E 0%, #5C0012 70%);
+        }
+        .right .welcome{
+            position:absolute; inset:0; display:grid; place-items:center; padding:40px;
+            color:#fff; text-align:center;
+        }
+        .right .welcome h3{ font-size:clamp(22px,2.6vw,28px); margin:0 0 10px; }
+        .right .welcome p{ max-width:40ch; opacity:.95; margin:0 auto; }
+
+        /* séparateur pétales */
+
+
+        /* visiteur */
+        .visitor{ margin-top:18px; text-align:center; }
+        .visitor a{
+            color:#fff; font-weight:700; text-decoration:none;
+            background:rgba(255,255,255,.16); padding:10px 18px; border-radius:999px;
+            transition:background .2s ease;
+        }
+        .visitor a:hover{ background:rgba(255,255,255,.26); }
     </style>
 </head>
 
-<!-- ======================================================================================
-     ANCIEN DESIGN — ACTIF (garde l’apparence actuelle)
-     Pour tester le NOUVEAU DESIGN, voir plus bas la section commentée "NOUVEAU DESIGN "
-====================================================================================== -->
-<body>
-<?php include __DIR__ . '/includes/header.php'; ?>
+<body class="logout">
 
-<main class="container">
-    <div class="conteneur_form">
-        <h2>S'inscrire</h2>
+<main>
+    <article class="card">
+        <div class="split">
+            <!-- gauche -->
+            <section class="left">
+                <h2>Hello!</h2>
+                <p class="desc">Créez votre compte — élégance & livraison soignée.</p>
 
-        <form action="<?= $BASE ?>traitement_inscription.php" method="POST" novalidate>
-            <label for="lastname">Nom</label>
-            <input type="text" id="lastname" name="lastname" required maxlength="50" autocomplete="family-name" placeholder="Dupont">
+                <form action="<?= $BASE ?>traitement_inscription.php" method="POST" class="form-inscription" novalidate>
+                    <label for="lastname">Nom</label>
+                    <div class="input"><input type="text" id="lastname" name="lastname" required placeholder="Dupont" autocomplete="family-name"></div>
 
-            <label for="firstname">Prénom</label>
-            <input type="text" id="firstname" name="firstname" required maxlength="30" autocomplete="given-name" placeholder="Alice">
+                    <label for="firstname">Prénom</label>
+                    <div class="input"><input type="text" id="firstname" name="firstname" required placeholder="Alice" autocomplete="given-name"></div>
 
-            <label for="phone">Téléphone</label>
-            <input type="tel" id="phone" name="phone"
-                   required inputmode="numeric"
-                   pattern="^0?7[0-9](?:[ .]?[0-9]{3}){2}[ .]?[0-9]{2}$" maxlength="14"
-                   placeholder="Ex.: 079 123 45 67" autocomplete="tel">
+                    <label for="phone">Téléphone</label>
+                    <div class="input"><input type="tel" id="phone" name="phone" required placeholder="079 123 45 67"></div>
 
-            <label for="email">Adresse e-mail</label>
-            <input type="email" id="email" name="email"
-                   pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$" required maxlength="50"
-                   autocomplete="email" placeholder="Ex.: luci@gmail.com">
+                    <label for="email">Adresse e-mail</label>
+                    <div class="input"><input type="email" id="email" name="email" required placeholder="prenom.nom@email.com"></div>
 
-            <label for="password">Mot de passe</label>
-            <div class="password-wrapper">
-                <input type="password" id="password" name="password"
-                       pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
-                       required minlength="8" autocomplete="new-password"">
-                <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
-            </div>
+                    <label for="password">Mot de passe</label>
+                    <div class="input" style="position:relative;">
+                        <input type="password" id="password" name="password" required placeholder="••••••••">
+                        <button type="button" class="toggle-password"
+                                onclick="togglePassword('password', this)"
+                                style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:0; cursor:pointer;">👁</button>
+                    </div>
 
-            <input type="submit" value="S'inscrire">
-        </form>
+                    <div class="actions">
+                        <button type="submit" class="btn-primary">S’inscrire</button>
+                        <a class="link" href="<?= $BASE ?>interface_connexion.php">Déjà inscrit ?</a>
+                    </div>
+                </form>
+            </section>
+
+            <!-- droite -->
+            <aside class="right">
+                <div class="welcome">
+                    <div>
+                        <h3>Bienvenue !</h3>
+                        <p>Découvrez DK Bloom et ses bouquets d’exception, conçus avec soin.</p>
+                    </div>
+                </div>
+                <div class="petal-edge" aria-hidden="true"></div>
+            </aside>
+        </div>
+    </article>
+
+    <!-- Visiteur -->
+    <div class="visitor">
+        <a href="<?= $BASE ?>index.php">Continuer en tant que visiteur</a>
     </div>
 </main>
-
-<?php include __DIR__ . '/includes/footer.php'; ?>
 
 <script>
     function togglePassword(fieldId, btn) {
@@ -161,79 +169,5 @@ if (!isset($BASE)) {
         else { field.type = "password"; btn.textContent = "👁"; }
     }
 </script>
-
-<!-- toasts -->
-<script>window.DKBASE = <?= json_encode($BASE) ?>;</script>
-<script src="<?= $BASE ?>js/commande.js"></script>
-<?php if (!empty($_SESSION['toast'])):
-    $t = $_SESSION['toast']; unset($_SESSION['toast']); ?>
-    <script>
-        document.addEventListener('DOMContentLoaded', function(){
-            const msg  = <?= json_encode($t['text'], JSON_UNESCAPED_UNICODE) ?>;
-            const type = <?= json_encode($t['type']) ?>; // 'error' | 'success' | 'info'
-            if (typeof window.toast === 'function') { window.toast(msg, type); }
-            else if (typeof window.showToast === 'function') { window.showToast(msg, type); }
-        });
-    </script>
-<?php endif; ?>
-
-<!--
-======================================================================================
-NOUVEAU DESIGN — COMMENTÉ (à activer après validation)
-Étapes d’activation :
-  A) Ajouter class="logout" au <body> ci-dessus
-  B) Dé-commenter le <style> "NOUVEAU DESIGN" dans le <head>
-  C) Remplacer le <main> "ANCIEN DESIGN" par ce bloc <main> :
-======================================================================================
-
-<main class="logout-wrap">
-  <span class="bubble b1"></span>
-  <span class="bubble b2"></span>
-  <span class="bubble b3"></span>
-
-  <section class="logout-card">
-    <h1>Créer un compte</h1>
-    <p class="subtitle">Rejoignez l’univers DK Bloom — élégance, raffinement & livraison soignée.</p>
-
-    <form action="<?= $BASE ?>traitement_inscription.php" method="POST" class="form-inscription" novalidate>
-      <label for="lastname">Nom</label>
-      <input type="text" id="lastname" name="lastname" required maxlength="50" autocomplete="family-name" placeholder="Dupont">
-
-      <label for="firstname">Prénom</label>
-      <input type="text" id="firstname" name="firstname" required maxlength="30" autocomplete="given-name" placeholder="Alice">
-
-      <label for="phone">Téléphone</label>
-      <input type="tel" id="phone" name="phone" required inputmode="numeric"
-             placeholder="07x xxx xx xx"
-             pattern="^0?7[0-9](?:[ .]?[0-9]{3}){2}[ .]?[0-9]{2}$"
-             maxlength="14" autocomplete="tel">
-
-      <label for="email">Adresse e-mail</label>
-      <input type="email" id="email" name="email" required maxlength="50" autocomplete="email"
-             placeholder="prenom.nom@email.com"
-             pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$">
-
-      <label for="password">Mot de passe</label>
-      <div class="password-wrapper">
-        <input type="password" id="password" name="password" required autocomplete="new-password"
-               minlength="8"
-               pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
-               placeholder="Min. 8 caractères (Maj, min, chiffre, spécial)">
-        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
-      </div>
-
-      <div class="actions">
-        <button type="submit" class="btn-primary">S'inscrire</button>
-        <a class="link" href="<?= $BASE ?>interface_connexion.php">Déjà inscrit ? Se connecter</a>
-      </div>
-    </form>
-  </section>
-</main>
-
-======================================================================================
-FIN — NOUVEAU DESIGN
-======================================================================================
--->
-
 </body>
 </html>

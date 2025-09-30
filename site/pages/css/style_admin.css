@@ -1,80 +1,132 @@
-/* ====== Admin Dashboard DK Bloom ====== */
+/* ====== Admin Dashboard DK Bloom — Bordeaux + Pétales ====== */
 :root{
-    --brand-1:#b70f0f;       /* rouge principal */
-    --brand-2:#ff4d4d;       /* rouge clair pour gradient */
-    --ink:#1f2d3d;
-    --muted:#6b7a90;
-    --bg:#f4f6f9;
-    --card:#ffffff;
-    --ok:#0aa66e;
-    --warn:#e49b0f;
-    --alert:#d83b3b;
+    --brand-1:#7a001c;     /* bordeaux foncé */
+    --brand-2:#a31d2b;     /* bordeaux plus clair */
+    --ink:#ffffff;         /* texte global clair */
+    --muted: rgb(255, 228, 240);       /* gris rosé pour secondaires */
+    --card:rgba(255,255,255,.08); /* cartes translucides */
+    --stroke:rgba(255,255,255,.22);
+    --ok:#12b886;
+    --warn:#f0b429;
+    --alert:#ff6b6b;
     --radius:14px;
-    --shadow:0 10px 25px rgba(0,0,0,.08);
+    --shadow:0 10px 28px rgba(0,0,0,.35);
 }
 
+/* Reset de base */
 *{box-sizing:border-box}
 html,body{height:100%}
+
+/* ===== Fond bordeaux + décor pétales ===== */
 body.adm{
-    margin:0; font-family:Inter,Segoe UI,Arial,system-ui,sans-serif;
-    background:var(--bg); color:var(--ink); display:flex;
+    margin:0;
+    font-family:Inter, Segoe UI, Arial, system-ui, sans-serif;
+    color:var(--ink);
+    display:flex;
+    background:linear-gradient(160deg, var(--brand-1) 0%, var(--brand-2) 100%);
+    position:relative;
+    overflow-x:hidden;
+}
+
+/* halo doux (vignette) */
+body.adm::before{
+    content:"";
+    position:fixed; inset:-20vmax;
+    pointer-events:none;
+    background:
+            radial-gradient(60vmax 60vmax at 15% 10%, rgba(255,255,255,.07) 0%, transparent 60%),
+            radial-gradient(50vmax 50vmax at 85% 20%, rgba(255,255,255,.06) 0%, transparent 65%),
+            radial-gradient(70vmax 70vmax at 20% 90%, rgba(0,0,0,.12) 0%, transparent 60%);
+    z-index:0;
+    filter:saturate(105%);
+}
+
+/* pétales / bokeh animés (sans images) */
+body.adm::after{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:0;
+    background-repeat:no-repeat;
+    background-image:
+            radial-gradient(20vmax 20vmax at 10% 25%, rgba(255,255,255,.08), transparent 60%),
+            radial-gradient(16vmax 16vmax at 85% 35%, rgba(255,255,255,.07), transparent 60%),
+            radial-gradient(18vmax 18vmax at 75% 80%, rgba(255,255,255,.06), transparent 60%),
+            radial-gradient(22vmax 22vmax at 25% 75%, rgba(255,255,255,.05), transparent 60%),
+            radial-gradient(14vmax 10vmax at 60% 15%, rgba(255,255,255,.055), transparent 60%),
+            radial-gradient(10vmax 14vmax at 35% 55%, rgba(255,255,255,.05), transparent 60%);
+    animation:petalsFloat 28s linear infinite;
+    opacity:.9;
+    filter:blur(.2px);
+}
+
+@keyframes petalsFloat{
+    0%   { transform:translateY(0) }
+    50%  { transform:translateY(-2.2rem) }
+    100% { transform:translateY(0) }
 }
 
 /* ===== Sidebar ===== */
 .adm-sidebar{
-    width: 250px; min-height:100vh; position:sticky; top:0;
-    background:linear-gradient(180deg, var(--brand-1), var(--brand-2));
-    color:#fff; box-shadow:var(--shadow);
+    width:250px; min-height:100vh; position:sticky; top:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.25));
+    border-right:1px solid var(--stroke);
+    box-shadow:var(--shadow);
     display:flex; flex-direction:column;
+    backdrop-filter: saturate(130%) blur(6px);
+    z-index:2; /* au-dessus des pétales */
 }
 .brand{display:flex; align-items:center; gap:10px; padding:18px 16px}
-.brand-logo{width:40px; height:40px; border-radius:10px; object-fit:cover; box-shadow:0 4px 10px rgba(0,0,0,.2)}
+.brand-logo{width:40px; height:40px; border-radius:10px; object-fit:cover; box-shadow:0 4px 10px rgba(0,0,0,.4)}
 .brand-name{font-weight:700; letter-spacing:.3px}
 
 .adm-nav{display:flex; flex-direction:column; padding:10px}
 .nav-item{
     display:flex; align-items:center; gap:10px;
     padding:12px 14px; border-radius:12px; color:#fff; text-decoration:none;
-    transition:.2s transform,.2s background;
+    transition:.2s transform,.2s background,.2s box-shadow;
 }
 .nav-item .ico{width:22px}
-.nav-item:hover{background:rgba(255,255,255,.12); transform:translateY(-1px)}
-.nav-item.active{background:rgba(255,255,255,.18)}
+.nav-item:hover{background:rgba(255,255,255,.10); transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.25)}
+.nav-item.active{background:rgba(255,255,255,.16); box-shadow:inset 0 0 0 1px var(--stroke)}
 
 .adm-footer{margin-top:auto; padding:14px 16px; opacity:.85; font-size:12px}
 
-/* Sidebar masquée par défaut si aside-closed */
-body.aside-closed .adm-sidebar {
-    transform: translateX(-100%);
-    transition: .25s transform;
-    position: fixed;
-    top: 0; left: 0;
-    height: 100%;
-    z-index: 1000;
+/* Sidebar masquée (mobile) */
+body.aside-closed .adm-sidebar{
+    transform:translateX(-100%);
+    transition:.25s transform;
+    position:fixed; top:0; left:0; height:100%; z-index:3;
 }
+body.aside-closed .adm-main{ margin-left:0 }
 
-/* Quand fermée, le main prend toute la largeur */
-body.aside-closed .adm-main {
-    margin-left: 0;
-}
-
-
-/* ===== Main ===== */
-.adm-main{flex:1; display:flex; flex-direction:column}
+/* ===== Main / Topbar ===== */
+.adm-main{flex:1; display:flex; flex-direction:column; position:relative; z-index:1}
 .adm-topbar{
     display:flex; align-items:center; gap:16px; padding:18px 22px;
-    background:linear-gradient(90deg, var(--brand-1), var(--brand-2));
-    color:#fff; box-shadow:var(--shadow);
+    background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    color:#fff; border-bottom:1px solid var(--stroke);
+    backdrop-filter:saturate(130%) blur(6px);
 }
-.burger{background:rgba(255,255,255,.18); color:#fff; border:0; border-radius:10px; padding:8px 10px; cursor:pointer}
-.burger:hover{background:rgba(255,255,255,.25)}
+.burger{background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:10px; padding:8px 10px; cursor:pointer}
+.burger:hover{background: rgb(255, 255, 255)
+}
 .welcome h1{margin:0 0 4px 0; font-size:22px}
-.welcome p{margin:0; opacity:.9}
+welcome p {
+    color: #fff !important;
+    opacity: 1; /* enlève l’effet "grisé" */
+}
 
 .top-actions{margin-left:auto; display:flex; gap:10px}
-.btn{background:#fff; color:var(--brand-1); border:0; padding:10px 14px; border-radius:12px; text-decoration:none; font-weight:600}
-.btn.ghost{background:transparent; color:#fff; outline:2px solid rgba(255,255,255,.6)}
-.btn:hover{filter:brightness(.95)}
+.btn{
+    background:#fff; color:var(--brand-1); border:0; padding:10px 14px;
+    border-radius:12px; text-decoration:none; font-weight:600;
+    box-shadow:0 6px 14px rgba(0,0,0,.15)
+}
+.btn.ghost{
+    background:transparent; color:#fff; outline:2px solid rgba(255,255,255,.55)
+}
+.btn:hover{filter:brightness(.96)}
 
 /* ===== KPI grid ===== */
 .kpi-grid{
@@ -83,50 +135,68 @@ body.aside-closed .adm-main {
 .kpi-card{
     background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
     display:flex; flex-direction:column; gap:12px; min-height:120px; position:relative;
+    border:1px solid var(--stroke);
     animation:pop .35s both;
+    backdrop-filter: blur(4px);
 }
 .kpi-card.alert{outline:2px solid var(--alert)}
 .kpi-label{color:var(--muted); font-size:13px}
 .kpi-value{font-size:28px; font-weight:800; letter-spacing:.3px}
-.kpi-badge{position:absolute; right:12px; top:12px; background:#fff3f3; color:var(--alert); padding:4px 8px; border-radius:999px; font-size:12px}
-
-.spark, .bar{
-    height:34px; border-radius:10px; background:
-        linear-gradient(90deg, rgba(183,15,15,.25), rgba(255,77,77,.25));
-    mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 10px);
+.kpi-badge{
+    position:absolute; right:12px; top:12px; background:rgba(255,255,255,.15);
+    color:#fff; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--stroke)
 }
 
-/* ===== Cards grid ===== */
+.spark, .bar{
+    height:34px; border-radius:10px;
+    background:linear-gradient(90deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
+    mask:repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 10px);
+    opacity:.9;
+}
+
+/* ===== Cards / tableaux ===== */
 .grid-2{display:grid; gap:16px; padding:0 20px 20px; grid-template-columns:1fr 1fr}
-.card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden}
+.card{
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    overflow:hidden; border:1px solid var(--stroke); backdrop-filter: blur(4px);
+}
 .card-head{display:flex; align-items:center; justify-content:space-between; padding:16px 16px 6px 16px}
 .card-head h2{margin:0; font-size:18px}
-.link{color:var(--brand-1); text-decoration:none; font-weight:600}
+.link{color:#ffd8d8; text-decoration:none; font-weight:600}
 .link:hover{text-decoration:underline}
 
 .table.like{padding:8px 16px 16px}
-.table.like .row{display:grid; grid-template-columns:70px 160px 1fr 140px 110px; gap:10px; padding:10px 0; border-bottom:1px solid #edf0f5; align-items:center}
+.table.like .row{
+    display:grid; grid-template-columns:70px 160px 1fr 140px 110px;
+    gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.12);
+    align-items:center
+}
 .table.like .row.head{font-weight:700; color:var(--muted)}
 .table.like .row.empty{color:var(--muted)}
-.quick-actions{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; padding:16px}
+
+.quick-actions{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; padding:16px
+}
 .qa{
     display:flex; align-items:center; justify-content:center; padding:12px; border-radius:12px;
-    background:linear-gradient(120deg, #fff, #fff8f8); border:1px solid #f1dede; text-decoration:none; color:var(--ink); font-weight:600;
+    background:linear-gradient(120deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+    border:1px solid var(--stroke); text-decoration:none; color:#fff; font-weight:600;
     transition:.2s transform,.2s box-shadow;
 }
-.qa:hover{transform:translateY(-2px); box-shadow:0 8px 16px rgba(183,15,15,.15)}
+.qa:hover{transform:translateY(-2px); box-shadow:0 8px 16px rgba(0,0,0,.35)}
 
 .chart-placeholder{
-    margin:16px; height:260px; border-radius:14px; background:
-        linear-gradient(135deg, #fff, #fff8f8);
-    border:1px dashed #e7c9c9; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:600;
+    margin:16px; height:260px; border-radius:14px;
+    background:linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+    border:1px dashed rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-weight:600;
 }
 
 .list{list-style:none; margin:0; padding:12px 16px}
-.list li{padding:10px 0; border-bottom:1px solid #edf0f5}
-.list li em{font-style:normal; color:var(--alert); font-weight:700}
+.list li{padding:10px 0; border-bottom:1px solid rgba(255,255,255,.12)}
+.list li em{font-style:normal; color:#ffd0d0; font-weight:700}
 
-.adm-bottom{padding:14px 20px; color:var(--muted)}
+.adm-bottom{padding:14px 20px; color: #fff !important}
 
 /* ===== Responsive ===== */
 @media (max-width: 1200px){
@@ -144,3 +214,66 @@ body.aside-closed .adm-main {
 
 /* ===== Animations ===== */
 @keyframes pop{from{transform:translateY(6px); opacity:0}to{transform:translateY(0); opacity:1}}
+
+
+/* === PATCH: blocs blancs + textes bordeaux sur fond bordeaux === */
+
+/* Fond général (tu gardes tes pétales/halos existants) */
+:root{
+    --brand-1:#7a001c;      /* bordeaux */
+    --brand-2:#a31d2b;
+    --ink:#7a001c;          /* texte bordeaux par défaut */
+    --muted:#6b7a90;
+    --card:#ffffff;         /* cartes/blocs blancs */
+    --stroke:rgba(122,0,28,.12); /* bordures très légères rosées */
+    --shadow:0 12px 28px rgba(0,0,0,.18);
+}
+
+/* Sidebar + topbar restent sombres */
+.adm-sidebar,
+.adm-topbar{ color:#fff; }
+
+/* Blocs blancs (KPI + cards) */
+.kpi-card,
+.card{
+    background:var(--card) !important;
+    color:var(--ink) !important;
+    border:1px solid var(--stroke);
+    box-shadow:var(--shadow);
+    backdrop-filter:none;           /* on enlève le glass si présent */
+}
+
+/* Titres & valeurs */
+.card-head h2{ color:var(--brand-1); }
+.kpi-label{ color: rgba(120, 4, 57, 0.17); }      /* gris lisible sur blanc */
+.kpi-value{ color:var(--brand-1); }
+
+/* Petits graphs/decors dans les KPI */
+.spark, .bar{
+    background:linear-gradient(90deg, rgba(243,128,128,.35), rgba(243,128,128,.18));
+    mask:repeating-linear-gradient(90deg,#000 0 6px,transparent 6px 10px);
+}
+
+/* Liens d’action dans les cards */
+.link{ color:var(--brand-1); }
+.link:hover{ text-decoration:underline; }
+
+/* Tableaux & séparateurs plus clairs */
+.table.like .row{ border-bottom:1px solid #eef1f6; }
+.list li{ border-bottom:1px solid #eef1f6; }
+
+/* Raccourcis (QA) blancs */
+.qa{
+    background:#fff;
+    color:var(--brand-1);
+    border:1px solid var(--stroke);
+}
+.qa:hover{ box-shadow:0 10px 20px rgba(0,0,0,.12); transform:translateY(-2px); }
+
+/* Boutons */
+.btn{ background:#fff; color:var(--brand-1); }
+.btn.ghost{ background:transparent; color:#fff; outline:2px solid rgba(255,255,255,.6); }
+
+/* Alertes badges (gardés) */
+.status-badge.status-oos{ background:#fde7e7; color:#a30000; }
+.status-badge.status-low{ background:#fff3e0; color:#9a5a00; }

@@ -1,4 +1,7 @@
 <?php
+// /site/pages/fleur.php
+session_start();
+
 // Base URL (avec slash final robuste)
 if (!isset($BASE)) {
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
@@ -8,7 +11,7 @@ if (!isset($BASE)) {
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 
-// Couleurs connues -> métadonnées d'affichage
+// Couleurs connues -> métadonnées d’affichage
 $imgMap = [
     'rouge'      => ['id' => 'c-rouge',  'file' => $BASE.'img/rouge.png',        'class' => 'rouge',   'swatch' => 'red',      'alt' => 'Rose rouge',       'title' => 'Rouge'],
     'rose clair' => ['id' => 'c-roseC',  'file' => $BASE.'img/rose_claire.png',  'class' => 'roseC',   'swatch' => 'pink',     'alt' => 'Rose rose claire', 'title' => 'Rose claire'],
@@ -73,8 +76,7 @@ foreach ($imgMap as $coul => $meta) {
         .btn-add{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #ccc;background: #9f1313;color:#fff;cursor:pointer}
         .btn-add[disabled]{opacity:.6;cursor:not-allowed}
         .btn_accueil{display:flex;gap:10px;margin-top:18px}
-        .button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;color: #610202
-        }
+        .button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;color: #610202}
     </style>
 
     <!-- Expose BASE + API_URL au JS -->
@@ -84,7 +86,7 @@ foreach ($imgMap as $coul => $meta) {
     </script>
 
     <!-- JS global panier -->
-    <script src="<?= $BASE ?>js/commande.js?v=qty4" defer></script>
+    <script src="<?= $BASE ?>js/commande.js?v=final" defer></script>
 </head>
 
 <body data-fallback="<?= htmlspecialchars($fallbackClass ?? '') ?>">
@@ -97,7 +99,7 @@ foreach ($imgMap as $coul => $meta) {
                 <h3 class="product-title">La rose</h3>
                 <p class="product-desc">Elle symbolise l’amour au premier regard et l’unicité.</p>
 
-                <!-- Radios couleurs (disabled si rupture) -->
+                <!-- Radios couleurs -->
                 <?php foreach ($imgMap as $coul => $meta): if (!isset($roses[$coul])) continue;
                     $proId   = (int)$roses[$coul]['PRO_ID'];
                     $proNom  = $roses[$coul]['PRO_NOM'];
@@ -153,7 +155,7 @@ foreach ($imgMap as $coul => $meta) {
                     <span class="text"></span>
                 </div>
 
-                <!-- Quantité : max = stock ; disabled si aucune couleur en stock -->
+                <!-- Quantité -->
                 <input
                         type="number"
                         class="qty"
@@ -182,7 +184,6 @@ foreach ($imgMap as $coul => $meta) {
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
-<!-- Script local : visuel + binding. NE PAS redéfinir selectRose ici. -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const radios  = document.querySelectorAll('.color-radio');
@@ -259,12 +260,16 @@ foreach ($imgMap as $coul => $meta) {
         else if (fallback) showImageByClass(fallback);
         refreshUI();
 
-        // 🔗 Bind: utiliser la vraie selectRose de commande.js
+        // ✅ Appel vers commande.js global
         if (btn) {
             btn.addEventListener('click', () => {
                 const q = parseInt(qty?.value || '1', 10);
                 if (Number.isFinite(q) && q > 0) btn.dataset.qty = String(q);
-                window.selectRose(btn);
+                if (typeof window.selectRose === "function") {
+                    window.selectRose(btn);
+                } else {
+                    showMsg("⚠️ Erreur : fonction panier manquante.");
+                }
             });
         }
     });
