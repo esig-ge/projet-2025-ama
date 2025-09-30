@@ -347,9 +347,9 @@ function recup_produit($pdo)
     </script>
     <br>
 
-
-
-
+    <p style="margin-top:16px">
+        <a class="btn ghost" href="<?= $BASE ?>adminAccueil.php">← Retour au dashboard</a>
+    </p>
 </div>
 </body>
 </html>

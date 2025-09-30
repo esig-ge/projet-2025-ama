@@ -95,6 +95,8 @@ if ($pdo) {
 }
 
 $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'UTF-8');
+$admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -228,16 +230,37 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'U
 
         <article class="card">
             <div class="card-head">
-                <h2>Raccourcis</h2>
+                <h2>To-Do List</h2>
             </div>
-            <div class="quick-actions">
-                <a class="qa" href="<?= $BASE ?>adminProduits.php">+ Ajouter un produit</a>
-                <a class="qa" href="<?= $BASE ?>adminPromos.php">Créer un code promo</a>
-                <a class="qa" href="<?= $BASE ?>adminClients.php">Lister les clients</a>
-                <a class="qa" href="<?= $BASE ?>adminAvis.php">Modérer les avis</a>
-                <a class="qa" href="<?= $BASE ?>adminParametres.php">Paramètres</a>
+
+            <div class="todo">
+                <div class="todo-top">
+                    <div class="progress-wrap" aria-label="Avancement">
+                        <div class="progress-bar" id="todo-progress"></div>
+                    </div>
+                    <div class="progress-meta"><span id="todo-count">0/0</span> fait</div>
+                </div>
+
+                <form class="todo-add" id="todo-add">
+                    <input class="todo-input" id="todo-input" type="text" placeholder="Ajouter une tâche… (Entrée)" maxlength="140" />
+                    <button class="btn" type="submit">Ajouter</button>
+                </form>
+
+                <div class="todo-filters">
+                    <button class="chip is-active" data-filter="all">Tout</button>
+                    <button class="chip" data-filter="open">À faire</button>
+                    <button class="chip" data-filter="done">Fait</button>
+                </div>
+
+                <ul class="todo-list" id="todo-list" aria-live="polite"></ul>
+
+                <div class="todo-actions">
+                    <button class="btn ghost" id="todo-clear-done">Supprimer cochées</button>
+                    <button class="btn ghost" id="todo-clear-all">Tout effacer</button>
+                </div>
             </div>
         </article>
+
     </section>
 
     <section class="grid-2">
@@ -354,12 +377,200 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin', ENT_QUOTES, 'U
 
     </section>
     <footer class="adm-bottom">Dernière mise à jour: <?= date('d.m.Y H:i') ?></footer>
+
+    <style>
+        .todo{--bord:#e7e7ea;--ink:#4a2b2b;--rose:#8d0e0e;--rose-2:#b24a4a;--bg:#fff7f8}
+        .todo{display:flex;flex-direction:column;gap:12px}
+        .todo-top{display:flex;align-items:center;gap:12px}
+        .progress-wrap{flex:1;height:10px;background:#f1e7e9;border-radius:999px;overflow:hidden;box-shadow:inset 0 0 0 1px #f0dfe3}
+        .progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--rose),var(--rose-2));transition:width .25s ease}
+        .progress-meta{font-size:.9rem;color:#7b5b5b}
+        .todo-add{display:flex;gap:8px}
+        .todo-input{flex:1;padding:10px 12px;border:1px solid var(--bord);border-radius:12px;background:#fff;outline:none}
+        .todo-input:focus{border-color:#d7b6bb;box-shadow:0 0 0 4px #f7e8eb}
+        .todo-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+        .chip{padding:6px 10px;border:1px solid var(--bord);border-radius:999px;background:#fff;color:var(--ink);cursor:pointer;font-size:.9rem}
+        .chip.is-active{border-color:#e7c6cc;background:var(--bg)}
+        .todo-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+        .todo-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bord);border-radius:14px;background:#fff;transition:background .2s}
+        .todo-item.dragging{opacity:.6}
+        .todo-check{width:20px;height:20px;border:1.5px solid #caa6ab;border-radius:6px;display:grid;place-items:center;cursor:pointer;flex:0 0 20px;background:#fff}
+        .todo-check input{appearance:none;width:0;height:0;position:absolute}
+        .todo-check .mark{opacity:0;transform:scale(.7);transition:all .2s}
+        .todo-check.checked{background:var(--bg);border-color:#b87b85}
+        .todo-check.checked .mark{opacity:1;transform:scale(1)}
+        .todo-label{flex:1}
+        .todo-item.done .todo-label{color:#9a7a7a;text-decoration:line-through}
+        .todo-del{border:none;background:transparent;cursor:pointer;font-size:18px;line-height:1;color:#9a646a}
+        .todo-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:2px}
+        .btn.ghost{background:#fff;border:1px solid var(--bord);color:#7b5b5b}
+    </style>
+
 </main>
 
 <script>
     document.getElementById('burger')?.addEventListener('click', () => {
         document.body.classList.toggle('aside-closed');
     });
+</script>
+<script>
+    (() => {
+        const admId = <?= json_encode($admId, JSON_UNESCAPED_UNICODE) ?>;
+        const STORAGE_KEY = `dkb_admin_todos_${admId||'guest'}`;
+
+        /*** State ***/
+        let todos = load() ?? seed();
+        let filter = 'all';
+
+        /*** Elements ***/
+        const $list   = document.getElementById('todo-list');
+        const $input  = document.getElementById('todo-input');
+        const $form   = document.getElementById('todo-add');
+        const $count  = document.getElementById('todo-count');
+        const $bar    = document.getElementById('todo-progress');
+        const $chips  = document.querySelectorAll('.todo-filters .chip');
+        const $clearD = document.getElementById('todo-clear-done');
+        const $clearA = document.getElementById('todo-clear-all');
+
+        /*** Init ***/
+        render();
+
+        /*** Events ***/
+        $form.addEventListener('submit', (e)=>{
+            e.preventDefault();
+            const t = ($input.value||'').trim();
+            if(!t) return;
+            todos.push({ id: uid(), text: t, done:false });
+            $input.value='';
+            save(); render();
+        });
+
+        $chips.forEach(ch=>{
+            ch.addEventListener('click', ()=>{
+                $chips.forEach(c=>c.classList.remove('is-active'));
+                ch.classList.add('is-active');
+                filter = ch.dataset.filter;
+                render();
+            });
+        });
+
+        $clearD.addEventListener('click', ()=>{
+            todos = todos.filter(t=>!t.done);
+            save(); render();
+        });
+        $clearA.addEventListener('click', ()=>{
+            if(confirm('Tout effacer ?')) { todos = []; save(); render(); }
+        });
+
+        /*** Drag to reorder ***/
+        let dragId = null;
+        $list.addEventListener('dragstart', e=>{
+            const li = e.target.closest('li.todo-item');
+            dragId = li?.dataset.id || null;
+            li?.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        $list.addEventListener('dragend', e=>{
+            e.target.closest('li.todo-item')?.classList.remove('dragging');
+        });
+        $list.addEventListener('dragover', e=>{
+            e.preventDefault();
+            const after = getDragAfterElement($list, e.clientY);
+            const dragging = $list.querySelector('.dragging');
+            if(!dragging) return;
+            if(after==null) $list.appendChild(dragging); else $list.insertBefore(dragging, after);
+        });
+        $list.addEventListener('drop', ()=>{
+            // Rebuild order from DOM
+            const ids = [...$list.querySelectorAll('.todo-item')].map(li=>li.dataset.id);
+            todos.sort((a,b)=> ids.indexOf(a.id) - ids.indexOf(b.id));
+            save(); render(); // re-render to reset classes
+        });
+
+        /*** Helpers ***/
+        function render(){
+            // filter
+            const filtered = todos.filter(t=>{
+                if(filter==='open') return !t.done;
+                if(filter==='done') return t.done;
+                return true;
+            });
+
+            // list
+            $list.innerHTML = '';
+            filtered.forEach(t=>{
+                const li = document.createElement('li');
+                li.className = 'todo-item'+(t.done?' done':'');
+                li.draggable = true;
+                li.dataset.id = t.id;
+
+                const check = document.createElement('button');
+                check.className = 'todo-check'+(t.done?' checked':'');
+                check.innerHTML = '<span class="mark">✔</span>';
+                check.addEventListener('click', ()=>{
+                    t.done = !t.done; save(); render();
+                });
+
+                const lbl = document.createElement('div');
+                lbl.className = 'todo-label';
+                lbl.textContent = t.text;
+
+                const del = document.createElement('button');
+                del.className = 'todo-del';
+                del.title = 'Supprimer';
+                del.innerHTML = '🗑️';
+                del.addEventListener('click', ()=>{
+                    todos = todos.filter(x=>x.id!==t.id);
+                    save(); render();
+                });
+
+                const wrap = document.createElement('div');
+                wrap.className = 'todo-check-wrap';
+                wrap.appendChild(check);
+
+                li.appendChild(check);
+                li.appendChild(lbl);
+                li.appendChild(del);
+                $list.appendChild(li);
+            });
+
+            // progress
+            const total = todos.length;
+            const done  = todos.filter(t=>t.done).length;
+            $count.textContent = `${done}/${total}`;
+            $bar.style.width = total? `${(done/total)*100}%` : '0%';
+        }
+
+        function getDragAfterElement(container, y){
+            const els = [...container.querySelectorAll('.todo-item:not(.dragging)')];
+            return els.reduce((closest, child)=>{
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height/2;
+                if(offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); }
+        function load(){
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); }
+            catch(e){ return null; }
+        }
+        function uid(){ return Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
+        function seed(){
+            // Première visite : quelques tâches de départ (modifiables/supprimables)
+            const s = [
+                {id:uid(), text:'Vérifier les alertes stock', done:false},
+                {id:uid(), text:'Répondre aux avis clients', done:false},
+                {id:uid(), text:'Créer la promo du week-end', done:true},
+            ];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+            return s;
+        }
+    })();
 </script>
 
 </body>

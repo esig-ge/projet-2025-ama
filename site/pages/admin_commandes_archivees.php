@@ -1,5 +1,5 @@
 <?php
-// /site/pages/admin_commande.php — regroupement par sections + archivage
+// /site/pages/admin_commandes_archivees.php — liste + désarchiver
 session_start();
 
 /* ===== Accès ===== */
@@ -23,7 +23,7 @@ $COM_STATUTS = [
     'annulee'
 ];
 
-/* Ordre d'affichage des sections (libellés jolis) */
+/* Ordre d'affichage des sections */
 $DISPLAY_ORDER = [
     'livree'                   => 'Livrées',
     'en preparation'           => 'En préparation',
@@ -35,10 +35,28 @@ $DISPLAY_ORDER = [
 $filtreStatut = isset($_GET['statut']) && $_GET['statut'] !== '' ? (string)$_GET['statut'] : '';
 $q            = trim($_GET['q'] ?? '');
 
-/* ===== POST: mise à jour du statut / archivage ===== */
+/* ===== POST: désarchiver / MAJ statut (facultatif) ===== */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+    if ($action === 'unarchive') {
+        $comId = (int)($_POST['com_id'] ?? 0);
+        if ($comId > 0) {
+            // S'assurer que la commande est bien archivée
+            $st = $pdo->prepare("SELECT COM_ARCHIVE FROM COMMANDE WHERE COM_ID=?");
+            $st->execute([$comId]);
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if ($row && (int)$row['COM_ARCHIVE'] === 1) {
+                $pdo->prepare("UPDATE COMMANDE SET COM_ARCHIVE=0, COM_ARCHIVED_AT=NULL WHERE COM_ID=?")->execute([$comId]);
+                $_SESSION['flash'] = "Commande #$comId désarchivée.";
+                header("Location: {$BASE}admin_commande.php"); exit; // retour logique vers la liste active
+            } else {
+                $_SESSION['flash'] = "Désarchivage impossible : commande non archivée.";
+                header("Location: ".$_SERVER['REQUEST_URI']); exit;
+            }
+        }
+    }
     if ($action === 'update') {
+        // Optionnel : autoriser la MAJ de statut même dans les archives
         $comId     = (int)($_POST['com_id'] ?? 0);
         $comStatut = $_POST['com_statut'] ?? '';
         if ($comId > 0 && $comStatut !== '' && in_array($comStatut, $COM_STATUTS, true)) {
@@ -51,29 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         header("Location: ".$_SERVER['REQUEST_URI']); exit;
     }
-    if ($action === 'archive') {
-        $comId = (int)($_POST['com_id'] ?? 0);
-        if ($comId > 0) {
-            // On s'assure que la commande est bien livrée et pas déjà archivée
-            $st = $pdo->prepare("SELECT COM_STATUT, COM_ARCHIVE FROM COMMANDE WHERE COM_ID=?");
-            $st->execute([$comId]);
-            $row = $st->fetch(PDO::FETCH_ASSOC);
-            if ($row && strtolower($row['COM_STATUT'] ?? '') === 'livree' && (int)$row['COM_ARCHIVE'] === 0) {
-                $pdo->prepare("UPDATE COMMANDE SET COM_ARCHIVE=1, COM_ARCHIVED_AT=NOW() WHERE COM_ID=?")->execute([$comId]);
-                $_SESSION['flash'] = "Commande #$comId archivée.";
-                // Redirection vers la page d'archives
-                header("Location: {$BASE}admin_commandes_archivees.php"); exit;
-            } else {
-                $_SESSION['flash'] = "Archivage impossible : statut non 'livrée' ou déjà archivée.";
-                header("Location: ".$_SERVER['REQUEST_URI']); exit;
-            }
-        }
-    }
 }
 
-/* ===== Lecture (non archivées), filtres, fallback montant ===== */
-function get_commandes(PDO $pdo, string $filtreStatut, string $q): array {
-    $where  = ["c.COM_ARCHIVE = 0"];
+/* ===== Lecture (archivées), filtres, fallback montant ===== */
+function get_commandes_archives(PDO $pdo, string $filtreStatut, string $q): array {
+    $where  = ["c.COM_ARCHIVE = 1"];
     $params = [];
     if ($filtreStatut !== '') { $where[] = "c.COM_STATUT = ?"; $params[] = $filtreStatut; }
     if ($q !== '') {
@@ -88,6 +88,7 @@ function get_commandes(PDO $pdo, string $filtreStatut, string $q): array {
         c.COM_ID                       AS commande_id,
         c.COM_DATE                     AS date_commande,
         c.COM_STATUT                   AS statut_commande,
+        c.COM_ARCHIVED_AT               AS archived_at,
         per.PER_NOM                    AS nom_client,
         per.PER_PRENOM                 AS prenom_client,
         CONCAT_WS(' ', a.ADR_RUE, a.ADR_NUMERO, a.ADR_NPA, a.ADR_VILLE, a.ADR_PAYS) AS adresse_complete,
@@ -105,7 +106,7 @@ function get_commandes(PDO $pdo, string $filtreStatut, string $q): array {
       LEFT JOIN PRODUIT p            ON cp.PRO_ID = p.PRO_ID
       LEFT JOIN PAIEMENT pa          ON c.PAI_ID  = pa.PAI_ID
       $W
-      GROUP BY c.COM_ID, c.COM_DATE, c.COM_STATUT,
+      GROUP BY c.COM_ID, c.COM_DATE, c.COM_STATUT, c.COM_ARCHIVED_AT,
                per.PER_NOM, per.PER_PRENOM,
                a.ADR_RUE, a.ADR_NUMERO, a.ADR_NPA, a.ADR_VILLE, a.ADR_PAYS,
                pa.PAI_MONTANT
@@ -125,7 +126,8 @@ function get_commandes(PDO $pdo, string $filtreStatut, string $q): array {
     $st->execute($params);
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
-$commandes = get_commandes($pdo, $filtreStatut, $q);
+
+$commandes = get_commandes_archives($pdo, $filtreStatut, $q);
 $nb = count($commandes);
 
 /* ===== Helpers UI ===== */
@@ -134,10 +136,10 @@ function badgeClass($s) {
     $s = strtolower((string)$s);
     return match ($s) {
         'livree'                  => 'badge-success',
-        'expediee'                => 'badge-blue',
+        'expediee'                => 'badge-info',
         "en attente d'expédition" => 'badge-dark',
         'annulee'                 => 'badge-danger',
-        default                   => 'badge-warn', // en preparation
+        default                   => 'badge-warn',
     };
 }
 ?>
@@ -146,7 +148,7 @@ function badgeClass($s) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Gestion des commandes — DK Bloom</title>
+    <title>Commandes archivées — DK Bloom</title>
 
     <link rel="stylesheet" href="<?= $BASE ?>css/style_admin.css">
     <style>
@@ -167,7 +169,7 @@ function badgeClass($s) {
 
         .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .toolbar .spacer{flex:1}
-        select,input[type=text]{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;background:#fff;color:var(--text)}
+        select,input[type=text]{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;background:#fff;color:#var(--text)}
         input[type=text]{min-width:240px;flex:1}
         .btn{appearance:none;border:1px solid var(--brand);color:#fff;background:var(--brand);padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer}
         .btn:hover{background:var(--brand-600);border-color:var(--brand-600)}
@@ -191,25 +193,13 @@ function badgeClass($s) {
         .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
         .badge-warn{background:var(--warn-bg);color:var(--warn)}
         .badge-info{background:#fff7d1;color:#8a6a00}
-        .badge-danger{background:var(--danger-bg);color:var(--danger)}
+        .badge-danger{background:var(--danger-bg);color:#var(--danger)}
         .badge-success{background:#e6f6ea;color:#155c2e}
         .badge-dark{background:#f1f1f3;color:#111}
 
         .row-form{display:flex;gap:8px;align-items:center;justify-content:flex-end}
-        .row-form select{border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px 10px;background:#fff;color:var(--text);min-width:210px}
+        .row-form select{border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px 10px;background:#fff;color:#111;min-width:210px}
 
-        .table td:last-child {
-            min-width: 180px; /* assez pour voir le bouton */
-            white-space: normal; /* permet le retour à la ligne */
-        }
-        .row-form {
-            flex-direction: column; /* les inputs et le bouton empilés verticalement */
-            align-items: stretch;
-        }
-        .row-form select,
-        .row-form button {
-            width: 100%;
-        }
         /* Sections */
         .section-row td{ padding:0; background:transparent; border-top:0; }
         .section-head{
@@ -219,48 +209,17 @@ function badgeClass($s) {
             border-top:1px solid var(--line); border-bottom:1px solid var(--line);
             letter-spacing:.2px;
         }
-        @media (max-width: 800px) {
-            .table thead { display: none; } /* optionnel : cacher en-tête */
-            .table tr { display: block; margin-bottom: 12px; border:1px solid var(--line); border-radius:10px; }
-            .table td { display: block; width: 100% !important; border:none; }
-            .table td::before { font-weight:700; display:block; margin-bottom:4px; }
-        }
+        @media (max-width: 720px){ .section-head{ top:0; } }
 
-
-        /* Case à cocher d'archivage */
-        .archiver-cell{white-space:nowrap}
-        .archiver{display:flex;align-items:center;gap:8px}
-        .archiver small{color:var(--muted)}
-        .archiver input[type=checkbox]{width:18px;height:18px;cursor:pointer}
-
-        /* --- Badges --- */
-        .badge-blue{ background:#e6f0ff; color:#0b4fb9; }  /* pour 'expediee' */
-
-        /* --- Largeurs de colonnes (facultatif mais utile) --- */
-        .table thead th:nth-child(1){ width:4.5%; }   /* ID un peu plus étroit */
-        .table thead th:nth-child(2){ width:16%; }    /* Date un peu plus large */
-
-        /* --- Typo par colonne --- */
-        .table tbody td:nth-child(1){                 /* ID */
-            font-size: 12px;
-            color: #6b7280;
-            white-space: nowrap;
-        }
-        .table tbody td:nth-child(2){                 /* Date */
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: .2px;
-            color:#111;
-            white-space: nowrap;
-        }
-
+        /* Action cell */
+        .actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
     </style>
 </head>
 <body>
 <div class="wrap">
 
-    <h1>Gestion des commandes</h1>
-    <p class="sub">Surveillez, filtrez et mettez à jour rapidement les commandes. Les commandes “Livrées” peuvent être archivées.</p>
+    <h1>Commandes archivées</h1>
+    <p class="sub">Historique des commandes. Vous pouvez <strong>désarchiver</strong> une commande pour la renvoyer dans la liste active.</p>
 
     <?php if(!empty($_SESSION['flash'])): ?>
         <div class="flash" style="margin:14px 0 0;background:#eef7ff;border:1px solid #cfe6ff;color:#0c4a6e;padding:10px 12px;border-radius:10px">
@@ -288,20 +247,21 @@ function badgeClass($s) {
             <table class="table">
                 <thead>
                 <tr>
-                    <th style="width:5%">ID</th>
-                    <th style="width:15%">Date</th>
+                    <th style="width:8%">ID</th>
+                    <th style="width:14%">Date</th>
                     <th style="width:15%">Client</th>
                     <th style="width:25%">Adresse</th>
                     <th>Produits</th>
                     <th style="width:10%">Statut</th>
                     <th style="width:12%">Montant</th>
-                    <th style="width:20%">Action</th>
+                    <th style="width:14%">Archivé le</th>
+                    <th style="width:22%">Action</th>
                 </tr>
                 </thead>
                 <tbody>
                 <?php
                 if (!$commandes) {
-                    echo '<tr><td colspan="8" style="text-align:center;padding:22px">Aucune commande.</td></tr>';
+                    echo '<tr><td colspan="9" style="text-align:center;padding:22px">Aucune commande archivée.</td></tr>';
                 } else {
                     $current = null;
                     foreach ($commandes as $r):
@@ -309,43 +269,40 @@ function badgeClass($s) {
                         if ($statut !== $current) {
                             $current = $statut;
                             $label = $DISPLAY_ORDER[$statut] ?? ucfirst($statut);
-                            echo '<tr class="section-row"><td colspan="8"><div class="section-head">'.$label.'</div></td></tr>';
+                            echo '<tr class="section-row"><td colspan="9"><div class="section-head">'.$label.'</div></td></tr>';
                         }
-                        $isLivree = ($statut === 'livree');
                         ?>
                         <tr>
-                            <td class="archiver-cell">
-                                <?php if ($isLivree): ?>
-                                    <!-- Case archivage + message -->
-                                    <form method="post" class="archiver" onsubmit="return confirm('Archiver cette commande ?');">
-                                        <input type="hidden" name="action" value="archive">
-                                        <input type="hidden" name="com_id" value="<?= (int)$r['commande_id'] ?>">
-                                        <input type="checkbox" aria-label="Archiver la commande" onchange="this.form.requestSubmit()">
-                                        <span>#<?= (int)$r['commande_id'] ?></span>
-                                    </form>
-                                    <small>Voulez-vous archiver cette commande ?</small>
-                                <?php else: ?>
-                                    #<?= (int)$r['commande_id'] ?>
-                                <?php endif; ?>
-                            </td>
+                            <td>#<?= (int)$r['commande_id'] ?></td>
                             <td><?= h($r['date_commande'] ?? '-') ?></td>
                             <td><?= h(($r['nom_client'] ?? '-') . ' ' . ($r['prenom_client'] ?? '')) ?></td>
                             <td><?= h($r['adresse_complete'] ?? '-') ?></td>
                             <td><?= h($r['produits'] ?? '-') ?></td>
                             <td><span class="badge <?= badgeClass($r['statut_commande'] ?? '') ?>"><?= h($r['statut_commande'] ?? '—') ?></span></td>
                             <td class="montant"><?= number_format((float)($r['montant_commande'] ?? 0), 2, '.', ' ') ?> CHF</td>
+                            <td><?= h($r['archived_at'] ?? '—') ?></td>
                             <td>
-                                <form method="post" class="row-form">
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="com_id" value="<?= (int)$r['commande_id'] ?>">
-                                    <select name="com_statut" title="Statut commande">
-                                        <option value="">Statut commande…</option>
-                                        <?php foreach ($COM_STATUTS as $opt): ?>
-                                            <option value="<?= h($opt) ?>" <?= ($opt === ($r['statut_commande'] ?? '')) ? 'selected' : '' ?>><?= h($opt) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <button class="btn" type="submit">Mettre à jour</button>
-                                </form>
+                                <div class="actions">
+                                    <!-- Désarchiver -->
+                                    <form method="post" onsubmit="return confirm('Désarchiver cette commande pour la renvoyer dans la liste active ?');">
+                                        <input type="hidden" name="action" value="unarchive">
+                                        <input type="hidden" name="com_id" value="<?= (int)$r['commande_id'] ?>">
+                                        <button class="btn" type="submit">Désarchiver</button>
+                                    </form>
+
+                                    <!-- (Optionnel) Changer le statut même depuis les archives -->
+                                    <form method="post" class="row-form">
+                                        <input type="hidden" name="action" value="update">
+                                        <input type="hidden" name="com_id" value="<?= (int)$r['commande_id'] ?>">
+                                        <select name="com_statut" title="Statut commande">
+                                            <option value="">Statut…</option>
+                                            <?php foreach ($COM_STATUTS as $opt): ?>
+                                                <option value="<?= h($opt) ?>" <?= ($opt === ($r['statut_commande'] ?? '')) ? 'selected' : '' ?>><?= h($opt) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button class="btn ghost" type="submit">Mettre à jour</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; } ?>
@@ -355,8 +312,8 @@ function badgeClass($s) {
     </div>
 
     <p style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn ghost" href="<?= $BASE ?>adminAccueil.php">← Retour au dashboard</a>
-        <a class="btn" href="<?= $BASE ?>admin_commandes_archivees.php">Voir les archives</a>
+        <a class="btn ghost" href="<?= $BASE ?>adminAccueil.php">← Dashboard</a>
+        <a class="btn" href="<?= $BASE ?>admin_commande.php">Voir les commandes actives</a>
     </p>
 </div>
 
