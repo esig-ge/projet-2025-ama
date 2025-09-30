@@ -370,7 +370,7 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
                             <td><?= (int)$o['COM_ID'] ?></td>
                             <td><?= h(date('d.m.Y', strtotime($o['COM_DATE']))) ?></td>
                             <td><?= h($o['COM_STATUT']) ?></td>
-                            <td><a class="btn-secondary" href="<?= $BASE ?>commande.php?com_id=<?= (int)$o['COM_ID'] ?>">Détails</a></td>
+                            <td><a class="btn-secondary" href="<?= $BASE ?>detail_commande.php?com_id=<?= (int)$o['COM_ID'] ?>">Détails</a></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
