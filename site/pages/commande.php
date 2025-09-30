@@ -346,7 +346,7 @@ if (($_POST['action'] ?? '') === 'set_qty') {
                     } elseif ($newQ < $oldQ) {
                         $delta = $oldQ - $newQ;
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK+:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
-                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c=>$comId, ':id'=>$itemId])';
+                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
                     }
                 }
 
@@ -718,6 +718,27 @@ $total = $subtotal + $shipping;
                 btn.textContent = oldText;
             }
 
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputs = document.querySelectorAll('.qty-input');
+        inputs.forEach(inp => {
+            let t;
+            // Soumission immédiate au "change"
+            inp.addEventListener('change', () => {
+                const form = inp.closest('form.qty-form');
+                if (form) form.submit();
+            });
+            // Et soumission douce 500ms après la dernière frappe (si l'user tape à la main)
+            inp.addEventListener('input', () => {
+                clearTimeout(t);
+                t = setTimeout(() => {
+                    const form = inp.closest('form.qty-form');
+                    if (form) form.submit();
+                }, 500);
+            });
         });
     });
 </script>
