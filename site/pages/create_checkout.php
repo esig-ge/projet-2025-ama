@@ -18,12 +18,14 @@ try {
     $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
     $origin = $scheme . '://' . $host;
 
-    // /site/pages/… -> /site/
-    $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? ''), '/\\');   // ex: /site/pages
-    $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: /site/pages/
-    $SITE_BASE = preg_replace('#/pages/$#', '/', $PAGE_BASE);         // ex: /site/
-    $BASE_URL  = rtrim($origin, '/') . $SITE_BASE;                    // ex: https://…/site/
+    $dir       = rtrim(dirname($_SERVER['PHP_SELF'] ?? ''), '/\\');   // ex: /.../site/pages
+    $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';   // ex: /.../site/pages/
+    // ✅ Corrigé: retire simplement le "pages/" final (sans rajouter de '/')
+    $SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);           // ex: /.../site/
+    // ✅ Normalisation anti doubles-slash
+    $SITE_BASE = preg_replace('#//+#', '/', $SITE_BASE);
 
+    $BASE_URL  = rtrim($origin, '/') . $SITE_BASE;                    // ex: https://.../site/
     $successUrl = $BASE_URL . 'pages/success_paiement.php?session_id={CHECKOUT_SESSION_ID}';
     $cancelUrl  = $BASE_URL . 'pages/adresse_paiement.php?canceled=1';
 
@@ -40,7 +42,7 @@ try {
     $perId = (int)($_SESSION['per_id'] ?? 0);
     if ($perId <= 0) throw new RuntimeException('Non authentifié.');
 
-    // COMMANDE en préparation
+    /* 3) Trouver la COMMANDE en préparation */
     $comId = (int)($_SESSION['current_com_id'] ?? 0);
     if ($comId <= 0) {
         $st = $pdo->prepare("
@@ -65,7 +67,7 @@ try {
     $chk->execute([':c' => $comId, ':p' => $perId]);
     if (!$chk->fetchColumn()) throw new RuntimeException('Commande non valide.');
 
-    /* 3) Charger les lignes facturables */
+    /* 4) Charger les lignes facturables */
     $rows = [];
 
     // Produits
@@ -94,7 +96,7 @@ try {
 
     if (!$rows) throw new RuntimeException('Votre panier est vide.');
 
-    /* 4) Construire les line_items (ignorer prix <= 0) */
+    /* 5) Construire les line_items (ignorer prix <= 0) */
     $currency  = 'chf';
     $lineItems = [];
     $totalCents = 0;
@@ -104,7 +106,7 @@ try {
         $qty  = max(1, (int)($r['qty']  ?? 1));
         $prc  = (float)($r['price'] ?? 0.0);
 
-        if ($prc <= 0) continue; // ex. emballage gratuit/0 CHF → on ne l’envoie pas à Stripe
+        if ($prc <= 0) continue; // ex: emballage gratuit → pas envoyé à Stripe
 
         $unit = (int) round($prc * 100); // CHF → centimes
         $totalCents += $unit * $qty;
@@ -126,21 +128,20 @@ try {
         throw new RuntimeException('Montant total invalide (0).');
     }
 
-    /* 5) Déterminer les moyens de paiement (optionnel) */
-    // On lit l’option choisie côté UI si elle existe, sinon on force 'card'
+    /* 6) Déterminer les moyens de paiement (optionnel) */
     $uiMethod = $_POST['pay_method'] ?? 'card';
-    $allowed  = ['card', 'twint', 'revolut_pay']; // NB: twint/revolut_pay doivent être activés sur ton compte Stripe
+    $allowed  = ['card', 'twint', 'revolut_pay']; // activer ces méthodes côté Stripe Dashboard
     $methods  = in_array($uiMethod, $allowed, true) ? [$uiMethod] : ['card'];
 
-    /* 6) Créer la Session Checkout — CORRECTION: on supprime automatic_payment_methods */
+    /* 7) Créer la Session Checkout (✅ avec client_reference_id) */
     $session = \Stripe\Checkout\Session::create([
-        'mode'                   => 'payment',
-        'payment_method_types'   => $methods, // <-- on utilise ce champ, pas automatic_payment_methods
-        'line_items'             => $lineItems,
-        'success_url'            => $successUrl,
-        'cancel_url'             => $cancelUrl,
-        'client_reference_id'    => (string)$comId,
-        'metadata'               => [
+        'mode'                 => 'payment',
+        'payment_method_types' => $methods,
+        'line_items'           => $lineItems,
+        'success_url'          => $successUrl,
+        'cancel_url'           => $cancelUrl,
+        'client_reference_id'  => (string)$comId,   // ⭐ IMPORTANT pour /success_paiement.php
+        'metadata'             => [
             'per_id' => (string)$perId,
             'com_id' => (string)$comId,
         ],
@@ -151,7 +152,5 @@ try {
 
 } catch (Throwable $e) {
     http_response_code(400);
-    // En dev, tu peux aussi logger pour traque rapide :
-    // error_log('CHECKOUT ERROR: ' . $e->getMessage());
     echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }
