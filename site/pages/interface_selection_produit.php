@@ -191,13 +191,21 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /2526_grep/t2
         <p class="sub">Trouve la création qui raconte ton histoire.</p>
 
         <figure class="showcase">
-            <img src="<?= $BASE ?>img/boxe_rouge_DK.png" alt="Coffret de roses DK">
+            <img id="heroImage" src="<?= $BASE ?>img/boxe_rouge_DK.png" alt="Visuel DK Bloom">
         </figure>
 
         <nav class="cat-nav">
-            <a class="pill" href="<?= $BASE ?>fleur.php">Fleurs</a>
-            <a class="pill" href="<?= $BASE ?>interface_catalogue_bouquet.php">Bouquets</a>
-            <a class="pill" href="<?= $BASE ?>coffret.php">Coffret</a>
+            <a class="pill"
+               href="<?= $BASE ?>fleur.php"
+               data-img="<?= $BASE ?>img/rouge.png">Fleurs</a>
+
+            <a class="pill"
+               href="<?= $BASE ?>interface_catalogue_bouquet.php"
+               data-img="<?= $BASE ?>img/BouquetRosePale.png">Bouquets</a>
+
+            <a class="pill"
+               href="<?= $BASE ?>coffret.php"
+               data-img="<?= $BASE ?>img/ExempleNoel.png">Coffret</a>
         </nav>
     </section>
 </main>
@@ -209,5 +217,40 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /2526_grep/t2
 
 <!-- JS global si besoin -->
 <script src="<?= $BASE ?>js/script.js" defer></script>
+
+<script>
+    (() => {
+        const hero = document.getElementById('heroImage');
+        if (!hero) return;
+
+        const defaultSrc = hero.getAttribute('src');
+        const links = document.querySelectorAll('.cat-nav .pill[data-img]');
+
+        // Précharger
+        links.forEach(a => { const i = new Image(); i.src = a.dataset.img; });
+
+        const setHero = (url) => {
+            if (!url || hero.src.endsWith(url)) return;
+            hero.style.opacity = .6;
+            const tmp = new Image();
+            tmp.onload = () => { hero.src = url; hero.style.opacity = 1; };
+            tmp.src = url;
+        };
+
+        links.forEach(link => {
+            const url = link.dataset.img;
+
+            // Survol / focus clavier => montrer
+            link.addEventListener('mouseenter', () => setHero(url));
+            link.addEventListener('focus',      () => setHero(url));
+
+            // Sortie / blur => revenir
+            const back = () => setHero(defaultSrc);
+            link.addEventListener('mouseleave', back);
+            link.addEventListener('blur',       back);
+        });
+    })();
+</script>
+
 </body>
 </html>

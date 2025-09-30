@@ -307,11 +307,11 @@ $isLogged = !empty($_SESSION['per_id']);
     <!-- STATS -->
     <section class="stats container">
         <div class="stats__item">
-            <div class="stats__number">+500</div>
+            <div class="stats__number">+50</div>
             <div class="stats__label">bouquets livrés</div>
         </div>
         <div class="stats__item">
-            <div class="stats__number">98%</div>
+            <div class="stats__number">100%</div>
             <div class="stats__label">clients satisfaits</div>
         </div>
         <div class="stats__item">
