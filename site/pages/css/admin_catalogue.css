@@ -3,11 +3,14 @@
    ============================ */
 
 body {
-    background-color: blue; /* fond page blanc */
     font-family: "Segoe UI", Arial, sans-serif;
     padding: 20px;
     background-image: url("site/pages/img/rose_admin_page_produit.jpg");
 
+}
+
+th{
+    color:white;
 }
 
 /* Titre principal */
@@ -24,7 +27,7 @@ h1 {
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: darkred; /* Bordeaux uniforme */
+    background-color: darkred ; /* Bordeaux uniforme */
     box-shadow: 0 0 10px rgba(0,0,0,0.25);
     border-radius: 8px;
     overflow: hidden;

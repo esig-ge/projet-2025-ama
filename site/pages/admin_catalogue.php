@@ -91,7 +91,7 @@ function recup_produit($pdo)
 <body>
 <div>
 
-    <h1>PRODUIT</h1>
+    <h1>PRODUITS</h1>
 
 <!---------------    tableau fleur ---------------->
     <h2 id="toggleFleur" style="cursor:pointer;">Fleur </h2>
