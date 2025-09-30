@@ -178,6 +178,15 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /2526_grep/t2
                 opacity: 0;
             }
         }
+        .apropos {
+            position: relative;
+            isolation: isolate;
+            background:
+                    radial-gradient(3px 3px at 20px 20px, rgba(92,0,18,.06) 98%, transparent 100%) 0 0/120px 120px,
+                    radial-gradient(3px 3px at 80px 60px, rgba(92,0,18,.05) 98%, transparent 100%) 0 0/120px 120px,
+                    #fff; /* couleur de base */
+        }
+
 
     </style>
 </head>
@@ -185,7 +194,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /2526_grep/t2
 
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="catalogue luxe">
+<main class="apropos catalogue luxe">
     <section class="hero-center">
         <h1>Nos produits</h1>
         <p class="sub">Trouve la création qui raconte ton histoire.</p>

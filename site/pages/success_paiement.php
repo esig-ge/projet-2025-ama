@@ -38,17 +38,39 @@ try {
    - On stocke un "flash toast" dans la session, à afficher sur la page panier/catalogue.
 */
 if ($paid) {
-    if ($orderId && isset($_SESSION['current_com_id']) && (int)$_SESSION['current_com_id'] === $orderId) {
+    $perId = (int)($_SESSION['per_id'] ?? 0);
+    $comId = (int)$orderId; // = client_reference_id envoyé à Stripe
+
+    // 1) Cette commande n'est plus un panier
+    if ($comId > 0 && $perId > 0) {
+        $stmt = $pdo->prepare("
+            UPDATE COMMANDE
+               SET COM_STATUT = 'en attente d''expédition'
+             WHERE COM_ID = ? AND PER_ID = ? AND COM_STATUT = 'en preparation'
+        ");
+        $stmt->execute([$comId, $perId]);
+    }
+
+    // 2) Ne plus référencer le panier actif côté session
+    if (!empty($_SESSION['current_com_id']) && (int)$_SESSION['current_com_id'] === $comId) {
         unset($_SESSION['current_com_id']);
     }
-    // Flash toast générique (adapte le lecteur de toast de ton layout si besoin)
+
+    // 3) Dire à /commande.php de purger le localStorage une seule fois
+    $_SESSION['just_paid'] = 1;
+
+    // 4) (optionnel) purge immédiate si l’utilisateur revient avec le bouton retour
+    echo "<script>try{localStorage.removeItem('DK_CART');localStorage.removeItem('DK_CART_ITEMS');}catch(e){}</script>";
+
+    // 5) Ton toast
     $_SESSION['toast'] = [
-        'type'    => 'success',       // success | info | warning | error
+        'type'    => 'success',
         'title'   => 'Paiement confirmé',
-        'message' => '🎉 Paiement confirmé — votre panier a été vidé.',
-        'ttl'     => time() + 60       // optionnel : validité de 60s
+        'message' => '🎉 Paiement confirmé — votre panier a été réinitialisé.',
+        'ttl'     => time() + 60
     ];
 }
+
 
 /* ===== Présentation simple ===== */
 ?>
@@ -96,9 +118,8 @@ if ($paid) {
     </div>
 
     <div class="cta">
-        <a class="btn" href="../pages/commande.php">Voir mes commandes</a>
-        <a class="btn sec" href="../index.php">Continuer mes achats</a>
-        <a class="btn sec" href="../pages/adresse_paiement.php">Revenir au paiement</a>
+        <a class="btn" href="../pages/detail_commande.php">Voir les détails de ma commande</a>
+        <a class="btn sec" href="../pages/index.php">Continuer mes achats</a>
     </div>
 
     <p class="note">
