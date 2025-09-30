@@ -1,19 +1,22 @@
-:root{
-    /* Palette de couleurs et styles globaux */
-    --bg:#ffffff;           /* fond principal */
-    --card:#ffffff;         /* fond des cartes */
-    --ink:#1a1a1a;          /* couleur du texte standard */
-    --muted: rgb(255, 255, 255);        /* texte secondaire/grisé */
-    --accent:#8d0e0e;       /* couleur principale (rouge foncé) */
-    --accent-weak:#5e0808;  /* variante plus sombre de l’accent */
-    --stroke:#e7e7ea;       /* couleur des bordures */
-    --shadow:0 10px 24px rgba(0,0,0,.06); /* ombre douce */
+/* =========================
+   DK Bloom — commande.css
+   ========================= */
 
-    /* Variable pour gérer l’espace du header fixé */
-    --header-h: 72px;
+/* --------- Variables --------- */
+:root{
+    --bg:#ffffff;
+    --card:#ffffff;
+    --ink:#1a1a1a;
+    --muted:#777;                 /* corrigé: n’était pas lisible (#fff) */
+    --accent:#8d0e0e;
+    --accent-weak:#5e0808;
+    --stroke:#e7e7ea;
+    --shadow:0 10px 24px rgba(0,0,0,.06);
+    --header-h:72px;
+    --brand:#7a0000;              /* utilisé pour la sélection “livraison” */
 }
 
-/* Réinitialisation basique */
+/* --------- Reset + layout de page --------- */
 *{box-sizing:border-box}
 html,body{height:100%}
 
@@ -22,444 +25,151 @@ body{
     color:var(--ink);
     background:var(--bg);
     font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-
-    /* Technique “flex column” pour coller le footer en bas */
-    display:flex;
-    flex-direction:column;
-    min-height:100vh;
-
-    /* On évite que le contenu passe sous le header fixé */
+    display:flex; flex-direction:column; min-height:100vh;
     padding-top:var(--header-h);
 }
-main{flex:1} /* le main prend toute la hauteur restante */
+main{flex:1}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+.page-title{margin:18px 0 12px;text-align:center}
 
-.wrap{
-    max-width:1100px;
-    margin:0 auto;
-    padding:16px
-}
-.page-title{
-    margin:18px 0 12px;
-    text-align:center
-}
-
-/* Mise en page en grille : colonne liste (gauche) + résumé (droite) */
+/* --------- Grille principale --------- */
 .grid{
     display:grid;
-    gap:18px;
-    grid-template-columns: 1.6fr .9fr;
+    grid-template-columns: 1fr 360px;   /* liste | récap  */
+    gap:24px; align-items:start;
 }
-@media (max-width:900px){
-    /* Sur petits écrans : une seule colonne */
-    .grid{grid-template-columns: 1fr}
-}
+@media (max-width:980px){ .grid{grid-template-columns:1fr} }
 
-/* Style des “cartes” (boîtes avec fond, bordure, arrondi, ombre) */
+/* --------- Cartes --------- */
 .card{
     background:var(--card);
     border:1px solid var(--stroke);
-    border-radius:16px;
+    border-radius:12px;
     box-shadow:var(--shadow);
-}
-
-/* === Lignes produits détaillées === */
-.cart-item,
-.cart-line{
-    display:grid;
-    grid-template-columns: 80px 1fr auto auto 36px; /* image | titre | PU | total | bouton */
-    gap:12px;
-    align-items:center;
-    padding:16px;
-    border-bottom:1px solid var(--stroke);
-}
-.cart-item:last-child,
-.cart-line:last-child{border-bottom:none}
-
-.item-img,
-.thumb{
-    width:80px;height:80px;
-    border-radius:12px;
-    object-fit:cover;
-    border:1px solid var(--stroke);
-    background:#fafafa;
-}
-
-.item-title,
-.meta .name{font-weight:700}
-
-.item-sub,
-.meta .price ~ .sub{
-    color:var(--muted);
-    font-size:13px
-}
-
-/* Bloc quantité avec boutons +/- et input */
-.qty{
-    display:flex; align-items:center; gap:10px; justify-self:end;
-}
-.qty button,
-.btn-ghost{
-    min-width:32px; height:32px; padding:0 10px;
-    border-radius:999px;
-    border:1px solid var(--stroke);
-    background:#f7f7f8;
-    color:var(--ink);
-    font-weight:700;
-    cursor:pointer;
-}
-.qty input{
-    width:54px; text-align:center;
-    background:#fff; color:var(--ink);
-    border:1px solid var(--stroke);
-    border-radius:12px;
-    padding:8px 0;
-}
-
-.price, .line-total{
-    justify-self:end;
-    font-weight:700
-}
-
-/* Bouton supprimer */
-.remove,
-.btn-remove{
-    width:32px;height:32px;
-    border-radius:999px;
-    border:1px solid var(--stroke);
-    background:#fff;
-    color:var(--accent);
-    cursor:pointer;
-    font-size:18px;
-}
-
-/* Résumé de la commande (colonne de droite) */
-.summary{padding:18px}
-.sum-row{
-    display:flex;
-    justify-content:space-between;
-    margin:8px 0;
-    color:var(--muted)
-}
-.sum-total{
-    display:flex;
-    justify-content:space-between;
-    margin:14px 0;
-    font-size:22px;
-    font-weight:800
-}
-
-/* Bouton “Valider ma commande” */
-.btn-primary{
-    display:block;
-    text-align:center;
-    padding:12px 18px;
-    border-radius:999px;
-    background:var(--accent);
-    color:#fff;
-    text-decoration:none;
-    font-weight:800;
-    margin:12px 0 8px;
-    border:1px solid var(--accent);
-    transition:background .15s ease;
-}
-.btn-primary:hover{
-    background:var(--accent-weak);
-    border-color:var(--accent-weak)
-}
-
-/* Style quand désactivé (panier vide) */
-.btn-primary[aria-disabled="true"]{
-    background:#e9e9ec;
-    border-color:#e9e9ec;
-    color:#9b9ba0;
-    pointer-events:none;
-}
-
-/* Champ code promo + bouton */
-.coupon{display:flex;gap:10px;margin:12px 0}
-.coupon input{
-    flex:1;
-    border-radius:12px;
-    border:1px solid var(--stroke);
-    background:#fff;
-    color:var(--ink);
-    padding:12px 14px
-}
-.btn-ghost{padding:10px 14px}
-
-/* Bloc d’aide (contact, infos livraison…) */
-.help{
-    border-top:1px solid var(--stroke);
-    margin-top:12px;
-    padding-top:12px
-}
-.help ul{
-    margin:8px 0 0 18px;
-    color:var(--muted)
-}
-
-/* Footer */
-.dkb-footer{
-    border-top:1px solid var(--stroke);
-    margin-top:30px;
-    color:var(--muted);
-    background:#fff;
-}
-
-/* Message quand le panier est vide */
-.empty{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:280px;
-    text-align:center;
-    color:var(--muted);
-}
-.empty strong{color:var(--ink)}
-
-/* Classe utilitaire pour cacher visuellement mais garder accessible aux lecteurs d’écran */
-.sr-only{
-    position:absolute;
-    width:1px;height:1px;
-    padding:0;margin:-1px;
     overflow:hidden;
-    clip:rect(0,0,0,0);
-    border:0;
 }
+.card.disabled{opacity:.6;filter:grayscale(.5)}
+.card.empty{text-align:center;padding:24px;box-shadow:none;background:transparent}
 
-/* Accessibilité : focus visible */
-a:focus,button:focus,input:focus{
-    outline:2px solid rgba(141,14,14,.35);
-    outline-offset:2px
-}
+/* --------- Utilitaires --------- */
+.muted{color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+a:focus,button:focus,input:focus{outline:2px solid rgba(141,14,14,.35);outline-offset:2px}
 
-/* Redondance : état désactivé du bouton checkout */
-#btn-checkout[aria-disabled="true"] {
-    pointer-events: none;
-    opacity: .6;
-}
-
-/* Variante compacte des lignes produit */
-.cart-brief{
-    display:grid;
-    grid-template-columns: 1fr auto auto auto; /* Nom | Qte | PU | Total */
-    gap:12px;
-    align-items:center;
-    padding:16px;
-    border-bottom:1px solid var(--stroke);
-}
-.cart-brief .name{font-weight:700}
-.cart-brief .qty{color:var(--muted)}
-.cart-brief .unit{justify-self:end}
-.cart-brief .total{justify-self:end;font-weight:700}
-
-/* --- Toast ajouté au panier --- */
-.dk-toast {
-    position: fixed;
-    left: 50%;
-    top: 24px;
-    transform: translateX(-50%);
-    z-index: 9999;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 10px 30px rgba(0,0,0,.15);
-    border-radius: 14px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease, transform .25s ease;
-    border: 1px solid rgba(0,0,0,.06);
-}
-.dk-toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-.dk-toast .thumb {
-    width: 44px; height: 44px; border-radius: 10px; object-fit: cover;
-    box-shadow: 0 4px 14px rgba(0,0,0,.12);
-}
-.dk-toast .msg {
-    font-size: 14px; line-height: 1.35; color: #222;
-}
-.dk-toast .msg strong { font-weight: 700; }
-
-/* --- Canvas de confetti pétales --- */
-#dk-petals {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9998;
-}
-/* === Lignes produits utilisées par le JS (cart-row) === */
+/* --------- Lignes du panier (alignées au markup de commande.php) --------- */
 .cart-row{
     display:grid;
-    grid-template-columns: 80px 1fr auto auto; /* image | nom | PU | total */
-    gap:12px;
-    align-items:center;
-    padding:16px;
-    border-bottom:1px solid var(--stroke);
+    grid-template-columns: 32px 64px 1fr auto auto auto; /* chk | img | nom | PU | total | actions */
+    gap:12px; align-items:center; padding:12px 16px; border-top:1px solid #eee;
 }
-.cart-row:last-child{ border-bottom:none; }
+.cart-row:first-of-type{border-top:1px solid #eee}
+.cart-row:last-child{border-bottom:none}
+
 .cart-img{
-    width:80px;height:80px;
-    border-radius:12px;
-    object-fit:cover;
-    border:1px solid var(--stroke);
-    background:#fafafa;
+    width:64px;height:64px; object-fit:cover;
+    border-radius:8px; border:1px solid var(--stroke); background:#fafafa;
 }
-.cart-name{ font-weight:700; }
-.cart-unit,.cart-total{ justify-self:end; }
+.cart-name{font-weight:600}
+.item-sub{font-weight:400;font-size:12px;color:var(--muted)}
+
+.cart-unit,.cart-total{justify-self:end}
 @media (max-width:600px){
-    .cart-row{ grid-template-columns:64px 1fr auto; }
-    .cart-img{ width:64px;height:64px; }
-    .cart-unit{ display:none; } /* on cache le PU sur petit écran, on garde le total */
+    .cart-row{grid-template-columns:32px 64px 1fr auto auto} /* masque le PU via CSS ci-dessous */
+    .cart-unit{display:none}
 }
 
-/* Préférence utilisateur: réduire les animations */
-@media (prefers-reduced-motion: reduce){
-    .dk-toast{ transition:none; }
+/* --------- Bouton poubelle --------- */
+.trash-form{margin:0}
+.trash-btn{
+    background:transparent;border:0;cursor:pointer;
+    font-size:18px;line-height:1;color:var(--accent);
+    padding:6px;border-radius:8px;
 }
+.trash-btn:hover{background:#b70f0f10}
 
-.cart-row {
-    display: grid;
-    grid-template-columns: 60px 1fr auto auto auto 40px;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.cart-img {
-    width: 60px;
-    height: auto;
-    border-radius: 4px;
-}
-
-.cart-remove {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2rem;
-    color: #b00;
-}
-.cart-remove:hover {
-    color: #e00;
-}
-
+/* --------- Barre “actions groupées” --------- */
 .bulk-bar{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:12px 16px;
-    border-bottom:1px solid #eee;
-    flex-wrap:wrap;               /* passe en ligne suivante si l’écran est étroit */
+    display:flex;gap:8px;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid #eee;flex-wrap:wrap;
 }
-.bulk-bar .checkall{display:flex; align-items:center; gap:8px}
-.bulk-bar .bulk-actions{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-left:auto;             /* pousse les boutons à droite de la barre */
+.left-actions{display:flex;gap:10px;align-items:center}
+.btn-ghost.small{font-size:.9rem;padding:.35rem .7rem;white-space:nowrap}
+
+/* --------- Récapitulatif (colonne droite) --------- */
+.summary{padding:18px}
+.sum-row,.sum-total{display:flex;justify-content:space-between;padding:10px 16px}
+.sum-total{font-weight:700;border-top:1px solid #eee}
+
+/* --------- CTA principal --------- */
+.btn-primary{
+    display:block;text-align:center;padding:12px 18px;border-radius:999px;
+    background:var(--accent);color:#fff;text-decoration:none;font-weight:800;
+    margin:12px 16px 8px;border:1px solid var(--accent);transition:background .15s ease;
 }
-.bulk-bar .bulk-actions form{display:inline-flex}
-.btn-ghost.small{white-space:nowrap}
-@media (max-width:560px){
-    .bulk-bar .bulk-actions{flex-wrap:wrap; margin-left:0}
+.btn-primary:hover{background:var(--accent-weak);border-color:var(--accent-weak)}
+.btn-primary[aria-disabled="true"]{background:#e9e9ec;border-color:#e9e9ec;color:#9b9ba0;pointer-events:none}
+#btn-checkout[aria-disabled="true"]{pointer-events:none;opacity:.6}
+
+/* --------- Coupon --------- */
+.coupon{display:flex;gap:10px;margin:12px 16px}
+.coupon input{
+    flex:1;border-radius:12px;border:1px solid var(--stroke);
+    background:#fff;color:var(--ink);padding:12px 14px;
 }
-/* --- Bloc livraison propre et aéré --- */
-.shipping-block .section-title{
-    margin-bottom: 10px;
+.btn-ghost{
+    min-width:32px;height:32px;padding:10px 14px;border-radius:999px;
+    border:1px solid var(--stroke);background:#f7f7f8;color:var(--ink);
+    font-weight:700;cursor:pointer;
 }
 
+/* --------- Aide --------- */
+.help{border-top:1px solid var(--stroke);margin:12px 16px 0;padding-top:12px}
+.help ul{margin:8px 0 0 18px;color:var(--muted)}
+
+/* --------- Flash message --------- */
+.flash{
+    margin:12px auto;max-width:920px;background:#f6fff6;color:#0a6b0a;
+    border:1px solid #bfe6bf;padding:10px 12px;border-radius:10px;
+}
+
+/* --------- Section livraison --------- */
+.section-title{margin:18px 0 10px 0;font-size:18px;font-weight:700}
+.shipping-block .section-title{margin:10px 16px}
 .shipping-options{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px,1fr));
-    gap: 18px;
-    border: 0;
-    padding: 0;
-    margin: 14px 0 0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:18px;border:0;padding:0;margin:14px 16px 0;
 }
-
-/* cache VRAIMENT les radios (toutes plateformes) */
+.shipping-options .opt{display:block;position:relative}
 .shipping-options .opt input[type="radio"]{
-    position: absolute;
-    inset: 0;
-    width: 0; height: 0;
-    opacity: 0;
-    pointer-events: none;
-    appearance: none;
+    position:absolute;inset:0;width:0;height:0;opacity:0;pointer-events:none;appearance:none;
+}
+.shipping-options .opt>span{
+    display:block;padding:14px 18px;border:2px solid #e1e1e1;border-radius:14px;
+    background:#fafafa;text-align:center;font-weight:500;line-height:1.25;color:#222;
+    transition:transform .08s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.shipping-options .opt>span:hover{background:#f2f2f2;border-color:#d5d5d5}
+.shipping-options .opt input[type="radio"]:focus-visible+span{outline:3px solid rgba(122,0,0,.25);outline-offset:2px}
+.shipping-options .opt input[type="radio"]:checked+span{
+    border-color:var(--brand);background:#fff6f6;color:var(--brand);
+    box-shadow:0 4px 12px rgba(0,0,0,.10);transform:translateY(-1px);
 }
 
-/* bouton "tuile" */
-.shipping-options .opt{
-    display: block;
+/* --------- Zone commentaires --------- */
+textarea.comment-box{
+    width:100%;min-height:80px;resize:vertical;padding:12px 14px;
+    font-size:14px;font-family:"Segoe UI",Arial,sans-serif;line-height:1.4;
+    border:1.5px solid #ccc;border-radius:10px;outline:none;
+    transition:all .3s ease;box-shadow:inset 0 1px 3px rgba(0,0,0,.08);
 }
+textarea.comment-box:focus{border-color:#8A1B2E;box-shadow:0 0 6px rgba(138,27,46,.3)}
+textarea.comment-box::placeholder{color:#999;font-style:italic}
 
-.shipping-options .opt > span{
-    display: block;
-    padding: 14px 18px;              /* + d’air */
-    border: 2px solid #e1e1e1;
-    border-radius: 14px;
-    background: #fafafa;
-    text-align: center;
-    font-weight: 500;
-    line-height: 1.25;
-    color: #222;
-    transition: transform .08s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+/* --------- États / responsif divers --------- */
+.empty{display:flex;align-items:center;justify-content:center;min-height:280px;text-align:center;color:var(--muted)}
+.empty strong{color:var(--ink)}
+.dkb-footer{border-top:1px solid var(--stroke);margin-top:30px;color:var(--muted);background:#fff}
+
+@media (prefers-reduced-motion:reduce){
+    *{transition:none !important; animation:none !important}
 }
-
-/* hover / focus */
-.shipping-options .opt > span:hover{
-    background: #f2f2f2;
-    border-color: #d5d5d5;
-}
-
-.shipping-options .opt input[type="radio"]:focus-visible + span{
-    outline: 3px solid rgba(122,0,0,.25);
-    outline-offset: 2px;
-}
-
-/* sélectionné */
-.shipping-options .opt input[type="radio"]:checked + span{
-    border-color: var(--brand, #7a0000);
-    background: #fff6f6;
-    color: var(--brand, #7a0000);
-    box-shadow: 0 4px 12px rgba(0,0,0,.10);
-    transform: translateY(-1px);
-}
-
-/* espace net avec les boutons d’action */
-.shipping-actions{
-    margin-top: 20px;
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-/* ------------- TEXTAREA ----------------- */
-.comment-box {
-    width: 100%;
-    min-height: 80px;
-    resize: vertical;
-    padding: 12px 14px;
-    font-size: 14px;
-    border: 1.5px solid #ccc;
-    border-radius: 10px;
-    outline: none;
-    transition: all 0.3s ease;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
-}
-
-.comment-box:focus {
-    border-color: #8A1B2E;
-    box-shadow: 0 0 6px rgba(138, 27, 46, 0.3);
-}
-
-.comment-box::placeholder {
-    color: #999;
-    font-style: italic;
-}
-

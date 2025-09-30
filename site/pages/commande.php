@@ -438,31 +438,6 @@ $total = $subtotal + $shipping;
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
-    <style>
-        .grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
-        @media (max-width:980px){.grid{grid-template-columns:1fr}}
-        .card{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);overflow:hidden}
-        .card.disabled{opacity:.6;filter:grayscale(.5)}
-        .muted{color:#777}
-        .cart-row{display:grid;grid-template-columns:32px 64px 1fr auto auto auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #eee}
-        .cart-img{width:64px;height:64px;object-fit:cover;border-radius:8px}
-        .cart-name{font-weight:600}
-        .item-sub{font-weight:400;font-size:12px;color:#777}
-        .trash-form{margin:0}
-        .trash-btn{background:transparent;border:0;cursor:pointer;font-size:18px;line-height:1;color:#b70f0f;padding:6px;border-radius:8px}
-        .trash-btn:hover{background:#b70f0f10}
-        .flash{margin:12px auto;max-width:920px;background:#f6fff6;color:#0a6b0a;border:1px solid #bfe6bf;padding:10px 12px;border-radius:10px}
-        .card.empty{text-align:center;padding:24px}
-        .section-title{margin:18px 0 10px 0;font-size:18px;font-weight:700}
-        .bulk-bar{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee}
-        .left-actions{display:flex;gap:10px;align-items:center}
-        .btn-ghost.small{font-size:.9rem;padding:.35rem .7rem}
-        .sum-row,.sum-total{display:flex;justify-content:space-between;padding:10px 16px}
-        .sum-total{font-weight:700;border-top:1px solid #eee}
-        textarea{width:100%;min-height:80px;resize:vertical;padding:12px 14px;font-size:14px;font-family:"Segoe UI",Arial,sans-serif;line-height:1.4;border:1.5px solid #ccc;border-radius:10px;outline:none;transition:all .3s ease;box-shadow:inset 0 1px 3px rgba(0,0,0,.08)}
-        textarea:focus{border-color:#8A1B2E;box-shadow:0 0 6px rgba(138,27,46,.3)}
-        textarea::placeholder{color:#999;font-style:italic}
-    </style>
 </head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
