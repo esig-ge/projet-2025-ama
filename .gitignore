@@ -29,7 +29,8 @@ composer.lock
 !.env.dist
 
 # --- # Secrets Stripe (ne jamais versionner)
-site/database/config/secret_keys/
+site/database/config/secret_keys/stripe_secret.php
+site/database/config/secret_keys/*
 site/database/config/stripe.php
 site/database/config/env.php
 site/database/config/*-local.php

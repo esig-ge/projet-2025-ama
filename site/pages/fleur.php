@@ -82,7 +82,7 @@ foreach ($imgMap as $coul => $meta) {
     <!-- Expose BASE + API_URL au JS -->
     <script>
         window.DKBASE  = <?= json_encode($BASE) ?>;
-        window.API_URL = <?= json_encode($BASE . 'api/commande.php') ?>; // ✅ API correcte
+        window.API_URL = <?= json_encode($BASE . 'api/cart.php') ?>;
     </script>
 
     <!-- JS global panier -->
