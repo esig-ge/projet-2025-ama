@@ -276,6 +276,111 @@ if (($_POST['action'] ?? '') === 'clear_all') {
     }
     header("Location: ".$BASE."commande.php"); exit;
 }
+/* ========= A1) MISE À JOUR QUANTITÉ ========= */
+if (($_POST['action'] ?? '') === 'set_qty') {
+    $comId  = (int)($_POST['com_id']  ?? 0);
+    $itemId = (int)($_POST['item_id'] ?? 0);
+    $kind   = strtolower((string)($_POST['kind'] ?? 'produit'));
+    $newQ   = max(1, (int)($_POST['qty'] ?? 1)); // au moins 1
+
+    if ($comId > 0 && $itemId > 0) {
+        // Vérifier que la commande appartient bien à l'utilisateur et est modifiable
+        $chk = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
+        $chk->execute([':c'=>$comId, ':p'=>$perId]);
+        if ($chk->fetchColumn()) {
+
+            if ($kind === 'produit') {
+                // Récupérer qté actuelle + type produit (fleur/bouquet/coffret)
+                $st = $pdo->prepare("SELECT CP_QTE_COMMANDEE, CP_TYPE_PRODUIT FROM COMMANDE_PRODUIT WHERE COM_ID=:c AND PRO_ID=:id");
+                $st->execute([':c'=>$comId, ':id'=>$itemId]);
+                if ($row = $st->fetch(PDO::FETCH_ASSOC)) {
+                    $oldQ = (int)$row['CP_QTE_COMMANDEE'];
+                    $type = strtolower((string)$row['CP_TYPE_PRODUIT']);
+
+                    // où débiter/re-créditer le stock
+                    $map = [
+                        'fleur'   => ['table'=>'FLEUR',   'col'=>'FLE_QTE_STOCK', 'id'=>'PRO_ID'],
+                        'bouquet' => ['table'=>'BOUQUET', 'col'=>'BOU_QTE_STOCK', 'id'=>'PRO_ID'],
+                        'coffret' => ['table'=>'COFFRET', 'col'=>'COF_QTE_STOCK', 'id'=>'PRO_ID'],
+                    ];
+                    if (!isset($map[$type])) { $_SESSION['message'] = "Type de produit invalide."; header("Location: ".$BASE."commande.php"); exit; }
+
+                    $t  = $map[$type]['table'];
+                    $c  = $map[$type]['col'];
+                    $id = $map[$type]['id'];
+
+                    if ($newQ > $oldQ) {
+                        $delta = $newQ - $oldQ;
+                        // Vérifier le stock disponible
+                        $qStock = (int)$pdo->query("SELECT {$c} FROM {$t} WHERE {$id}=".(int)$itemId)->fetchColumn();
+                        if ($qStock < $delta) {
+                            $_SESSION['message'] = "Stock insuffisant (disponible: {$qStock}).";
+                            header("Location: ".$BASE."commande.php"); exit;
+                        }
+                        // Débiter le stock et mettre à jour la ligne
+                        $pdo->prepare("UPDATE {$t} SET {$c}={$c}-:d WHERE {$id}=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_PRODUIT SET CP_QTE_COMMANDEE=:q WHERE COM_ID=:c AND PRO_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                    } elseif ($newQ < $oldQ) {
+                        $delta = $oldQ - $newQ;
+                        // Re-créditer le stock et mettre à jour la ligne
+                        $pdo->prepare("UPDATE {$t} SET {$c}={$c}+:d WHERE {$id}=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_PRODUIT SET CP_QTE_COMMANDEE=:q WHERE COM_ID=:c AND PRO_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                    }
+                }
+
+            } elseif ($kind === 'supplement') {
+                // Suppléments
+                $st = $pdo->prepare("SELECT CS_QTE_COMMANDEE FROM COMMANDE_SUPP WHERE COM_ID=:c AND SUP_ID=:id");
+                $st->execute([':c'=>$comId, ':id'=>$itemId]);
+                if ($row = $st->fetch(PDO::FETCH_ASSOC)) {
+                    $oldQ = (int)$row['CS_QTE_COMMANDEE'];
+                    if ($newQ > $oldQ) {
+                        $delta = $newQ - $oldQ;
+                        $qStock = (int)$pdo->query("SELECT SUP_QTE_STOCK FROM SUPPLEMENT WHERE SUP_ID=".(int)$itemId)->fetchColumn();
+                        if ($qStock < $delta) {
+                            $_SESSION['message'] = "Stock insuffisant de supplément (disponible: {$qStock}).";
+                            header("Location: ".$BASE."commande.php"); exit;
+                        }
+                        $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK-:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                    } elseif ($newQ < $oldQ) {
+                        $delta = $oldQ - $newQ;
+                        $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK+:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c=>$comId, ':id'=>$itemId])';
+                    }
+                }
+
+            } else { // emballage
+                $st = $pdo->prepare("SELECT CE_QTE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id");
+                $st->execute([':c'=>$comId, ':id'=>$itemId]);
+                if ($row = $st->fetch(PDO::FETCH_ASSOC)) {
+                    $oldQ = (int)$row['CE_QTE'];
+                    if ($newQ > $oldQ) {
+                        $delta = $newQ - $oldQ;
+                        $qStock = (int)$pdo->query("SELECT EMB_QTE_STOCK FROM EMBALLAGE WHERE EMB_ID=".(int)$itemId)->fetchColumn();
+                        if ($qStock < $delta) {
+                            $_SESSION['message'] = "Stock emballage insuffisant (disponible: {$qStock}).";
+                            header("Location: ".$BASE."commande.php"); exit;
+                        }
+                        $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK=EMB_QTE_STOCK-:d WHERE EMB_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_EMBALLAGE SET CE_QTE=:q WHERE COM_ID=:c AND EMB_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                    } elseif ($newQ < $oldQ) {
+                        $delta = $oldQ - $newQ;
+                        $pdo->prepare("UPDATE EMBALLAGE SET EMB_QTE_STOCK=EMB_QTE_STOCK+:d WHERE EMB_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_EMBALLAGE SET CE_QTE=:q WHERE COM_ID=:c AND EMB_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                    }
+                }
+            }
+
+            $_SESSION['message'] = "Quantité mise à jour.";
+        } else {
+            $_SESSION['message'] = "Action non autorisée.";
+        }
+    } else {
+        $_SESSION['message'] = "Requête invalide.";
+    }
+    header("Location: ".$BASE."commande.php"); exit;
+}
 
 
 /* ========= B) CHARGEMENT DE LA COMMANDE + LIGNES ========= */
