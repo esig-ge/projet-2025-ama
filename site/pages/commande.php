@@ -454,10 +454,26 @@ $total = $subtotal + $shipping;
                         <img class="cart-img" src="<?= htmlspecialchars($img) ?>" alt="">
                         <div class="cart-name">
                             <?= htmlspecialchars($L['NAME']) ?><br>
-                            <span class="item-sub"><?= htmlspecialchars($sub) ?> · Qté <?= $q ?></span>
+                            <span class="item-sub"><?= htmlspecialchars($sub) ?></span>
                         </div>
+
+                        <!-- QTÉ -->
+                        <form class="qty-form" method="post" action="<?= $BASE ?>commande.php">
+                            <input type="hidden" name="action" value="set_qty">
+                            <input type="hidden" name="com_id"  value="<?= $comId ?>">
+                            <input type="hidden" name="item_id" value="<?= $id ?>">
+                            <input type="hidden" name="kind"    value="<?= htmlspecialchars($kind, ENT_QUOTES) ?>">
+
+                            <button type="button" class="qty-step" data-step="-1" aria-label="Diminuer">−</button>
+                            <input class="qty-input" type="number" name="qty" min="1" value="<?= $q ?>">
+                            <button type="button" class="qty-step" data-step="1" aria-label="Augmenter">+</button>
+
+                            <button type="submit">OK</button>
+                        </form>
+
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
                         <div class="cart-total"><?= number_format($lt, 2, '.', ' ') ?> CHF</div>
+
                         <form class="trash-form" method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Supprimer cet article ?');">
                             <input type="hidden" name="action" value="del">
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
@@ -466,6 +482,7 @@ $total = $subtotal + $shipping;
                             <button class="trash-btn" aria-label="Supprimer cet article">🗑️</button>
                         </form>
                     </div>
+
                 <?php endforeach; ?>
             <?php endif; ?>
         </section>

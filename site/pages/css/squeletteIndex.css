@@ -153,8 +153,9 @@ h1{
     align-items: center;
     gap: 30px;
 }
-.btn-retour-admin{
+.btn-retour-admin a{
     display: flex;
     color: #5e0808;
     font-weight: bold;
+    justify-items: right;
 }
