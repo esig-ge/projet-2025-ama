@@ -493,6 +493,22 @@ $total = $subtotal + $shipping;
             color: #999;
             font-style: italic;
         }
+        .qty-input {
+            width: 60px;
+            text-align: center;
+            border: none;          /* supprime la bordure */
+            outline: none;         /* supprime le contour au focus */
+            font-size: 14px;
+            background: transparent; /* fond transparent pour s’intégrer */
+        }
+
+        /* Pour garder un petit effet focus propre */
+        .qty-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(138,27,46,0.3); /* halo bordeaux doux */
+            border-radius: 6px;
+        }
+
     </style>
 </head>
 <body>
@@ -742,6 +758,5 @@ $total = $subtotal + $shipping;
         });
     });
 </script>
-
 </body>
 </html>

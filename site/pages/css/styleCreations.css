@@ -88,6 +88,147 @@
 .dkb-nav:focus-visible, .dkb-dot:focus-visible{
     outline:2px solid #fff; outline-offset:2px;
 }
+/* ============ DK Bloom — Creations / Prestations ============ */
+:root{
+    --dk-bordeaux:#5C0012;
+    --dk-bordeaux-2:#8A1B2E;
+    --gold:#B08D57;
+    --paper:#fff;
+    --ink:#1b1b1b;
+    --stroke:#e9e6ea;
+    --radius:22px;
+    --shadow:0 12px 32px rgba(0,0,0,.08);
+}
+
+main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 16px 56px;
+}
+
+main > h1{
+    margin:8px 0 18px;
+    font-family: "Playfair Display", serif;
+    font-weight:600;
+    font-size:clamp(28px, 3.6vw, 40px);
+    letter-spacing:.3px;
+    color:var(--dk-bordeaux-2);
+    text-align:center;
+}
+
+/* ====== Carousel wrapper ====== */
+.dkb-video-carousel{
+    position:relative;
+    border-radius:var(--radius);
+    background:
+            radial-gradient(1000px 400px at -5% -10%, rgba(186,146,74,.08), transparent 60%),
+            radial-gradient(800px 320px at 110% 0%, rgba(92,0,18,.10), transparent 55%),
+            var(--paper);
+    box-shadow:var(--shadow);
+    padding:16px 12px 24px;
+    overflow:hidden;
+}
+
+/* ====== Core layout ====== */
+.dkb-carousel{
+    position:relative;
+    outline:0;
+}
+.dkb-track{
+    display:flex;
+    width:100%;
+    will-change:transform;
+    transition:transform .6s cubic-bezier(.22,.61,.36,1);
+}
+.dkb-slide{
+    min-width:100%;
+    padding:6px;
+    display:flex;
+    justify-content:center;
+}
+.dkb-frame{
+    width:100%;
+    max-width:960px;
+    border-radius:18px;
+    overflow:hidden;
+    background:#000;
+    box-shadow:0 10px 24px rgba(0,0,0,.12);
+}
+
+/* Aspect ratio 16/9 moderne */
+.dkb-frame .dkb-video{
+    width:100%;
+    height:auto;
+    aspect-ratio:16/9;
+    display:block;
+    object-fit:cover;
+    background:#000;
+}
+
+/* ====== Arrows ====== */
+.dkb-nav{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    width:46px; height:46px;
+    border:none;
+    border-radius:50%;
+    background:rgba(255,255,255,.85);
+    backdrop-filter:saturate(120%) blur(6px);
+    color:var(--dk-bordeaux);
+    box-shadow:0 6px 18px rgba(0,0,0,.14);
+    cursor:pointer;
+    display:grid; place-items:center;
+    transition:transform .15s ease, background .2s ease;
+    user-select:none;
+}
+.dkb-nav:hover{ background:#fff; transform:translateY(-50%) scale(1.05); }
+.dkb-prev{ left:12px; }
+.dkb-next{ right:12px; }
+
+/* ====== Dots ====== */
+.dkb-dots{
+    margin-top:14px;
+    display:flex; gap:10px;
+    justify-content:center; align-items:center;
+}
+.dkb-dot{
+    width:10px; height:10px;
+    border-radius:999px;
+    background:#c9c4c9;
+    border:1px solid #cfc9cf;
+    transition:width .25s ease, background .25s ease, transform .25s ease;
+}
+.dkb-dot:hover{ transform:scale(1.12); }
+.dkb-dot.is-active{
+    width:26px;
+    background:linear-gradient(90deg, var(--gold), #d8b67a);
+    border-color:#d8b67a;
+}
+
+/* ====== Focus styles (accessibilité) ====== */
+.dkb-carousel:focus-visible,
+.dkb-nav:focus-visible,
+.dkb-dot:focus-visible{
+    outline:3px solid color-mix(in oklab, var(--gold) 70%, #fff);
+    outline-offset:2px;
+    border-radius:14px;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 720px){
+    .dkb-video-carousel{ padding:10px 8px 18px; }
+    .dkb-nav{ width:40px; height:40px; }
+    .dkb-prev{ left:6px; }
+    .dkb-next{ right:6px; }
+}
+
+/* Respecte le choix “réduire les animations” */
+@media (prefers-reduced-motion: reduce){
+    .dkb-track{ transition:none; }
+    .dkb-nav{ transition:none; }
+    .dkb-dot{ transition:none; }
+}
 
 /* Petite amélioration tablettes */
 @media (max-width: 640px){
