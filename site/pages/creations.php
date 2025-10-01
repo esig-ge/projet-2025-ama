@@ -83,6 +83,9 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 <button class="dkb-dot" role="tab" aria-selected="false" aria-controls="slide-3" type="button"></button>
             </div>
         </div>
+        <div>
+            <div><img src=""></div>
+        </div>
     </section>
 
 
