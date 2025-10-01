@@ -84,7 +84,10 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
             </div>
         </div>
         <div>
-            <div><img src=""></div>
+            <div><img src="img/bouquet_rouge_insta.jpeg"></div>
+            <div><img src="img/bouquet_B.jpeg"></div>
+v            <div><img src="img/bouquet_rouge_coeur.jpeg"></div>
+
         </div>
     </section>
 
