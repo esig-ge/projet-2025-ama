@@ -83,6 +83,11 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 <button class="dkb-dot" role="tab" aria-selected="false" aria-controls="slide-3" type="button"></button>
             </div>
         </div>
+        <div>
+            <div><img src="<?= $BASE ?>img/bouquet_rouge_insta.jpg" alt="Bouquet rouge"></div>
+            <div><img src="<?= $BASE ?>img/bouquet_B.jpg" alt="Bouquet B"></div>
+            <div><img src="<?= $BASE ?>img/bouquet_rouge_coeur.jpg" alt="Bouquet cœur rouge"></div>
+        </div>
     </section>
 
 
