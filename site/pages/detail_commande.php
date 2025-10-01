@@ -303,6 +303,14 @@ $paidAmount = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT'] 
             <div style="margin-top:16px">
                 <a class="btn" href="<?= $BASE ?>info_perso.php">Mes commandes</a>
             </div>
+
+            <!-- 🔽 Nouveau bouton PDF -->
+            <div style="margin-top:10px">
+                <a class="btn" href="<?= $BASE ?>facture_pdf.php?com_id=<?= (int)$head['COM_ID'] ?>">
+                    Télécharger la facture (PDF)
+                </a>
+            </div>
+
             <p class="muted" style="margin-top:10px">
                 Besoin d’aide ? Contactez-nous via la page <a href="<?= $BASE ?>contact.php">Contact</a>.
             </p>

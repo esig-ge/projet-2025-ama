@@ -44,3 +44,6 @@ site/uploads/
 app/storage/cache/
 app/storage/logs/
 storage/
+
+# --- Ne pas versionner dompdf
+/app/libs/dompdf/

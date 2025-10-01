@@ -22,11 +22,10 @@ if (is_file($co_fs_main)) {
 } elseif (is_file($co_fs_pages)) {
     $CREATE_CHECKOUT_URL = $PAGE_BASE . 'create_checkout.php';
 } else {
-    // fallback logique : on vise la racine
     $CREATE_CHECKOUT_URL = $SITE_BASE . 'create_checkout.php';
 }
 
-/* Détection API cart.php pour afficher le récap (si tu gardes l'API) */
+/* Détection API cart.php (si tu gardes l'API) */
 $api_fs_main  = __DIR__ . '/../api/cart.php';
 $api_fs_pages = __DIR__ . '/api/cart.php';
 if (is_file($api_fs_main)) {
@@ -75,6 +74,10 @@ $defFac = fetchOne($pdo, $sqlAdr, [':id'=>$perId, ':type'=>'FACTURATION']) ?: [
 $defLiv = fetchOne($pdo, $sqlAdr, [':id'=>$perId, ':type'=>'LIVRAISON']) ?: [
     'ADR_ID'=>null,'ADR_RUE'=>'','ADR_NUMERO'=>'','ADR_NPA'=>'','ADR_VILLE'=>'','ADR_PAYS'=>'Suisse','ADR_TYPE'=>'LIVRAISON'
 ];
+
+/* Afficher les cases "Enregistrer dans mon espace" uniquement si pas d'adresse existante */
+$showSaveBilling  = empty($defFac['ADR_ID']);
+$showSaveShipping = empty($defLiv['ADR_ID']);
 
 /* Heuristique: case “même adresse” cochée par défaut si livraison absente ou identique à facturation */
 $prefCheckSame = (
@@ -133,11 +136,11 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     <link rel="stylesheet" href="<?= $PAGE_BASE ?>css/commande.css">
 
     <style>
-        /* ===== mini styles layout ===== */
+        /* ===== layout ===== */
         .wrap { max-width: 1150px; margin-inline:auto; }
-        .grid-pay { display:grid; gap:18px; grid-template-columns: 1fr; }
-        @media (min-width: 980px){ .grid-pay { grid-template-columns: 1fr 1fr; } }
-        @media (min-width: 1180px){ .grid-pay { grid-template-columns: 1fr 1fr .85fr; } }
+        .grid-pay { display:grid; gap:18px; grid-template-columns: 1fr !important; }
+        @media (min-width:980px){ .grid-pay { grid-template-columns: 1fr !important; } }
+        @media (min-width:1180px){ .grid-pay { grid-template-columns: 1fr !important; } }
 
         .card { background:#fff; border-radius:10px; padding:16px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
         form#checkout-form { display:grid; gap:18px; grid-template-columns: 1fr; }
@@ -154,7 +157,25 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
         .btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:10px;
             background:#8b0000; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:700; }
         .btn-primary[aria-disabled="true"] { opacity:.6; pointer-events:none; }
-        .note { background:#fff8e5; border:1px solid #ffecb3; padding:10px 12px; border-radius:8px; }
+
+        /* Bandeau astuce fin en bas */
+        .note{
+            background:#fff8e5;
+            border:1px solid #ffecb3;
+            border-radius:8px;
+            padding:6px 10px;
+            font-size:.9rem;
+            line-height:1.2;
+            display:flex;
+            gap:8px;
+            align-items:center;
+            margin-top:14px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .note a{ font-weight:600; text-decoration:underline; }
+
         .mini-title { font-size:1.15rem; font-weight:800; margin-bottom:8px; }
         .mini-cart-list { display:flex; flex-direction:column; gap:10px; }
         .mini-row { display:grid; grid-template-columns: 56px 1fr auto; gap:10px; align-items:center; }
@@ -330,6 +351,14 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
                     </label>
                     <div class="same-note" id="same-note" aria-live="polite"></div>
                 </div>
+
+                <?php if ($showSaveBilling): ?>
+                    <div class="hr"></div>
+                    <label class="pay-option" style="cursor:pointer">
+                        <input type="checkbox" id="save_billing" checked>
+                        Enregistrer cette adresse de facturation dans mon espace
+                    </label>
+                <?php endif; ?>
             </section>
 
             <!-- Colonne 2 : LIVRAISON + PAIEMENT -->
@@ -372,6 +401,14 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
                 <input type="hidden" id="ship_country" name="ship_country" value="CH">
 
+                <?php if ($showSaveShipping): ?>
+                    <div class="hr"></div>
+                    <label class="pay-option" style="cursor:pointer">
+                        <input type="checkbox" id="save_shipping" checked>
+                        Enregistrer cette adresse de livraison dans mon espace
+                    </label>
+                <?php endif; ?>
+
                 <div class="hr"></div>
 
                 <h2>Moyen de paiement</h2>
@@ -399,21 +436,13 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
             </section>
         </form>
 
-<!--        Colonne 3 : RÉCAP PANIER -->
-<!--        <aside class="card" id="mini-cart" aria-live="polite">-->
-<!--            <div class="mini-title">Récapitulatif</div>-->
-<!--            <div id="mini-cart-list" class="mini-cart-list">-->
-<!--                <div class="mini-empty">Chargement du panier…</div>-->
-<!--            </div>-->
-<!--            <div class="mini-total" id="mini-total" style="display:none">-->
-<!--                <span>Total</span><span id="mini-total-amount">0.00 CHF</span>-->
-<!--            </div>-->
-<!--        </aside>-->
-<!--    </div>-->
+        <!-- Colonne 3 : RÉCAP PANIER (laissé en commentaire) -->
+        <!-- <aside class="card" id="mini-cart" aria-live="polite"> ... </aside> -->
+    </div>
 
     <div class="note" style="margin-top:18px">
         Astuce : tu peux revenir au panier pour modifier les articles avant de payer.
-        <br> Les commandes sont effectuées uniquement en Suisse.
+        <span>Les commandes sont effectuées uniquement en Suisse.</span>
         <a href="<?= $PAGE_BASE ?>commande.php">Retour au panier</a>
     </div>
 </main>
@@ -507,6 +536,12 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
         fd.append('same_as_billing', same.checked ? '1' : '0');
         fd.append('csrf', window.CSRF_CHECKOUT);
 
+        // Flags d’enregistrement d’adresse (cases affichées uniquement si pas d’adresse existante)
+        const saveBillingEl  = document.getElementById('save_billing');
+        const saveShippingEl = document.getElementById('save_shipping');
+        fd.append('save_billing',  saveBillingEl  ? (saveBillingEl.checked  ? '1':'0') : '0');
+        fd.append('save_shipping', saveShippingEl ? (saveShippingEl.checked ? '1':'0') : '0');
+
         try {
             const res  = await fetch(window.CREATE_CHECKOUT_URL, {
                 method: 'POST',
@@ -534,73 +569,8 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     });
 
     /* ==========================
-       3) Mini-récap du panier (lecture seule)
+       3) Mini-récap du panier (lecture seule) — laissé en commentaire
        ========================== */
-    // async function renderMiniCart(){
-    //     const box = document.getElementById('mini-cart-list');
-    //     const totalBox = document.getElementById('mini-total');
-    //     const totalAmt = document.getElementById('mini-total-amount');
-    //
-    //     try {
-    //         const url = window.API_URL + '?action=list';
-    //         const res = await fetch(url, { credentials:'same-origin' });
-    //         const text = await res.text();
-    //         let data;
-    //         try { data = JSON.parse(text); } catch(e) { throw new Error('Réponse non JSON du panier'); }
-    //
-    //         if (!res.ok || data.ok === false) throw new Error(data.error || data.msg || `HTTP ${res.status}`);
-    //
-    //         const items = data.items || data.lines || [];
-    //         if (!items.length) {
-    //             box.innerHTML = '<div class="mini-empty">Votre panier est vide.</div>';
-    //             totalBox.style.display = 'none';
-    //             return;
-    //         }
-    //
-    //         let html = '';
-    //         let subtotal = 0;
-    //
-    //         items.forEach(it => {
-    //             const name  = it.name || it.pro_nom || 'Article';
-    //             const qty   = Number(it.qty ?? it.quantite ?? 1);
-    //             const price = Number(it.price ?? it.prix ?? it.unit_price ?? 0);
-    //             const line  = qty * price;
-    //             subtotal += line;
-    //
-    //             let apiUrl = it.img || it.image || '';
-    //             const guessFile = getProductImageFile(name);
-    //             const candidates = [];
-    //             if (apiUrl) candidates.push(apiUrl);
-    //             buildImageCandidates(guessFile).forEach(u => candidates.push(u));
-    //
-    //             const initialSrc = candidates.shift();
-    //             const restJson   = JSON.stringify(candidates).replace(/'/g, '&#39;');
-    //
-    //             html += `
-    //     <div class="mini-row">
-    //         <img
-    //           src="${initialSrc}"
-    //           alt=""
-    //           class="mini-thumb"
-    //           onerror="tryNextImage(this)"
-    //           data-srcs='${restJson}'>
-    //         <div>
-    //             <div class="mini-name">${name}</div>
-    //             <div class="mini-meta">x ${qty} · ${price.toFixed(2)} CHF</div>
-    //         </div>
-    //         <div class="mini-meta">${line.toFixed(2)} CHF</div>
-    //     </div>`;
-    //         });
-    //
-    //         box.innerHTML = html;
-    //         totalAmt.textContent = subtotal.toFixed(2) + ' CHF';
-    //         totalBox.style.display = '';
-    //     } catch (err) {
-    //         console.error(err);
-    //         box.innerHTML = '<div class="mini-empty">Impossible de charger le récap pour le moment.</div>';
-    //         document.getElementById('mini-total').style.display = 'none';
-    //     }
-    // }
     // renderMiniCart();
 </script>
 </body>
