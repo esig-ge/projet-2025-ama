@@ -13,6 +13,7 @@ $isLogged = !empty($_SESSION['per_id']);
     <title>DK Bloom — À propos</title>
 
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/style_apropos.css">
     <style>
         :root{

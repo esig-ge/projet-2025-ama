@@ -18,6 +18,7 @@ if (!isset($BASE)) {
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <!-- CSS spécifique (tu l’utilises pour tes formulaires/cartes) -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_connexion_inscription.css">
+    <!-- <link rel="stylesheet" href="<?= $BASE ?>css/style.css"> -->
 </head>
 
 <body>
@@ -27,66 +28,7 @@ if (!isset($BASE)) {
     <h1 style="text-align:center; margin:0 0 16px; color:darkred;">Nous contacter</h1>
 
     <div class="grid">
-        <!-- Formulaire -->
-        <section class="card" aria-labelledby="titre-contact" style="max-width:760px; margin:auto;">
-<!--            <h2 id="titre-contact">Écris-nous</h2>
-            <p class="muted">Une question, un événement ? Remplis le formulaire et nous te répondons rapidement.</p>
-
-            <form id="contactForm" method="post" action="<?php /*= $BASE */?>traitement_page_contact.php" novalidate>
-                <div>
-                    <label for="nom">Nom <span class="req">*</span></label>
-                    <input id="nom" name="nom" required autocomplete="family-name" />
-                </div>
-
-                <div>
-                    <label for="prenom">Prénom</label>
-                    <input id="prenom" name="prenom" autocomplete="given-name" />
-                </div>
-
-                <div class="full">
-                    <label for="email">E-mail <span class="req">*</span></label>
-                    <input id="email" name="email" type="email" required autocomplete="email" inputmode="email" />
-                </div>
-
-                <div>
-                    <label for="tel">Téléphone</label>
-                    <input id="tel" name="tel" type="tel" inputmode="tel" autocomplete="tel"
-                           placeholder="+41 79 123 45 67"
-                           pattern="^(\+?\d{2}\s?)?0?\d{2}[\s.]?\d{3}[\s.]?\d{2}[\s.]?\d{2}$" />
-                    <div class="help">Format CH accepté (ex. +41 79 123 45 67)</div>
-                </div>
-
-                <div>
-                    <label for="sujet">Sujet <span class="req">*</span></label>
-                    <select id="sujet" name="sujet" required>
-                        <option value="">— choisir —</option>
-                        <option>Service après-vente</option>
-                        <option>Autre</option>
-                    </select>
-                </div>
-
-                <div class="full">
-                    <label for="message">Message <span class="req">*</span></label>
-                    <textarea id="message" name="message" required maxlength="2000"
-                              placeholder="Décris ton besoin, la date souhaitée etc."></textarea>
-                </div>
-
-                <div class="full row-inline">
-                    <input type="checkbox" id="consent" name="consent" required>
-                    <label for="consent">J’accepte que mes données soient utilisées pour traiter ma demande (RGPD).</label>
-                </div>
-
-                <div class="full actions">
-                    <button id="sendBtn" type="submit">Envoyer la demande</button>
-                    <span class="note" id="formNote" aria-live="polite"></span>
-                </div>
-            </form>-->
-
-            <div id="formMsg" class="alert ok" style="display:none;margin-top:12px;"></div>
-            <div id="formErr" class="alert err" style="display:none;margin-top:12px;"></div>
-        </section>
-
-        <!-- Coordonnées / Carte -->
+             <!-- Coordonnées / Carte -->
         <aside class="card" aria-labelledby="titre-infos">
             <h2 id="titre-infos">Nos coordonnées</h2>
             <ul class="info-list">

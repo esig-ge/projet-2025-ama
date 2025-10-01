@@ -4,7 +4,7 @@
     --card:#ffffff;
     --ink:#1a1a1a;
     --muted: rgb(255, 255, 255);
-    --accent:#8d0e0e;      /* bordeaux */
+    --accent: rgba(97, 2, 2, 0.71);      /* bordeaux */
     --accent-weak:#5e0808; /* hover bordeaux foncé */
     --stroke:#e7e7ea;
     --shadow:0 10px 24px rgba(0,0,0,.06);

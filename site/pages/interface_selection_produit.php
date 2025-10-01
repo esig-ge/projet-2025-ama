@@ -11,6 +11,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /2526_grep/t2
 
     <!-- CSS global header/footer + CSS de la page -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
     <style>
         :root {

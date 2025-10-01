@@ -9,7 +9,7 @@
 :root{
     --brand: var(--accent, #7a0000);  /* rouge DK (hérite si présent) */
     --container: 1200px;              /* largeur max du contenu centré */
-    --header-h: 64px;                 /* HAUTEUR du header fixe */
+    --header-h: 80px;                 /* HAUTEUR du header fixe */
 }
 
 *{ box-sizing: border-box; }
@@ -51,12 +51,12 @@ main{ flex:1; } /* pousse le footer en bas si contenu court */
 
 /* Barre interne: logo à gauche, nav à droite */
 .header{
-    height: 100%;
+    height: var(--header-h);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 0 20px;
+    gap: 20px;
+    padding: 0 24px;
 }
 
 /* Logo image compacte */
@@ -109,17 +109,6 @@ main{ flex:1; } /* pousse le footer en bas si contenu court */
     .menu-toggle{ display: none; }
 }
 
-/* ============= Dropdown (sous-menu) ============= */
-/* HTML recommandé:
-   <li class="menu-item dropdown">
-     <button class="dropdown-toggle" aria-expanded="false">Produits</button>
-     <div class="dropdown-menu">
-       <a href="#">Fleurs</a> …
-     </div>
-   </li>
-   -> En mobile: le JS toggle .open sur .dropdown
-   -> En desktop: on autorise aussi :hover/:focus-within
-*/
 .menu-item.dropdown{ position: relative; }
 
 /* Sous-menu (mobile: s’affiche quand .open; desktop: via hover) */
@@ -178,26 +167,26 @@ main{ flex:1; } /* pousse le footer en bas si contenu court */
 .site-footer{
     background: var(--brand);
     color: #fff;
-    padding: 18px 0;
-    margin-top: 48px;
+    padding: 28px 0;
+    margin-top: 56px;
     overflow: hidden; /* évite le débordement d’images/icônes */
 }
 
 /* Structure moderne centrée */
 .site-footer .footer-inner{
     max-width: var(--container);
-    margin-inline: auto;
-    padding-inline: 16px;
+    margin: 0 auto;
+    padding: 0 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     text-align: center;
 }
 
 .site-footer .footer-links{
     display: flex;
-    gap: 28px;
+    gap: 30px;
     flex-wrap: wrap;
     justify-content: center;
 }
@@ -214,7 +203,7 @@ main{ flex:1; } /* pousse le footer en bas si contenu court */
 
 /* Typo compacte dans le footer */
 .site-footer p{
-    font-size: .95rem;
+    font-size: 1rem;
     margin: 0;
     font-weight: 400;
 }
@@ -255,25 +244,3 @@ main{ flex:1; } /* pousse le footer en bas si contenu court */
     padding: 8px 12px; border-radius: 6px;
 }
 .skiplink:focus{ left: 12px; top: 12px; z-index: 2000; }
-
-/* ============= Petites notes d’intégration =============
-1) JS minimal pour le burger:
-   const btn = document.querySelector('.menu-toggle');
-   const menu = document.querySelector('.menu');
-   btn?.addEventListener('click', () => {
-     const open = menu.classList.toggle('is-open');
-     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-   });
-
-2) JS minimal pour dropdown en mobile:
-   document.querySelectorAll('.menu-item.dropdown > .dropdown-toggle')
-     .forEach(btn => btn.addEventListener('click', (e) => {
-       const li = e.currentTarget.closest('.menu-item.dropdown');
-       li.classList.toggle('open');
-       const expanded = li.classList.contains('open');
-       btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-     }));
-
-3) Ne pas remettre de font/fond/couleurs globales ici:
-   c’est géré par styles.css (fond à pois, palette, etc.).
-*/
