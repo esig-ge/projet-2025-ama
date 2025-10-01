@@ -22,10 +22,12 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
     <h1>Nos prestations déjà réalisées</h1>
 
     <section class="dkb-video-carousel" role="region" aria-label="Prestations DK Bloom">
-        <div class="dkb-carousel" data-active="0">
+        <!-- rôle et description de carrousel + focus clavier -->
+        <div class="dkb-carousel" data-active="0"
+             role="region" aria-roledescription="carousel" aria-label="Carrousel de vidéos" tabindex="0">
             <div class="dkb-track">
                 <!-- Slide 1 -->
-                <div class="dkb-slide is-active">
+                <div class="dkb-slide is-active" id="slide-1">
                     <div class="dkb-frame">
                         <video class="dkb-video"
                                preload="metadata"
@@ -40,7 +42,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 </div>
 
                 <!-- Slide 2 -->
-                <div class="dkb-slide">
+                <div class="dkb-slide" id="slide-2">
                     <div class="dkb-frame">
                         <video class="dkb-video"
                                preload="metadata"
@@ -55,7 +57,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 </div>
 
                 <!-- Slide 3 -->
-                <div class="dkb-slide">
+                <div class="dkb-slide" id="slide-3">
                     <div class="dkb-frame">
                         <video class="dkb-video"
                                preload="metadata"
@@ -71,12 +73,8 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
             </div>
 
             <!-- Flèches -->
-            <button class="dkb-nav dkb-prev" aria-label="Précédent" type="button">
-                &#10094;
-            </button>
-            <button class="dkb-nav dkb-next" aria-label="Suivant" type="button">
-                &#10095;
-            </button>
+            <button class="dkb-nav dkb-prev" aria-label="Précédent" type="button">&#10094;</button>
+            <button class="dkb-nav dkb-next" aria-label="Suivant" type="button">&#10095;</button>
 
             <!-- Puces -->
             <div class="dkb-dots" role="tablist" aria-label="Sélection de la vidéo">
@@ -86,6 +84,9 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
             </div>
         </div>
     </section>
+
+
+
 
     <script>
         (() => {
