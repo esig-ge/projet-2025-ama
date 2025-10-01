@@ -204,11 +204,11 @@ function resolveEmbImage(int $id, string $name, string $BASE, array $legacyMap):
                 <span class="stock-badge <?= $disabled ? 'out':'' ?>" data-stock-badge>
           <?= $disabled ? 'Rupture de stock' : ('En stock : '.$stock) ?>
         </span>
-
+<!--
                 <div class="stock-msg" data-stock-msg>
                     <span class="dot" aria-hidden="true"></span>
                     <span class="text" data-stock-text></span>
-                </div>
+                </div>-->
 
                 <br>
                 <button type="button" class="add-to-cart" data-add <?= $disabled ? 'disabled' : '' ?>>
