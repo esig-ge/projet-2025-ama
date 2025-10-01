@@ -58,7 +58,8 @@ if (!function_exists('isAdmin')) {
         }
 
     </style>
-    <link rel="stylesheet" href="<?= $BASE ?>css/squeletteIndex.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
 </head>
 
 <script>

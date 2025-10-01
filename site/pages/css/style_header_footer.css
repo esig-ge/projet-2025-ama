@@ -1,164 +1,279 @@
+/* ============================================================
+   DK Bloom — style_header_footer.css
+   Header + Footer uniquement
+   ============================================================ */
 
 /* ============= Base / Layout ============= */
+/* Astuce: si styles.css définit déjà --accent, on la réutilise
+   en fallback: --brand prend --accent sinon #7a0000 */
 :root{
-    --brand:#7a0000;
-    --container:1200px;
-    --header-h:64px; /* ajuste si ton header est plus haut */
+    --brand: var(--accent, #7a0000);  /* rouge DK (hérite si présent) */
+    --container: 1200px;              /* largeur max du contenu centré */
+    --header-h: 64px;                 /* HAUTEUR du header fixe */
 }
 
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%}
+*{ box-sizing: border-box; }
+html,body{ height:100%; }
+
+/* On ne redéfinit NI font NI couleurs ici (gérées par styles.css).
+   On réserve juste de la place sous le header fixe pour éviter
+   que le contenu passe dessous. */
 body{
     min-height:100%;
     display:flex;
     flex-direction:column;
-    font-family:Arial, sans-serif;
-    padding-top:var(--header-h); /* header fixed => espace en haut */
+    padding-top: var(--header-h); /* espace sous header fixe */
 }
 
-main{flex:1}
-.container{max-width:var(--container);margin:0 auto;padding:0 16px}
+main{ flex:1; } /* pousse le footer en bas si contenu court */
+
+/* Conteneur centrant le contenu horizontalement */
+.container{
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: 16px;
+}
 
 /* ============= Header ============= */
+/* Header fixe en haut avec légère ombre pour la lisibilité.
+   Couleurs de texte héritées du global, mais on force le contraste. */
 .site-header{
-    position:fixed; inset:0 0 auto 0;
-    height:var(--header-h);
-    background:var(--brand); color:#fff; z-index:1000;
-    box-shadow:0 2px 5px rgba(0,0,0,.3);
-}
-.header{
-    height:var(--header-h);
-    display:flex; align-items:center; justify-content:space-between;
-    gap:16px; padding:0 20px;
-}
-.logo img{height:28px; width:auto; display:block}
-
-/* bouton mobile (HTML: <button class="menu-toggle">☰</button>) */
-.menu-toggle{
-    background:none;border:0;color:#fff;cursor:pointer;
-    font-size:20px; line-height:1;
-}
-
-/* nav (HTML: <nav class="menu"> <a>...</a> ) */
-.menu{
-    position:fixed; top:0; right:-100%; height:100%; width:260px;
-    background:#222; padding:64px 20px; display:flex; flex-direction:column;
-    gap:18px; transition:right .3s ease;
-    z-index:1050;
-}
-.menu.is-open{ right:0; }
-
-.menu a{
-    color:#fff; text-decoration:none; font-size:1.05rem;
-}
-.menu a:hover{ color:#ffdede; }
-
-/* Desktop */
-@media (min-width:768px){
-    .menu{ position:static; height:auto; width:auto; background:transparent;
-        padding:0; flex-direction:row; gap:24px; right:auto; }
-    .menu a{ color:#fff; }
-    .menu-toggle{ display:none; }
-}
-
-/* Bloc dropdown */
-.menu-item.dropdown {
-    position: relative;
-}
-
-/* Par défaut caché */
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%; left: 0;
-    background: #8C0B0B; /* ton rouge DK */
-    border-radius: 6px;
-    min-width: 180px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: var(--header-h);
+    background: var(--brand);
+    color: #fff;
     z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,.25);
+    /* Option: un léger blur si tu as du contenu derrière transparent
+       backdrop-filter: saturate(140%) blur(4px); */
 }
 
-/* Liens internes */
-.dropdown-menu a {
+/* Barre interne: logo à gauche, nav à droite */
+.header{
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 20px;
+}
+
+/* Logo image compacte */
+.logo img{
+    height: 28px;
+    width: auto;
     display: block;
-    padding: 10px 14px;
+}
+
+/* Bouton burger (affiché en mobile) — HTML: <button class="menu-toggle" aria-expanded="false" aria-controls="site-menu">☰</button> */
+.menu-toggle{
+    background: none;
+    border: 0;
+    color: #fff;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* Navigation (HTML: <nav id="site-menu" class="menu">…</nav>)
+   - Mobile: panneau latéral coulissant
+   - Desktop: en ligne (reset des positions) */
+.menu{
+    position: fixed;
+    top: 0; right: -100%;
+    height: 100%; width: 260px;
+    background: #222;
+    padding: var(--header-h) 20px 20px; /* laisse la zone du header */
+    display: flex; flex-direction: column; gap: 18px;
+    transition: right .3s ease;
+    z-index: 1050;
+}
+.menu.is-open{ right: 0; } /* ajouté/retiré en JS sur clic burger */
+
+/* Liens du menu */
+.menu a{
     color: #fff;
     text-decoration: none;
+    font-size: 1.05rem;
 }
-.dropdown-menu a:hover {
-    background: rgba(255,255,255,0.1);
+.menu a:hover{ color: #ffdede; }
+
+/* Desktop ≥ 768px : nav inline, on cache le burger */
+@media (min-width: 768px){
+    .menu{
+        position: static; height: auto; width: auto;
+        background: transparent; padding: 0;
+        flex-direction: row; gap: 24px; right: auto;
+    }
+    .menu-toggle{ display: none; }
 }
 
-/* Quand ouvert */
-.menu-item.dropdown.open .dropdown-menu {
+/* ============= Dropdown (sous-menu) ============= */
+/* HTML recommandé:
+   <li class="menu-item dropdown">
+     <button class="dropdown-toggle" aria-expanded="false">Produits</button>
+     <div class="dropdown-menu">
+       <a href="#">Fleurs</a> …
+     </div>
+   </li>
+   -> En mobile: le JS toggle .open sur .dropdown
+   -> En desktop: on autorise aussi :hover/:focus-within
+*/
+.menu-item.dropdown{ position: relative; }
+
+/* Sous-menu (mobile: s’affiche quand .open; desktop: via hover) */
+.dropdown-menu{
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #8C0B0B; /* rouge DK lisible */
+    border-radius: 8px;
+    min-width: 200px;
+    padding: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    z-index: 1100;
+}
+
+/* Items internes du dropdown */
+.dropdown-menu a{
     display: block;
+    padding: 10px 12px;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+}
+.dropdown-menu a:hover{
+    background: rgba(255,255,255,0.12);
 }
 
+/* État ouvert (utilisé en mobile via JS) */
+.menu-item.dropdown.open .dropdown-menu{ display: block; }
+
+/* En desktop: ouverture au survol et au focus clavier */
+@media (min-width: 768px){
+    .menu-item.dropdown:hover .dropdown-menu,
+    .menu-item.dropdown:focus-within .dropdown-menu{
+        display: block;
+    }
+
+    /* En desktop, place le dropdown sous l’item, pas en panneau */
+    .menu{ align-items: center; }
+    .menu-item.dropdown{ /* pour éviter que le menu pousse la barre */ }
+}
+
+/* Accessibilité: style pour bouton dropdown si utilisé */
+.dropdown-toggle{
+    background: transparent;
+    border: 0;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+    padding: 8px 0;
+}
 
 /* ============= Footer ============= */
+/* Footer simple, centré, discret, compatible ancien HTML */
 .site-footer{
-    background:var(--brand);
-    color:#fff;
-    padding:18px 0;
-    margin-top:48px;
-    overflow:hidden; /* évite qu’un média trop grand gonfle le footer */
+    background: var(--brand);
+    color: #fff;
+    padding: 18px 0;
+    margin-top: 48px;
+    overflow: hidden; /* évite le débordement d’images/icônes */
 }
-.site-footer a{ color:#fff; text-decoration:none }
-.site-footer a:hover{ text-decoration:underline }
 
-/* --- Mise en page centrée (nouvelle structure) --- */
+/* Structure moderne centrée */
 .site-footer .footer-inner{
-    max-width:var(--container);
-    margin:0 auto;
-    padding:0 16px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:12px;
-    text-align:center;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
 }
-.site-footer .legal{
-    font-size:.95rem;
-    font-weight:400;
-    margin:0;
-}
+
 .site-footer .footer-links{
-    display:flex;
-    gap:28px;
-    flex-wrap:wrap;
-    justify-content:center;
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
+
 .site-footer .footer-social{
-    display:flex;
-    gap:12px;
-    justify-content:center;
-    align-items:center;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
 }
 .site-footer .footer-social img{
-    width:24px; height:24px; object-fit:contain; display:block;
+    width: 24px; height: 24px; object-fit: contain; display: block;
 }
 
-/* --- Protections typographiques : garde le footer discret --- */
-.site-footer p{ font-size:.95rem !important; margin:0 !important; font-weight:400 !important; }
-.site-footer a{ font-size:1rem !important; }
+/* Typo compacte dans le footer */
+.site-footer p{
+    font-size: .95rem;
+    margin: 0;
+    font-weight: 400;
+}
+.site-footer a{
+    color: #fff;
+    text-decoration: none;
+    font-size: 1rem;
+}
+.site-footer a:hover{ text-decoration: underline; }
 
-/* --- Compatibilité avec ANCIEN HTML (footer-grid / footer-nav / reseau_sociaux) --- */
+/* --- Compatibilité avec ANCIEN HTML (grilles existantes) --- */
 .footer-grid{
-    max-width:var(--container);
-    margin:0 auto;
-    padding:0 16px;
-    display:flex;
-    flex-direction:column;     /* on force l’empilement centré */
-    align-items:center;
-    gap:12px;
-    text-align:center;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: 16px;
+    display: flex;
+    flex-direction: column;   /* empilement centré */
+    align-items: center;
+    gap: 12px;
+    text-align: center;
 }
-.footer-left{ margin:0; font-size:.95rem; font-weight:400; }
-.footer-nav{ display:flex; gap:28px; flex-wrap:wrap; justify-content:center }
-.reseau_sociaux{ display:flex; gap:12px; justify-content:center; align-items:center }
-.reseau_sociaux img{ width:24px; height:24px; object-fit:contain; display:block }
+.footer-left{ margin: 0; font-size: .95rem; font-weight: 400; }
+.footer-nav{ display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+.reseau_sociaux{ display: flex; gap: 12px; justify-content: center; align-items: center; }
+.reseau_sociaux img{ width: 24px; height: 24px; object-fit: contain; display: block; }
 
-@media (max-width:700px){
-    .footer-links, .footer-nav{ gap:18px; }
+@media (max-width: 700px){
+    .footer-links, .footer-nav{ gap: 18px; }
 }
 
+/* ============= Bonus accessibilité ============= */
+/* Lien d’évitement (HTML tout en haut du body):
+   <a class="skiplink" href="#main">Aller au contenu</a> */
+.skiplink{
+    position: absolute;
+    left: -9999px; top: 0;
+    background: #000; color: #fff;
+    padding: 8px 12px; border-radius: 6px;
+}
+.skiplink:focus{ left: 12px; top: 12px; z-index: 2000; }
+
+/* ============= Petites notes d’intégration =============
+1) JS minimal pour le burger:
+   const btn = document.querySelector('.menu-toggle');
+   const menu = document.querySelector('.menu');
+   btn?.addEventListener('click', () => {
+     const open = menu.classList.toggle('is-open');
+     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+   });
+
+2) JS minimal pour dropdown en mobile:
+   document.querySelectorAll('.menu-item.dropdown > .dropdown-toggle')
+     .forEach(btn => btn.addEventListener('click', (e) => {
+       const li = e.currentTarget.closest('.menu-item.dropdown');
+       li.classList.toggle('open');
+       const expanded = li.classList.contains('open');
+       btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+     }));
+
+3) Ne pas remettre de font/fond/couleurs globales ici:
+   c’est géré par styles.css (fond à pois, palette, etc.).
+*/
