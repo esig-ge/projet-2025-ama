@@ -48,6 +48,15 @@ if (!function_exists('isAdmin')) {
             border-radius: 5px;
             cursor: pointer;
         }
+        .apropos {
+            position: relative;
+            isolation: isolate;
+            background:
+                    radial-gradient(3px 3px at 20px 20px, rgba(92,0,18,.06) 98%, transparent 100%) 0 0/120px 120px,
+                    radial-gradient(3px 3px at 80px 60px, rgba(92,0,18,.05) 98%, transparent 100%) 0 0/120px 120px,
+                    #fff; /* couleur de base */
+        }
+
     </style>
     <link rel="stylesheet" href="<?= $BASE ?>css/squeletteIndex.css">
 </head>
@@ -81,7 +90,7 @@ if (!function_exists('isAdmin')) {
 <?php endif; ?>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main>
+<main class="apropos">
     <section class="entete_accueil">
         <div class="image_texte">
             <div class="texte">

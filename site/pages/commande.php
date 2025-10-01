@@ -2,42 +2,44 @@
 // /site/pages/commande.php
 session_start();
 
-// Base URL (robuste)
+/* ===== Anti-cache pour éviter le retour d’anciens paniers ===== */
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+/* ===== Base URL (robuste) ===== */
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
+/* ===== Accès ===== */
 if (empty($_SESSION['per_id'])) {
     $_SESSION['message'] = "Veuillez vous connecter pour voir votre commande.";
     header('Location: interface_connexion.php'); exit;
 }
-$perId = (int)($_SESSION['per_id'] ?? 0);
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
+$perId = (int)($_SESSION['per_id'] ?? 0);
 
-/* ====== Utils: normalisation + image ====== */
+/* ============================== */
+/* ========== HELPERS =========== */
+/* ============================== */
 function norm_name(string $s): string {
     $s = strtolower(trim($s));
-    // iconv peut retourner false si le module n'est pas dispo ; préviens
     $converted = @iconv('UTF-8', 'ASCII//TRANSLIT', $s);
     if ($converted !== false) $s = $converted;
     $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s);
     $s = preg_replace('/\s+/', ' ', $s);
     return trim($s);
 }
-
 function getProductImage(string $name): string {
     $k = norm_name($name);
 
-    /* ---- EMBALLAGES (papier/emballage + couleur) ---- */
-    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) {
-        return 'emballage_' . $m[2] . '.PNG';
-    }
-    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k)) {
-        return 'emballage_rose.PNG';
-    }
+    // EMBALLAGES
+    if (preg_match('/^(papier|emballage)s?\s+(blanc|gris|noir|violet)$/', $k, $m)) return 'emballage_' . $m[2] . '.PNG';
+    if (preg_match('/^(papier|emballage)s?\s+rose(\s+pale|\s+pale)?$/', $k))     return 'emballage_rose.PNG';
 
-    /* ---- SUPPLÉMENTS ---- */
+    // SUPPLÉMENTS
     if (preg_match('/paillet+e?s?/', $k))   return 'paillette_argent.PNG';
     if (preg_match('/papillon/', $k))       return 'papillon_doree.PNG';
     if (preg_match('/baton\s*coeur|batt?on\s*coeur/', $k)) return 'baton_coeur.PNG';
@@ -46,7 +48,7 @@ function getProductImage(string $name): string {
     if (preg_match('/(lettre|initiale)/', $k)) return 'lettre.png';
     if (preg_match('/carte/', $k))          return 'carte.PNG';
 
-    /* ---- ROSES UNITAIRES (produits "Rose Rouge", etc.) ---- */
+    // ROSES UNITAIRES
     if (preg_match('/^rose.*clair$/', $k))  return 'rose_claire.png';
     static $simpleMap = [
         'rose rouge'   => 'rouge.png',
@@ -59,11 +61,7 @@ function getProductImage(string $name): string {
     ];
     if (isset($simpleMap[$k])) return $simpleMap[$k];
 
-    /* ---- BOUQUETS : "Bouquet 12", "Bouquet 12 Rouge", "Bouquet de 12 roses", etc. ----
-       -> on choisit l'image par le NOMBRE, on ignore la couleur éventuelle
-    */
-    // Exemples qui matcheront:
-    // "bouquet 12", "bouquet 12 rouge", "bouquet de 12 roses"
+    // BOUQUETS : on choisit l’image par le NOMBRE
     if (preg_match('/\bbouquet\b(?:\s+de)?\s+([0-9]{2,3})\b/', $k, $m)) {
         $nb = (int)$m[1];
         switch ($nb) {
@@ -79,31 +77,24 @@ function getProductImage(string $name): string {
         }
     }
 
-    /* ---- COFFRETS ---- */
+    // COFFRETS
     if (strpos($k, 'coffret') === 0) return 'coffret.png';
 
-    /* ---- fallback ---- */
     return 'placeholder.png';
 }
-
-
-/* ====== Couleurs (clé -> hex) ====== */
 function color_hex(?string $c): ?string {
     if (!$c) return null;
     $k = strtolower(trim($c));
-    $map = [
-        'rouge' => '#b70f0f',
-        'rose'  => '#f29fb5',
-        'blanc' => '#e7e7e7',
-        'bleu'  => '#3b6bd6',
-        'noir'  => '#222222',
-        'gris'  => '#9aa0a6',
-    ];
+    $map = ['rouge'=>'#b70f0f','rose'=>'#f29fb5','blanc'=>'#e7e7e7','bleu'=>'#3b6bd6','noir'=>'#222222','gris'=>'#9aa0a6'];
     if (preg_match('/^#([0-9a-f]{3}|[0-9a-f]{6})$/i', $k)) return $k;
     return $map[$k] ?? null;
 }
 
-/* ========= A) SUPPRESSION D’UN ARTICLE ========= */
+/* ======================================= */
+/* ========== ACTIONS PANIER ============= */
+/* ======================================= */
+
+/* -- A) SUPPRESSION D’UN ARTICLE -- */
 if (($_POST['action'] ?? '') === 'del') {
     $delCom = (int)($_POST['com_id'] ?? 0);
     $itemId = (int)($_POST['item_id'] ?? 0);
@@ -161,8 +152,7 @@ if (($_POST['action'] ?? '') === 'del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
-
-/* ========= A2) SUPPRESSION MULTIPLE ========= */
+/* -- A2) SUPPRESSION MULTIPLE -- */
 if (($_POST['action'] ?? '') === 'bulk_del') {
     $delCom   = (int)($_POST['com_id'] ?? 0);
     $selected = $_POST['sel'] ?? [];
@@ -221,8 +211,7 @@ if (($_POST['action'] ?? '') === 'bulk_del') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
-
-/* ========= A3) VIDER TOUT LE PANIER ========= */
+/* -- A3) VIDER TOUT LE PANIER -- */
 if (($_POST['action'] ?? '') === 'clear_all') {
     $delCom = (int)($_POST['com_id'] ?? 0);
     if ($delCom > 0) {
@@ -382,14 +371,17 @@ if (($_POST['action'] ?? '') === 'set_qty') {
     header("Location: ".$BASE."commande.php"); exit;
 }
 
-
-/* ========= B) CHARGEMENT DE LA COMMANDE + LIGNES ========= */
-$sql = "SELECT COM_ID, COM_DATE
-        FROM COMMANDE
-        WHERE PER_ID = :per AND COM_STATUT = 'en preparation'
-        ORDER BY COM_ID DESC
-        LIMIT 1";
-$st  = $pdo->prepare($sql);
+/* =========================================== */
+/* ========== CHARGEMENT DU PANIER =========== */
+/* =========================================== */
+/* On charge la COMMANDE du client en 'en preparation' (le panier actif) */
+$st  = $pdo->prepare("
+    SELECT COM_ID, COM_DATE
+      FROM COMMANDE
+     WHERE PER_ID = :per AND COM_STATUT = 'en preparation'
+     ORDER BY COM_ID DESC
+     LIMIT 1
+");
 $st->execute([':per'=>$perId]);
 $com = $st->fetch(PDO::FETCH_ASSOC);
 
@@ -399,29 +391,30 @@ $comId = 0;
 
 if ($com) {
     $comId = (int)$com['COM_ID'];
-    $sql = "
+
+    $sqlLines = "
         SELECT 'produit' AS KIND, p.PRO_ID AS ITEM_ID, p.PRO_NOM AS NAME,
                p.PRO_PRIX AS UNIT_PRICE, cp.CP_QTE_COMMANDEE AS QTE, cp.CP_TYPE_PRODUIT AS SUBTYPE
-        FROM COMMANDE_PRODUIT cp
-        JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
-        WHERE cp.COM_ID = :com1
+          FROM COMMANDE_PRODUIT cp
+          JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
+         WHERE cp.COM_ID = :c1
 
         UNION ALL
         SELECT 'supplement', s.SUP_ID, s.SUP_NOM, s.SUP_PRIX_UNITAIRE, cs.CS_QTE_COMMANDEE, 'supplement'
-        FROM COMMANDE_SUPP cs
-        JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
-        WHERE cs.COM_ID = :com2
+          FROM COMMANDE_SUPP cs
+          JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
+         WHERE cs.COM_ID = :c2
 
         UNION ALL
         SELECT 'emballage', e.EMB_ID, e.EMB_NOM, 0.00, ce.CE_QTE, 'emballage'
-        FROM COMMANDE_EMBALLAGE ce
-        JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
-        WHERE ce.COM_ID = :com3
+          FROM COMMANDE_EMBALLAGE ce
+          JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
+         WHERE ce.COM_ID = :c3
 
         ORDER BY NAME
     ";
-    $st = $pdo->prepare($sql);
-    $st->execute([':com1'=>$comId, ':com2'=>$comId, ':com3'=>$comId]);
+    $st = $pdo->prepare($sqlLines);
+    $st->execute([':c1'=>$comId, ':c2'=>$comId, ':c3'=>$comId]);
     $lines = $st->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($lines as $L) {
@@ -445,6 +438,7 @@ $total = $subtotal + $shipping;
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
+<<<<<<< HEAD
     <style>
         .grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
         @media (max-width:980px){.grid{grid-template-columns:1fr}}
@@ -510,6 +504,8 @@ $total = $subtotal + $shipping;
         }
 
     </style>
+=======
+>>>>>>> 65c78851117e8f1ded7177cfea8f5e054e1aa27c
 </head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
@@ -578,7 +574,7 @@ $total = $subtotal + $shipping;
                             <span class="item-sub"><?= htmlspecialchars($sub) ?></span>
                         </div>
 
-                        <!-- QTÉ -->
+                        <!-- QTÉ (si tu ajoutes set_qty côté serveur, ce form est prêt) -->
                         <form class="qty-form" method="post" action="<?= $BASE ?>commande.php">
                             <input type="hidden" name="action" value="set_qty">
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
@@ -598,7 +594,6 @@ $total = $subtotal + $shipping;
                             <button class="trash-btn" aria-label="Supprimer cet article">🗑️</button>
                         </form>
                     </div>
-
                 <?php endforeach; ?>
             <?php endif; ?>
         </section>
@@ -640,9 +635,8 @@ $total = $subtotal + $shipping;
                 </ul>
             </div>
             <br>
-            <label> Informations supplémentaires : </label>
-            <textarea placeholder="Veuillez ajouter des détails précis..." class="comment-box">
-        </textarea>
+            <label>Informations supplémentaires :</label>
+            <textarea placeholder="Veuillez ajouter des détails précis..." class="comment-box"></textarea>
         </aside>
     </div>
 
@@ -675,13 +669,13 @@ $total = $subtotal + $shipping;
                 <p class="muted">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
             <?php endif; ?>
         </div>
-
     </section>
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
 <script>
+    /* Tout sélectionner */
     document.addEventListener('DOMContentLoaded', function(){
         var checkAll = document.getElementById('checkAll');
         if (!checkAll) return;
@@ -692,39 +686,26 @@ $total = $subtotal + $shipping;
 </script>
 
 <script>
+    /* Préparer la commande côté serveur avant de passer à l’adresse/paiement */
     document.addEventListener('DOMContentLoaded', function () {
         const btn = document.getElementById('btn-checkout');
         if (!btn) return;
 
         btn.addEventListener('click', async function (e) {
-            // Ne pas suivre directement le href, on upsert d'abord la commande
             e.preventDefault();
-
-            // Si le panier est vide, on ne fait rien
             if (btn.getAttribute('aria-disabled') === 'true') return;
 
-            // Petite protection anti-double-clic
             btn.setAttribute('aria-disabled', 'true');
             const oldText = btn.textContent;
             btn.textContent = 'Préparation de la commande…';
 
             try {
-                // Appelle ton endpoint API situé dans /site/pages/api/
                 const res = await fetch('<?= $BASE ?>api/upsert_from_cart.php', { method: 'POST' });
-
-                // Vérification d'authentification
-                if (res.status === 401) {
-                    window.location.href = '<?= $BASE ?>interface_connexion.php';
-                    return;
-                }
+                if (res.status === 401) { window.location.href = '<?= $BASE ?>interface_connexion.php'; return; }
 
                 const data = await res.json();
+                if (!res.ok || !data.ok) throw new Error(data?.error || 'Échec de la création de la commande');
 
-                if (!res.ok || !data.ok) {
-                    throw new Error(data?.error || 'Échec de la création de la commande');
-                }
-
-                // Redirection vers l’étape adresse/paiement en emportant l’order_id
                 const orderId = encodeURIComponent(data.order_id);
                 window.location.href = '<?= $BASE ?>adresse_paiement.php?order_id=' + orderId;
 
@@ -733,7 +714,6 @@ $total = $subtotal + $shipping;
                 btn.setAttribute('aria-disabled', 'false');
                 btn.textContent = oldText;
             }
-
         });
     });
 </script>
@@ -758,5 +738,19 @@ $total = $subtotal + $shipping;
         });
     });
 </script>
+<<<<<<< HEAD
+=======
+
+<?php if (!empty($_SESSION['just_paid'])): ?>
+    <script>
+        try{
+            localStorage.removeItem('DK_CART');
+            localStorage.removeItem('DK_CART_ITEMS');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }catch(e){}
+    </script>
+    <?php unset($_SESSION['just_paid']); endif; ?>
+
+>>>>>>> 65c78851117e8f1ded7177cfea8f5e054e1aa27c
 </body>
 </html>

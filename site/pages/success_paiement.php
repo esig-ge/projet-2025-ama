@@ -3,6 +3,11 @@
 declare(strict_types=1);
 session_start();
 
+/* ========== Bases de chemins (robuste) ========== */
+$dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
+$BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';         // ex: /2526_grep/t25_6_v21/site/pages/
+$SITE_BASE = preg_replace('#pages/$#', '', $BASE);                 // ex: /2526_grep/t25_6_v21/site/
+
 /* ========== Bootstrap Stripe & DB ========== */
 require_once __DIR__ . '/../database/config/stripe.php';
 /** @var PDO $pdo */
@@ -33,24 +38,40 @@ try {
     exit('Erreur Stripe: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
 }
 
-/* ===== DÉTACHER LE PANIER PAYÉ + POSER UN TOAST POUR LA PROCHAINE PAGE =====
-   - Si la session pointe encore sur la commande payée, on la libère.
-   - On stocke un "flash toast" dans la session, à afficher sur la page panier/catalogue.
-*/
+/* ===== DÉTACHER LE PANIER PAYÉ + POSER UN TOAST POUR LA PROCHAINE PAGE ===== */
 if ($paid) {
-    if ($orderId && isset($_SESSION['current_com_id']) && (int)$_SESSION['current_com_id'] === $orderId) {
+    $perId = (int)($_SESSION['per_id'] ?? 0);
+    $comId = (int)$orderId; // = client_reference_id envoyé à Stripe
+
+    // 1) Cette commande n'est plus un panier
+    if ($comId > 0 && $perId > 0) {
+        $stmt = $pdo->prepare("
+            UPDATE COMMANDE
+               SET COM_STATUT = 'en attente d''expédition'
+             WHERE COM_ID = ? AND PER_ID = ? AND COM_STATUT = 'en preparation'
+        ");
+        $stmt->execute([$comId, $perId]);
+    }
+
+    // 2) Ne plus référencer le panier actif côté session
+    if (!empty($_SESSION['current_com_id']) && (int)$_SESSION['current_com_id'] === $comId) {
         unset($_SESSION['current_com_id']);
     }
-    // Flash toast générique (adapte le lecteur de toast de ton layout si besoin)
+
+    // 3) Dire à /commande.php de purger le localStorage une seule fois
+    $_SESSION['just_paid'] = 1;
+
+    // 4) (optionnel) purge immédiate si l’utilisateur revient avec le bouton retour
+    echo "<script>try{localStorage.removeItem('DK_CART');localStorage.removeItem('DK_CART_ITEMS');}catch(e){}</script>";
+
+    // 5) Ton toast
     $_SESSION['toast'] = [
-        'type'    => 'success',       // success | info | warning | error
+        'type'    => 'success',
         'title'   => 'Paiement confirmé',
-        'message' => '🎉 Paiement confirmé — votre panier a été vidé.',
-        'ttl'     => time() + 60       // optionnel : validité de 60s
+        'message' => '🎉 Paiement confirmé — votre panier a été réinitialisé.',
+        'ttl'     => time() + 60
     ];
 }
-
-/* ===== Présentation simple ===== */
 ?>
 <!doctype html>
 <html lang="fr">
@@ -58,8 +79,9 @@ if ($paid) {
     <meta charset="utf-8">
     <title>DK Bloom — Paiement réussi</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="stylesheet" href="../css/style_header_footer.css">
-    <link rel="stylesheet" href="../css/style_connexion_inscription.css">
+    <!-- CSS via SITE_BASE -->
+    <link rel="stylesheet" href="<?= $SITE_BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $SITE_BASE ?>css/style_connexion_inscription.css">
     <style>
         body{background:#faf7f7;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
         .wrap{max-width:900px;margin:40px auto;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.07);padding:28px}
@@ -96,10 +118,15 @@ if ($paid) {
     </div>
 
     <div class="cta">
-        <a class="btn" href="../pages/commande.php">Voir mes commandes</a>
-        <a class="btn sec" href="../index.php">Continuer mes achats</a>
-        <a class="btn sec" href="../pages/adresse_paiement.php">Revenir au paiement</a>
+        <?php if ($orderId > 0): ?>
+            <a class="btn" href="<?= $BASE ?>detail_commande.php?com_id=<?= urlencode((string)$orderId) ?>">
+                Voir les détails de ma commande
+            </a>
+        <?php endif; ?>
+        <a class="btn sec" href="<?= $BASE ?>index.php">Continuer mes achats</a>
     </div>
+
+
 
     <p class="note">
         Note : le statut officiel de la commande est mis à jour par notre <i>webhook</i> Stripe.
