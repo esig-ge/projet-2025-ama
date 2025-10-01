@@ -399,17 +399,17 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
             </section>
         </form>
 
-        <!-- Colonne 3 : RÉCAP PANIER -->
-        <aside class="card" id="mini-cart" aria-live="polite">
-            <div class="mini-title">Récapitulatif</div>
-            <div id="mini-cart-list" class="mini-cart-list">
-                <div class="mini-empty">Chargement du panier…</div>
-            </div>
-            <div class="mini-total" id="mini-total" style="display:none">
-                <span>Total</span><span id="mini-total-amount">0.00 CHF</span>
-            </div>
-        </aside>
-    </div>
+<!--        Colonne 3 : RÉCAP PANIER -->
+<!--        <aside class="card" id="mini-cart" aria-live="polite">-->
+<!--            <div class="mini-title">Récapitulatif</div>-->
+<!--            <div id="mini-cart-list" class="mini-cart-list">-->
+<!--                <div class="mini-empty">Chargement du panier…</div>-->
+<!--            </div>-->
+<!--            <div class="mini-total" id="mini-total" style="display:none">-->
+<!--                <span>Total</span><span id="mini-total-amount">0.00 CHF</span>-->
+<!--            </div>-->
+<!--        </aside>-->
+<!--    </div>-->
 
     <div class="note" style="margin-top:18px">
         Astuce : tu peux revenir au panier pour modifier les articles avant de payer.
@@ -536,72 +536,72 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
     /* ==========================
        3) Mini-récap du panier (lecture seule)
        ========================== */
-    async function renderMiniCart(){
-        const box = document.getElementById('mini-cart-list');
-        const totalBox = document.getElementById('mini-total');
-        const totalAmt = document.getElementById('mini-total-amount');
-
-        try {
-            const url = window.API_URL + '?action=list';
-            const res = await fetch(url, { credentials:'same-origin' });
-            const text = await res.text();
-            let data;
-            try { data = JSON.parse(text); } catch(e) { throw new Error('Réponse non JSON du panier'); }
-
-            if (!res.ok || data.ok === false) throw new Error(data.error || data.msg || `HTTP ${res.status}`);
-
-            const items = data.items || data.lines || [];
-            if (!items.length) {
-                box.innerHTML = '<div class="mini-empty">Votre panier est vide.</div>';
-                totalBox.style.display = 'none';
-                return;
-            }
-
-            let html = '';
-            let subtotal = 0;
-
-            items.forEach(it => {
-                const name  = it.name || it.pro_nom || 'Article';
-                const qty   = Number(it.qty ?? it.quantite ?? 1);
-                const price = Number(it.price ?? it.prix ?? it.unit_price ?? 0);
-                const line  = qty * price;
-                subtotal += line;
-
-                let apiUrl = it.img || it.image || '';
-                const guessFile = getProductImageFile(name);
-                const candidates = [];
-                if (apiUrl) candidates.push(apiUrl);
-                buildImageCandidates(guessFile).forEach(u => candidates.push(u));
-
-                const initialSrc = candidates.shift();
-                const restJson   = JSON.stringify(candidates).replace(/'/g, '&#39;');
-
-                html += `
-        <div class="mini-row">
-            <img
-              src="${initialSrc}"
-              alt=""
-              class="mini-thumb"
-              onerror="tryNextImage(this)"
-              data-srcs='${restJson}'>
-            <div>
-                <div class="mini-name">${name}</div>
-                <div class="mini-meta">x ${qty} · ${price.toFixed(2)} CHF</div>
-            </div>
-            <div class="mini-meta">${line.toFixed(2)} CHF</div>
-        </div>`;
-            });
-
-            box.innerHTML = html;
-            totalAmt.textContent = subtotal.toFixed(2) + ' CHF';
-            totalBox.style.display = '';
-        } catch (err) {
-            console.error(err);
-            box.innerHTML = '<div class="mini-empty">Impossible de charger le récap pour le moment.</div>';
-            document.getElementById('mini-total').style.display = 'none';
-        }
-    }
-    renderMiniCart();
+    // async function renderMiniCart(){
+    //     const box = document.getElementById('mini-cart-list');
+    //     const totalBox = document.getElementById('mini-total');
+    //     const totalAmt = document.getElementById('mini-total-amount');
+    //
+    //     try {
+    //         const url = window.API_URL + '?action=list';
+    //         const res = await fetch(url, { credentials:'same-origin' });
+    //         const text = await res.text();
+    //         let data;
+    //         try { data = JSON.parse(text); } catch(e) { throw new Error('Réponse non JSON du panier'); }
+    //
+    //         if (!res.ok || data.ok === false) throw new Error(data.error || data.msg || `HTTP ${res.status}`);
+    //
+    //         const items = data.items || data.lines || [];
+    //         if (!items.length) {
+    //             box.innerHTML = '<div class="mini-empty">Votre panier est vide.</div>';
+    //             totalBox.style.display = 'none';
+    //             return;
+    //         }
+    //
+    //         let html = '';
+    //         let subtotal = 0;
+    //
+    //         items.forEach(it => {
+    //             const name  = it.name || it.pro_nom || 'Article';
+    //             const qty   = Number(it.qty ?? it.quantite ?? 1);
+    //             const price = Number(it.price ?? it.prix ?? it.unit_price ?? 0);
+    //             const line  = qty * price;
+    //             subtotal += line;
+    //
+    //             let apiUrl = it.img || it.image || '';
+    //             const guessFile = getProductImageFile(name);
+    //             const candidates = [];
+    //             if (apiUrl) candidates.push(apiUrl);
+    //             buildImageCandidates(guessFile).forEach(u => candidates.push(u));
+    //
+    //             const initialSrc = candidates.shift();
+    //             const restJson   = JSON.stringify(candidates).replace(/'/g, '&#39;');
+    //
+    //             html += `
+    //     <div class="mini-row">
+    //         <img
+    //           src="${initialSrc}"
+    //           alt=""
+    //           class="mini-thumb"
+    //           onerror="tryNextImage(this)"
+    //           data-srcs='${restJson}'>
+    //         <div>
+    //             <div class="mini-name">${name}</div>
+    //             <div class="mini-meta">x ${qty} · ${price.toFixed(2)} CHF</div>
+    //         </div>
+    //         <div class="mini-meta">${line.toFixed(2)} CHF</div>
+    //     </div>`;
+    //         });
+    //
+    //         box.innerHTML = html;
+    //         totalAmt.textContent = subtotal.toFixed(2) + ' CHF';
+    //         totalBox.style.display = '';
+    //     } catch (err) {
+    //         console.error(err);
+    //         box.innerHTML = '<div class="mini-empty">Impossible de charger le récap pour le moment.</div>';
+    //         document.getElementById('mini-total').style.display = 'none';
+    //     }
+    // }
+    // renderMiniCart();
 </script>
 </body>
 </html>

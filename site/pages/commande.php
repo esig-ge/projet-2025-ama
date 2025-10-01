@@ -265,6 +265,14 @@ if (($_POST['action'] ?? '') === 'clear_all') {
     }
     header("Location: ".$BASE."commande.php"); exit;
 }
+
+/* -- A4) CHOIX LIVRAISON (standard / retrait + zone Genève/Suisse) -- */
+if (($_POST['action'] ?? '') === 'set_shipping') {
+    $_SESSION['ship_mode'] = ($_POST['ship_mode'] ?? 'standard') === 'retrait' ? 'retrait' : 'standard';
+    $_SESSION['ship_zone'] = ($_POST['ship_zone'] ?? 'geneve') === 'suisse' ? 'suisse' : 'geneve';
+    header("Location: ".$BASE."commande.php"); exit;
+}
+
 /* ========= A1) MISE À JOUR QUANTITÉ ========= */
 if (($_POST['action'] ?? '') === 'set_qty') {
     $comId  = (int)($_POST['com_id']  ?? 0);
@@ -331,7 +339,7 @@ if (($_POST['action'] ?? '') === 'set_qty') {
                             header("Location: ".$BASE."commande.php"); exit;
                         }
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK-:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
-                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c ET SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
                     } elseif ($newQ < $oldQ) {
                         $delta = $oldQ - $newQ;
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK+:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
@@ -425,7 +433,53 @@ if ($com) {
 $hasOrder = (bool)$com;
 $hasItems = $hasOrder && !empty($lines);
 
+/* ===== Livraison (5 CHF Genève, 10 CHF Suisse), 0 si Retrait ===== */
+$ship_mode = $_SESSION['ship_mode'] ?? 'standard'; // 'standard' | 'retrait'
+$ship_zone = $_SESSION['ship_zone'] ?? 'geneve';   // 'geneve' | 'suisse'
+
 $shipping = 0.00;
+if ($hasItems) {
+    if ($ship_mode === 'standard') {
+        $shipping = ($ship_zone === 'geneve') ? 5.00 : 10.00;
+    } else { // retrait en boutique
+        $shipping = 0.00;
+    }
+}
+
+/* ===== TVA Suisse (2024) ===== */
+$RATE_REDUCED = 0.026; // 2,6% (fleurs/bouquets)
+$RATE_NORMAL  = 0.081; // 8,1% (suppléments/emballages/coffrets)
+
+$base_reduced = 0.0;
+$base_normal  = 0.0;
+
+foreach ($lines as $L) {
+    $kind = strtolower((string)$L['KIND']);      // 'produit' | 'supplement' | 'emballage'
+    $sub  = strtolower((string)$L['SUBTYPE']);   // 'fleur' | 'bouquet' | 'coffret' | 'supplement' | 'emballage'
+    $qte  = (int)$L['QTE'];
+    $pu   = (float)$L['UNIT_PRICE'];
+    $lt   = $qte * $pu;
+
+    if ($kind === 'produit' && ($sub === 'fleur' || $sub === 'bouquet')) {
+        $base_reduced += $lt;      // 2,6%
+    } else {
+        $base_normal  += $lt;      // 8,1%
+    }
+}
+
+/* Ventilation de la livraison au prorata des bases */
+$ship_red = 0.0; $ship_norm = 0.0;
+$goods_total = $base_reduced + $base_normal;
+if ($shipping > 0 && $goods_total > 0) {
+    $ship_red  = $shipping * ($base_reduced / $goods_total);
+    $ship_norm = $shipping - $ship_red;
+}
+
+$tax_reduced = round(($base_reduced + $ship_red)  * $RATE_REDUCED, 2);
+$tax_normal  = round(($base_normal  + $ship_norm) * $RATE_NORMAL,  2);
+$tax_total   = $tax_reduced + $tax_normal;
+
+/* Total (présentation comme avant: produits + livraison) */
 $total = $subtotal + $shipping;
 ?>
 <!DOCTYPE html>
@@ -438,6 +492,25 @@ $total = $subtotal + $shipping;
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/commande.css">
+
+    <style>
+        /* Petit style pour la bulle TVA */
+        .tva-pill{
+            margin-left:6px;border:none;border-radius:999px;padding:0 8px;height:20px;line-height:20px;
+            font-size:12px;cursor:pointer;background:#eee
+        }
+        .summary .sum-row{position:relative}
+        .tva-pop{
+            position:absolute; top:32px; left:8px; max-width:320px; background:#fff; border:1px solid #e6e6e9;
+            box-shadow:0 8px 20px rgba(0,0,0,.08); border-radius:10px; padding:10px 12px; font-size:12px; color:#333;
+            z-index:100; display:none
+        }
+        .tva-pop[aria-hidden="false"]{display:block}
+        .small{font-size:12px}
+        .muted.small{color:#666}
+        .shipping-block .zone { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+        .shipping-block .note { font-size:12px; color:#666; margin-top:4px;}
+    </style>
 </head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
@@ -506,7 +579,7 @@ $total = $subtotal + $shipping;
                             <span class="item-sub"><?= htmlspecialchars($sub) ?></span>
                         </div>
 
-                        <!-- QTÉ (si tu ajoutes set_qty côté serveur, ce form est prêt) -->
+                        <!-- QTÉ -->
                         <form class="qty-form" method="post" action="<?= $BASE ?>commande.php">
                             <input type="hidden" name="action" value="set_qty">
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
@@ -541,6 +614,23 @@ $total = $subtotal + $shipping;
             <div class="sum-row">
                 <span>Livraison</span>
                 <span><?= number_format($shipping, 2, '.', ' ') ?> CHF</span>
+            </div>
+            <div class="sum-row">
+                <span>
+                    TVA
+                    <button type="button" class="tva-pill" id="tva-pill" aria-haspopup="true" aria-expanded="false">?</button>
+                    <span class="tva-pop" id="tva-pop" role="tooltip" aria-hidden="true">
+                        <strong>TVA Suisse</strong><br>
+                        Fleurs / bouquets : 2,6 %<br>
+                        Suppléments / emballages / coffrets : 8,1 %<br>
+                        Livraison ventilée au prorata (2,6 % / 8,1 %).
+                    </span>
+                </span>
+                <span><?= number_format($tax_total, 2, '.', ' ') ?> CHF</span>
+            </div>
+            <div class="sum-row muted small">
+                <span>Détail : 2,6 % <?= number_format($tax_reduced,2,'.',' ') ?> • 8,1 % <?= number_format($tax_normal,2,'.',' ') ?></span>
+                <span></span>
             </div>
 
             <div class="sum-total">
@@ -581,16 +671,37 @@ $total = $subtotal + $shipping;
     <section class="card shipping-block<?= $disabledClass ?>">
         <div class="inner">
             <div class="section-title">Type de livraison</div>
-            <fieldset class="full group shipping-options">
-                <label class="opt">
-                    <input type="radio" name="livraison" value="standard" <?= $disabledAttr ?> checked>
-                    <span>🚚 Standard (48h)</span>
-                </label>
-                <label class="opt">
-                    <input type="radio" name="livraison" value="retrait" <?= $disabledAttr ?>>
-                    <span>🏬 Retrait en boutique</span>
-                </label>
-            </fieldset>
+
+            <!-- Formulaire des options de livraison -->
+            <form method="post" action="<?= $BASE ?>commande.php" id="shipForm">
+                <input type="hidden" name="action" value="set_shipping">
+
+                <fieldset class="full group shipping-options">
+                    <label class="opt">
+                        <input type="radio" name="ship_mode" value="standard" <?= $disabledAttr ?> <?= ($ship_mode==='standard'?'checked':'') ?>>
+                        <span>🚚 Standard (48h)</span>
+                    </label>
+                    <label class="opt">
+                        <input type="radio" name="ship_mode" value="retrait" <?= $disabledAttr ?> <?= ($ship_mode==='retrait'?'checked':'') ?>>
+                        <span>🏬 Retrait en boutique</span>
+                    </label>
+                </fieldset>
+
+                <div id="zoneWrap" style="margin-top:8px;<?= ($ship_mode==='retrait'?'display:none;':'') ?>">
+                    <div class="zone">
+                        <label class="opt">
+                            <input type="radio" name="ship_zone" value="geneve" <?= $disabledAttr ?> <?= ($ship_zone==='geneve'?'checked':'') ?>>
+                            <span>Genève — 5.00 CHF</span>
+                        </label>
+                        <label class="opt">
+                            <input type="radio" name="ship_zone" value="suisse" <?= $disabledAttr ?> <?= ($ship_zone==='suisse'?'checked':'') ?>>
+                            <span>Reste de la Suisse — 10.00 CHF</span>
+                        </label>
+                    </div>
+                    <div class="note">La TVA sur la livraison est ventilée entre 2,6 % et 8,1 % selon le contenu.</div>
+                </div>
+            </form>
+
             <br>
             <div class="actions">
                 <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
@@ -649,17 +760,17 @@ $total = $subtotal + $shipping;
         });
     });
 </script>
+
 <script>
+    /* Autosubmit qty + livraison + popover TVA */
     document.addEventListener('DOMContentLoaded', () => {
-        const inputs = document.querySelectorAll('.qty-input');
-        inputs.forEach(inp => {
+        // Quantités
+        document.querySelectorAll('.qty-input').forEach(inp => {
             let t;
-            // Soumission immédiate au "change"
             inp.addEventListener('change', () => {
                 const form = inp.closest('form.qty-form');
                 if (form) form.submit();
             });
-            // Et soumission douce 500ms après la dernière frappe (si l'user tape à la main)
             inp.addEventListener('input', () => {
                 clearTimeout(t);
                 t = setTimeout(() => {
@@ -668,6 +779,44 @@ $total = $subtotal + $shipping;
                 }, 500);
             });
         });
+
+        // Livraison (autosubmit)
+        const shipForm = document.getElementById('shipForm');
+        if (shipForm){
+            const zoneWrap = document.getElementById('zoneWrap');
+            shipForm.addEventListener('change', (e)=>{
+                if (e.target.name === 'ship_mode') {
+                    // Afficher/masquer le choix de zone
+                    if (e.target.value === 'retrait') {
+                        zoneWrap && (zoneWrap.style.display = 'none');
+                    } else {
+                        zoneWrap && (zoneWrap.style.display = '');
+                    }
+                }
+                shipForm.submit();
+            });
+        }
+
+        // Popover TVA
+        const pill = document.getElementById('tva-pill');
+        const pop  = document.getElementById('tva-pop');
+        if(pill && pop){
+            const hide = ()=>{ pop.setAttribute('aria-hidden','true'); pill.setAttribute('aria-expanded','false'); };
+            pill.addEventListener('click', ()=>{
+                const open = pop.getAttribute('aria-hidden') === 'false';
+                pop.setAttribute('aria-hidden', open ? 'true' : 'false');
+                pill.setAttribute('aria-expanded', open ? 'false' : 'true');
+            });
+            pop.addEventListener('mouseleave', hide);
+            pill.addEventListener('mouseleave', ()=>{
+                setTimeout(()=>{
+                    if(!pill.matches(':hover') && !pop.matches(':hover')) hide();
+                },120);
+            });
+            document.addEventListener('click', (e)=>{
+                if(!pill.contains(e.target) && !pop.contains(e.target)) hide();
+            });
+        }
     });
 </script>
 
