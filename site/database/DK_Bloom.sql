@@ -250,6 +250,8 @@ CREATE TABLE `COMMANDE` (
                             `RAB_ID` BIGINT NULL,
                             `PAI_ID` BIGINT NULL,
                             `COM_STATUT` ENUM('en preparation','expediee','livree','en attente d''expédition','annulee') NOT NULL DEFAULT 'en preparation',
+                            `COM_ARCHIVE` BOOLEAN NULL,
+                            `COM_ARCHIVED_AT` TIMESTAMP NULL,
                             `COM_DATE` DATE NOT NULL,
                             `COM_DESCRIPTION` TEXT NULL,
                             `COM_PTS_CUMULE` INT NOT NULL DEFAULT 0,
