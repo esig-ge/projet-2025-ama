@@ -23,7 +23,7 @@ $tailles = $pdo->query("
 $bouquets = []; // tableau [{nb, prix, variants: [{pro_id,couleur,stock,prix}]}]
 foreach ($tailles as $nb) {
     $st = $pdo->prepare("
-        SELECT p.PRO_ID, p.PRO_PRIX, p.PRO_NOM, b.BOU_COULEUR, b.BOU_QTE_STOCK
+        SELECT p.PRO_ID, p.PRO_PRIX, p.PRO_NOM, b.BOU_COULEUR,b.BOU_DESCRIPTION, b.BOU_QTE_STOCK
         FROM BOUQUET b
         JOIN PRODUIT p ON p.PRO_ID = b.PRO_ID
         WHERE b.BOU_NB_ROSES = :nb
@@ -32,7 +32,7 @@ foreach ($tailles as $nb) {
     $st->execute([':nb' => $nb]);
     $variants = $st->fetchAll(PDO::FETCH_ASSOC);
     if (!$variants) { continue; }
-
+// PAS OUBLIER DE RAJOUTER LES VARIABLES DE BOU_DESCRIPTION
     $bouquets[] = [
         'nb'       => (int)$nb,
         'prix'     => (float)$variants[0]['PRO_PRIX'], // même prix pour toutes les couleurs
@@ -323,12 +323,12 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
             if (!$def) $def = $item['variants'][0];
             ?>
             <form class="card product bouquet-card"
+                  data-nb="<?= (int)$nb ?>"
                   onsubmit="return addBouquetForm(event, this)">
                 <!-- valeur mise à jour à chaque changement de radio -->
                 <input type="hidden" name="pro_id" value="<?= (int)$def['pro_id'] ?>">
-
                 <img src="<?= htmlspecialchars($img) ?>" alt="Bouquet <?= (int)$nb ?> roses" loading="lazy">
-                <h3>Bouquet <?= (int)$nb); htmlspecialchars($def['pro_n']) ?></h3>
+                <h3>  <?= htmlspecialchars($def['pro_nom'], ENT_QUOTES, 'UTF-8')  ?></h3>
                 <p class="price"><?= number_format($prix, 2, '.', "'") ?> CHF</p>
 
                 <div class="swatches" role="group" aria-label="Couleur">
@@ -371,7 +371,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                 <br>
                 <button type="submit"
                         class="add-to-cart"
-                        data-pro-name="Bouquet <?= (int)$nb ?>"
+                        data-pro-name="<?= htmlspecialchars($def['pro_nom'] , ENT_QUOTES, 'UTF-8') ?>"
                     <?= $def['stock']<=0 ? 'disabled' : '' ?>>
                     Ajouter
                 </button>
