@@ -1,0 +1,107 @@
+/* =========================================================
+   DK Bloom — style_catalogue.css
+   Spécifique à /site/pages/interface_catalogue_bouquet.php
+   (style.css + style_header_footer.css déjà chargés)
+   ========================================================= */
+
+/* --- Grille catalogue (cartes) --- */
+.catalogue {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 22px;
+    justify-items: center;
+}
+
+/* --- Carte produit compacte --- */
+.catalogue .card.product {
+    background: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+    text-align: center;
+    width: 100%;
+    max-width: 260px;
+}
+
+/* image de la carte (éviter les images géantes) */
+.catalogue .card.product img {
+    max-width: 200px;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px;
+    border-radius: 10px;
+}
+
+/* prix mis en évidence */
+.price { font-weight: 600; }
+
+/* --- Stock / ruptures --- */
+.stock-note { font-size: .9rem; color: #666; margin: 6px 0 0; }
+.stock-badge {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: .78rem;
+    background: #eee;
+    color: #333;
+}
+.stock-badge.oos { color: #a30000; }
+
+/* boutons désactivés (rappel visuel local) */
+.add-to-cart[disabled] { opacity: .55; cursor: not-allowed; }
+
+/* --- Pastilles de couleur (swatches) --- */
+.swatches {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 8px 0 10px;
+}
+.swatches input[type="radio"] { position: absolute; left: -9999px; }
+.swatches .swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+    background: var(--c);
+    border: 1px solid #ccc;
+}
+/* radio cochée -> contour noir un peu plus visible */
+.swatches input[type="radio"]:checked + .swatch {
+    border-color: #000;
+}
+
+/* --- Message stock/info (bandeau rose/bleu) --- */
+.stock-message {
+    display: none;                /* caché par défaut */
+    align-items: flex-start;      /* icône + texte alignés en haut */
+    gap: 10px;
+    margin: 8px 0 10px;           /* espace autour */
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff5f7;
+    border: 1px solid #ffd6e0;
+    color: #7a0000;
+    line-height: 1.35;
+    text-align: left;
+    max-width: 100%;
+    word-break: break-word;
+}
+.stock-message.show { display: flex; }
+.stock-message.info { background: #eaf4ff; border-color: #b6d4fe; color: #084298; }
+.stock-message .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #d90429; flex: 0 0 10px; margin-top: 4px;
+}
+.stock-message.info .dot { background: #0d6efd; }
+.stock-message .text { flex: 1; font-size: .92rem; }
+
+/* --- Champ quantité --- */
+.qty-input { margin: 8px 0 4px; width: 90px; }
+
+/* --- Navigation bas de page (retour/suivant) --- */
+.nav-actions {
+    text-align: center;
+    margin: 16px 0 24px;
+}
