@@ -91,21 +91,26 @@ include __DIR__ . '/includes/header.php';
                 <h2>Suivez-nous dans nos réseaux-sociaux</h2>
                 <div class="socials">
                     <!-- TikTok -->
-                    <a href="https://www.tiktok.com/@_dkbloom"
-                       target="_blank" rel="noopener" aria-label="TikTok">
-                        <img src="<?= $BASE ?>img/tiktok.png"
-                             alt="TikTok" width="32" height="32" loading="lazy">
+                    <a class="social-btn" aria-label="TikTok"
+                       href="https://www.tiktok.com/@_dkbloom"
+                       target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                            <path fill="currentColor"
+                                  d="M12 2c.5 0 1 .4 1 1v11.6c0 1.5-1.2 2.7-2.7 2.7S7.6 16.1 7.6 14.6c0-1.4 1-2.5 2.4-2.7V9.3c-3 .2-5.4 2.6-5.4 5.6 0 3.1 2.5 5.6 5.6 5.6 3 0 5.6-2.5 5.6-5.6V8.4c.9.6 2 1 3.1 1.1.6 0 1-.4 1-1V6.3c0-.6-.4-1-1-1-.9 0-1.8-.3-2.5-.9a3.6 3.6 0 0 1-1.1-2.6c0-.5-.4-1-1-1h-4c-.6 0-1 .5-1 1z"/>
+                        </svg>
                     </a>
 
                     <!-- Instagram -->
-                    <a href="https://www.instagram.com/_dkbloom/"
-                       target="_blank" rel="noopener" aria-label="Instagram">
-                        <img src="<?= $BASE ?>img/Instagram_icon.png"
-                             alt="Instagram" width="32" height="32" loading="lazy">
+                    <a class="social-btn" aria-label="Instagram"
+                       href="https://www.instagram.com/_dkbloom/"
+                       target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                            <path fill="currentColor"
+                                  d="M12 7.3A4.7 4.7 0 1 0 12 16.7 4.7 4.7 0 1 0 12 7.3zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm6.1-8.3a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2zM12 2.5c-2.7 0-3 .01-4.1.06-1.1.05-1.9.23-2.6.5a5.2 5.2 0 0 0-1.9 1.2 5.2 5.2 0 0 0-1.2 1.9c-.27.7-.45 1.5-.5 2.6C1.1 10.4 1.1 10.7 1.1 13.4s.01 3 .06 4.1c.05 1.1.23 1.9.5 2.6.28.7.64 1.3 1.2 1.9a5.2 5.2 0 0 0 1.9 1.2c.7.27 1.5.45 2.6.5 1.1.05 1.4.06 4.1.06s3-.01 4.1-.06c1.1-.05 1.9-.23 2.6-.5a5.2 5.2 0 0 0 1.9-1.2 5.2 5.2 0 0 0 1.2-1.9c.27-.7.45-1.5.5-2.6.05-1.1.06-1.4.06-4.1s-.01-3-.06-4.1c-.05-1.1-.23-1.9-.5-2.6a5.2 5.2 0 0 0-1.2-1.9 5.2 5.2 0 0 0-1.9-1.2c-.7-.27-1.5-.45-2.6-.5C15 2.51 14.7 2.5 12 2.5z"/>
+                        </svg>
                     </a>
                 </div>
             </div>
-
         </div>
     </section>
 

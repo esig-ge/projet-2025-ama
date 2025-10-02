@@ -73,9 +73,6 @@ if (!function_exists('isAdmin')) {
         </div>
     </section>
 
-    <!-- Séparateur chevron (full-width) -->
-    <img id="separateur" src="<?= $BASE ?>img/separateur.png" alt="">
-
     <!-- 6) Confiance / Praticité -->
     <section class="home-trust container" aria-label="Nos engagements">
         <h2 class="sr-only">Nos engagements</h2>

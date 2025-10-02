@@ -14,20 +14,6 @@ if (!isset($BASE)) {
             <a href="<?= $BASE ?>contact.php"> Contact </a>
             <a href="<?= $BASE ?>login.php"> Espace client </a>
         </nav>
-
-        <div class="footer-social">
-            <a href="https://www.instagram.com/_dkbloom/"
-               target="_blank" rel="noopener" aria-label="Instagram">
-                <img src="<?= $BASE ?>img/Instagram_icon.png"
-                     alt="Instagram" width="24" height="24" loading="lazy">
-            </a>
-
-            <a href="https://www.tiktok.com/@_dkbloom"
-               target="_blank" rel="noopener" aria-label="TikTok">
-                <img src="<?= $BASE ?>img/tiktok.png"
-                     alt="TikTok" width="24" height="24" loading="lazy">
-            </a>
-        </div>
     </div>
 </footer>
 
