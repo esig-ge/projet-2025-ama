@@ -146,6 +146,9 @@ welcome p {
     position:absolute; right:12px; top:12px; background:rgba(255,255,255,.15);
     color:#fff; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--stroke)
 }
+kpi-label{
+    color: darkred;
+}
 
 .spark, .bar{
     height:34px; border-radius:10px;
