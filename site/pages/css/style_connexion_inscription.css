@@ -1,194 +1,271 @@
-/* Conteneur principal du formulaire */
-.conteneur_form {
-    width: 400px;
-    margin: 80px auto;                 /* espace sous le header */
-    padding: 25px;
-    background-color: darkred;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+/* ============================================================
+   DK Bloom — style_connexion_inscription.css
+   Formulaires + slider "à propos" + formulaire contact
+   ============================================================ */
+
+/* ---------- Variables (hérite de style.css / header_footer) ---------- */
+:root{
+    --brand: var(--accent, #8d0e0e);   /* couleur primaire DK */
+    --brand-2: var(--accent-2, #ff3b53);
+    --ink: var(--ink, #1a1a1a);
+    --bg: var(--bg, #ffffff);
+    --card: var(--card, #ffffff);
+    --radius: var(--radius, 12px);
+    --stroke: var(--stroke, #e7e7ea);
+}
+
+/* ============================================================
+   1) Cartes / formulaires génériques (connexion/inscription)
+   ============================================================ */
+
+/* Conteneur principal du formulaire (responsive) */
+.conteneur_form{
+    max-width: 420px;                 /* au lieu d'une width fixe */
+    width: 100%;
+    margin: clamp(48px, 8vh, 96px) auto;  /* espace sous le header */
+    padding: 24px;
+    background-color: var(--brand);   /* remplace darkred */
+    border-radius: var(--radius);
+    box-shadow: 0 4px 15px rgba(0,0,0,.16);
     display: flex;
     flex-direction: column;
     align-items: center;
+    color: #fff;                      /* texte lisible sur fond brand */
 }
 
 /* Titre */
-.conteneur_form h2 {
+.conteneur_form h2{
     text-align: center;
-    margin-bottom: 20px;
-    color: #fff;
-    font-size: 1.5rem;
-    font-weight: bold;
+    margin: 0 0 16px;
+    font-size: 1.35rem;
+    font-weight: 700;
 }
 
-/* Labels */
-.conteneur_form label {
+/* Label */
+.conteneur_form label{
     display: block;
-    margin-bottom: 6px;
-    font-weight: bold;
-    color: #fff;
-    text-align: left;
+    margin: 0 0 6px;
+    font-weight: 600;
     width: 100%;
 }
 
-/* Champs de saisie */
+/* Champs de saisie (inputs + textarea) */
 .conteneur_form input[type="text"],
 .conteneur_form input[type="email"],
 .conteneur_form input[type="password"],
 .conteneur_form input[type="tel"],
-.conteneur_form textarea {
+.conteneur_form textarea{
     width: 100%;
     padding: 10px 12px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.95rem;
+    margin: 0 0 14px;
+    border: 1px solid rgba(255,255,255,.45);
+    border-radius: 8px;
+    font-size: .95rem;
+    color: var(--ink);
+    background: #fff;
     box-sizing: border-box;
 }
 
-.conteneur_form textarea {
-    height: 100px;
+.conteneur_form textarea{
+    min-height: 110px;
     resize: vertical;
 }
 
-/* Bouton principal */
-.conteneur_form input[type="submit"] {
-    width: 60%;
-    padding: 10px;
-    background-color: #fff;
-    color: darkred;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-    transition: background 0.3s, color 0.3s, transform 0.2s;
+/* Accessibilité focus */
+.conteneur_form input:focus-visible,
+.conteneur_form textarea:focus-visible{
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    border-color: #fff;
 }
 
-.conteneur_form input[type="submit"]:hover {
-    background-color: indianred;
-    color: #fff;
-    transform: scale(1.05);
+/* Bouton principal */
+.conteneur_form input[type="submit"]{
+    width: min(60%, 240px);
+    padding: 10px 14px;
+    background: #fff;
+    color: var(--brand);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: transform .15s ease, background .25s ease, color .25s ease;
+}
+
+.conteneur_form input[type="submit"]:hover{
+    background: #ffe9ec;
+    transform: translateY(-1px);
+}
+
+.conteneur_form input[type="submit"]:active{
+    transform: translateY(0);
 }
 
 /* Liens (ex: mot de passe oublié) */
-.conteneur_form a {
+.conteneur_form a{
     color: #ffdede;
-    font-size: 0.9rem;
+    font-size: .9rem;
     text-decoration: underline;
 }
-.conteneur_form a:hover {
-    color: #fff;
-}
 
-/*------------------------------------------- page a propos-------------------------------------------*/
+.conteneur_form a:hover{ color:#fff; }
 
-.slider {
+/* ============================================================
+   2) Section "À propos" — slider
+   ============================================================ */
+
+.slider{
     width: 100%;
     overflow: hidden;
+    /* optionnel: arrondis si le slider est dans une carte claire */
+    border-radius: var(--radius);
 }
 
-.slide-track {
+.slide-track{
     display: flex;
     gap: 10px;
+    /* Animation uniquement si motion OK (voir media query + fallback) */
     animation: scroll 40s linear infinite;
+    will-change: transform;
 }
 
-
-.slide-track img {
-    width: 250px;         /* fixe la largeur */
+.slide-track img{
+    width: 250px;            /* taille fixe des vignettes */
     height: 180px;
     object-fit: cover;
-    margin-right: 5px;
-    border-radius: 12px;  /* optionnel : arrondi élégant */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* petit effet */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.12);
 }
 
-
-@keyframes scroll {
+/* Animation du carrousel */
+@keyframes scroll{
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
 }
 
+/* Respecte les préférences utilisateurs (réduit/stoppe l'animation) */
+@media (prefers-reduced-motion: reduce){
+    .slide-track{ animation: none; }
+}
 
-.texte_propos {
+/* Texte "à propos" */
+.texte_propos{
     max-width: 900px;
     margin: 0 auto 40px;
     text-align: center;
-    line-height: 1.6;
+    line-height: 1.65;
     padding: 20px;
     display: flex;
     align-items: center;
-    justify-items: center;
-    background-color: #ffa0c4;
+    justify-content: center;   /* correction: justify-content (pas justify-items) */
+    background: #ffa0c4;       /* garde ta couleur existante */
+    color: var(--ink, #1b1b1b);
+    border-radius: var(--radius);
 }
 
-/*------------------------------------------- contact-------------------------------------------*/
+/* ============================================================
+   3) Page Contact — formulaire
+   ============================================================ */
 
-/* Style global du formulaire */
-form#contactForm {
+/* Grille simple pour empiler les champs proprement */
+form#contactForm{
     display: grid;
-    gap: 1.2rem; /* espace homogène entre chaque bloc */
+    gap: 1.2rem;
 }
 
-/* Chaque div (champ) */
-#contactForm > div {
+/* Chaque bloc champ */
+#contactForm > div{
     display: flex;
     flex-direction: column;
 }
 
-/* Label et input espacés */
-#contactForm label {
-    margin-bottom: 0.4rem;
-    font-weight: 500;
+/* Label */
+#contactForm label{
+    margin-bottom: .4rem;
+    font-weight: 600;
 }
 
-/* Inputs, select, textarea */
+/* Inputs / select / textarea */
 #contactForm input,
 #contactForm select,
-#contactForm textarea {
-    padding: 0.6rem 0.8rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+#contactForm textarea{
+    padding: .65rem .8rem;
+    border: 1px solid var(--stroke);
+    border-radius: 8px;
     font-size: 1rem;
     width: 100%;
     box-sizing: border-box;
+    background: var(--card);
+    color: var(--ink);
+}
+
+/* Focus visible */
+#contactForm input:focus-visible,
+#contactForm select:focus-visible,
+#contactForm textarea:focus-visible{
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-color: var(--brand);
 }
 
 /* Texte d’aide */
-#contactForm .help {
-    font-size: 0.85rem;
+#contactForm .help{
+    font-size: .85rem;
     color: #777;
-    margin-top: 0.3rem;
+    margin-top: .3rem;
 }
 
 /* Actions (boutons) */
-#contactForm .actions {
+#contactForm .actions{
     display: flex;
     gap: 1rem;
     align-items: center;
-    margin-top: 1rem;
+    margin-top: .4rem;
+    flex-wrap: wrap;
 }
 
-#contactForm button {
-    background: var(--accent, #e0112b);
+#contactForm button{
+    background: var(--brand);
     color: #fff;
     border: none;
-    padding: 0.7rem 1.4rem;
-    border-radius: 8px;
+    padding: .7rem 1.3rem;
+    border-radius: 10px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: background .25s ease, transform .15s ease;
 }
 
-#contactForm button:hover {
-    background: var(--accent-2, #ff3b53);
+#contactForm button:hover{
+    background: color-mix(in oklab, var(--brand), white 18%);
+}
+
+#contactForm button:active{
+    transform: translateY(1px);
 }
 
 /* Checkbox inline */
-#contactForm .row-inline {
+#contactForm .row-inline{
     flex-direction: row;
     align-items: center;
-    gap: 0.6rem;
+    gap: .6rem;
 }
 
+/* ============================================================
+   4) Petites retouches responsive
+   ============================================================ */
 
+@media (max-width: 480px){
+    .slide-track img{
+        width: 200px;
+        height: 150px;
+    }
+    .conteneur_form{ padding: 20px; }
+}
+
+aside.card {
+    background: var(--card, #fff);  /* fond clair (hérite de style global) */
+    color: var(--ink, #1a1a1a);     /* texte sombre */
+    padding: 20px;
+    border-radius: 12px;
+}
