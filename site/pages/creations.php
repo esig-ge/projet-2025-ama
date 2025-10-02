@@ -1,5 +1,9 @@
 <?php
+/* Page: creations.php*/
+
 session_start();
+
+/* Base URL robuste: permet de référencer /css, /img, /js depuis /site/pages/ */
 $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pages/
 ?>
 <!doctype html>
@@ -7,27 +11,30 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>DK Bloom — Coffrets</title>
+    <title>DK Bloom — Nos créations</title>
 
-    <!-- CSS global + page -->
+    <!-- CSS global (header/footer + styles généraux) -->
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
-    <link rel="stylesheet" href="<?= $BASE ?>css/styleCreations.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
+    <!-- CSS spécifique à cette page (carrousel) -->
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_creations.css">
 </head>
 <body>
 
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main>
-    <h1>Nos prestations déjà réalisées</h1>
+<main class="container">
+    <!-- Titre de page -->
+    <h1 class="reveal">Nos prestations déjà réalisées</h1>
 
+    <!-- Section carrousel (scope visuel + sémantique) -->
     <section class="dkb-video-carousel" role="region" aria-label="Prestations DK Bloom">
-        <!-- rôle et description de carrousel + focus clavier -->
-        <div class="dkb-carousel" data-active="0"
-             role="region" aria-roledescription="carousel" aria-label="Carrousel de vidéos" tabindex="0">
-            <div class="dkb-track">
+        <!-- Composant carrousel -->
+        <div class="dkb-carousel" aria-roledescription="carousel" aria-label="Carrousel de vidéos" tabindex="0">
+            <!-- Piste qui coulisse horizontalement -->
+            <div class="dkb-track" style="transform: translateX(0);">
                 <!-- Slide 1 -->
-                <div class="dkb-slide is-active" id="slide-1">
+                <div class="dkb-slide is-active" id="slide-1" role="group" aria-roledescription="slide" aria-label="1 sur 3">
                     <div class="dkb-frame">
                         <video class="dkb-video"
                                preload="metadata"
@@ -42,7 +49,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 </div>
 
                 <!-- Slide 2 -->
-                <div class="dkb-slide" id="slide-2">
+                <div class="dkb-slide" id="slide-2" role="group" aria-roledescription="slide" aria-label="2 sur 3">
                     <div class="dkb-frame">
                         <video class="dkb-video"
                                preload="metadata"
@@ -57,7 +64,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 </div>
 
                 <!-- Slide 3 -->
-                <div class="dkb-slide" id="slide-3">
+                <div class="dkb-slide" id="slide-3" role="group" aria-roledescription="slide" aria-label="3 sur 3">
                     <div class="dkb-frame">
                         <video class="dkb-video"
                                preload="metadata"
@@ -72,111 +79,118 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 </div>
             </div>
 
-            <!-- Flèches -->
+            <!-- Contrôles (flèches) -->
             <button class="dkb-nav dkb-prev" aria-label="Précédent" type="button">&#10094;</button>
-            <button class="dkb-nav dkb-next" aria-label="Suivant" type="button">&#10095;</button>
+            <button class="dkb-nav dkb-next" aria-label="Suivant"   type="button">&#10095;</button>
 
-            <!-- Puces -->
+            <!-- Indicateurs (puces) -->
             <div class="dkb-dots" role="tablist" aria-label="Sélection de la vidéo">
-                <button class="dkb-dot is-active" role="tab" aria-selected="true" aria-controls="slide-1" type="button"></button>
-                <button class="dkb-dot" role="tab" aria-selected="false" aria-controls="slide-2" type="button"></button>
-                <button class="dkb-dot" role="tab" aria-selected="false" aria-controls="slide-3" type="button"></button>
+                <button class="dkb-dot is-active" role="tab" aria-selected="true"  aria-controls="slide-1" type="button"></button>
+                <button class="dkb-dot"          role="tab" aria-selected="false" aria-controls="slide-2" type="button"></button>
+                <button class="dkb-dot"          role="tab" aria-selected="false" aria-controls="slide-3" type="button"></button>
             </div>
-        </div>
-        <div>
-            M D R
-            <!--<div><img src="<?php /*= $BASE */?>img/bouquet_rouge_insta.jpg" alt="Bouquet rouge"></div>
-            <div><img src="<?php /*= $BASE */?>img/bouquet_B.jpg" alt="Bouquet B"></div>
-            <div><img src="<?php /*= $BASE */?>img/bouquet_rouge_coeur.jpg" alt="Bouquet cœur rouge"></div>-->
         </div>
     </section>
 
-
-
-
+    <!-- JS du carrousel: simple et commenté -->
     <script>
-        (() => {
-            const root  = document.querySelector('.dkb-carousel');
+        (function () {
+            const root   = document.querySelector('.dkb-carousel');
             if (!root) return;
 
-            const track = root.querySelector('.dkb-track');
+            const track  = root.querySelector('.dkb-track');
             const slides = Array.from(root.querySelectorAll('.dkb-slide'));
             const videos = slides.map(s => s.querySelector('video'));
-            const prevBtn = root.querySelector('.dkb-prev');
-            const nextBtn = root.querySelector('.dkb-next');
-            const dots    = Array.from(root.querySelectorAll('.dkb-dot'));
+            const prev   = root.querySelector('.dkb-prev');
+            const next   = root.querySelector('.dkb-next');
+            const dots   = Array.from(root.querySelectorAll('.dkb-dot'));
 
             let index = 0;
-            const setIndex = (i) => {
+            let advanceTimer = null;
+
+            function playActive() {
+                const v = videos[index];
+                if (!v) return;
+                // Assure-toi que la vidéo est prête puis joue-la (silencieuse)
+                const p = v.play?.();
+                if (p && typeof p.then === 'function') p.catch(() => {});
+            }
+
+            function setIndex(i) {
                 index = (i + slides.length) % slides.length;
                 track.style.transform = `translateX(-${index * 100}%)`;
+
                 slides.forEach((s, k) => s.classList.toggle('is-active', k === index));
-                dots.forEach((d, k) => d.classList.toggle('is-active', k === index));
-                dots.forEach((d, k) => d.setAttribute('aria-selected', k === index ? 'true' : 'false'));
-
-                // Lecture uniquement de la vidéo active
-                videos.forEach((v, k) => {
-                    if (!v) return;
-                    if (k === index) {
-                        // Autoplay silencieux si possible
-                        const play = v.play?.();
-                        if (play && typeof play.then === 'function') {
-                            play.catch(() => {/* ignore */});
-                        }
-                    } else {
-                        try { v.pause(); } catch(e){}
-                    }
+                dots.forEach((d, k) => {
+                    d.classList.toggle('is-active', k === index);
+                    d.setAttribute('aria-selected', k === index ? 'true' : 'false');
                 });
-            };
 
-            const next = () => setIndex(index + 1);
-            const prev = () => setIndex(index - 1);
+                // Pause toutes les autres vidéos
+                videos.forEach((v, k) => { if (k !== index && v) try { v.pause(); } catch {} });
 
-            nextBtn.addEventListener('click', next);
-            prevBtn.addEventListener('click', prev);
+                // Joue celle qui devient visible
+                playActive();
+            }
+
+            const goNext = () => setIndex(index + 1);
+            const goPrev = () => setIndex(index - 1);
+
+            // Boutons
+            next.addEventListener('click', goNext);
+            prev.addEventListener('click', goPrev);
             dots.forEach((d, k) => d.addEventListener('click', () => setIndex(k)));
 
-            // clavier
+            // Clavier
             root.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowRight') next();
-                if (e.key === 'ArrowLeft')  prev();
+                if (e.key === 'ArrowRight') goNext();
+                if (e.key === 'ArrowLeft')  goPrev();
             });
-            root.tabIndex = 0; // pour capter le clavier
 
-            // Swipe (drag) simple
-            let startX = 0, isDown = false, moved = 0;
-            const onStart = (x) => { isDown = true; startX = x; moved = 0; };
-            const onMove  = (x) => { if(!isDown) return; moved = x - startX; };
-            const onEnd   = () => {
-                if(!isDown) return;
-                isDown = false;
-                const threshold = window.innerWidth * 0.12;
-                if (moved >  threshold) prev();
-                else if (moved < -threshold) next();
-            };
+            // Swipe simple
+            let down = false, startX = 0, moved = 0;
+            function start(x){ down = true; startX = x; moved = 0; }
+            function move(x){ if(!down) return; moved = x - startX; }
+            function end(){
+                if(!down) return; down = false;
+                const t = window.innerWidth * 0.12;
+                if (moved >  t) goPrev();
+                if (moved < -t) goNext();
+            }
+            root.addEventListener('pointerdown', e => { start(e.clientX); root.setPointerCapture(e.pointerId); });
+            root.addEventListener('pointermove',  e => move(e.clientX));
+            root.addEventListener('pointerup',    end);
+            root.addEventListener('pointercancel',end);
+            root.addEventListener('pointerleave', end);
 
-            root.addEventListener('pointerdown', e => { onStart(e.clientX); root.setPointerCapture(e.pointerId); });
-            root.addEventListener('pointermove',  e => onMove(e.clientX));
-            root.addEventListener('pointerup',    onEnd);
-            root.addEventListener('pointercancel',onEnd);
-            root.addEventListener('pointerleave', onEnd);
+            // Auto-advance quand une vidéo se termine
+            videos.forEach((v) => {
+                if (!v) return;
+                v.addEventListener('ended', () => {
+                    // petite latence pour une transition “smooth”
+                    clearTimeout(advanceTimer);
+                    advanceTimer = setTimeout(goNext, 200);
+                });
 
-            // Mise en pause quand la page n’est pas visible
+                // Si l’utilisateur clique “play” manuellement au milieu, on annule
+                // tout timer d’avance automatique pour éviter un saut involontaire.
+                v.addEventListener('play', () => clearTimeout(advanceTimer));
+            });
+
+            // Met pause si onglet caché, relance la bonne vidéo au retour
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) videos.forEach(v => v && v.pause());
-                else setIndex(index);
+                else playActive();
             });
 
             // Démarrage
             setIndex(0);
         })();
     </script>
+
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
-<!-- JS éventuel du slider -->
-<script src="<?= $BASE ?>js/script.js" defer></script>
-<!-- <script src="<?= $BASE ?>js/slider.js" defer></script> -->
 </body>
 </html>
