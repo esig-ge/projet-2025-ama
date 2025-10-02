@@ -2,6 +2,11 @@
 // /site/pages/fleur.php
 session_start();
 
+// Anti-cache pour toujours refléter la BDD au reload
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 // Base URL (avec slash final robuste)
 if (!isset($BASE)) {
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
@@ -41,14 +46,31 @@ foreach ($imgMap as $coul => $meta) {
     if (isset($roses[$coul])) { $fallbackClass = $meta['class']; break; }
 }
 
-// 1re couleur EN STOCK (cochée par défaut)
+// 1re couleur EN STOCK (cochée par défaut) + infos initiales
 $initialCheckedId = null;
+$initialColorKey  = null;   // clé 'rouge', 'blanc', etc.
 $initialMax       = 1;
+$initialPrice     = null;
+$initialName      = 'La rose';
+
 foreach ($imgMap as $coul => $meta) {
     if (!isset($roses[$coul])) continue;
     if ((int)$roses[$coul]['STOCK'] > 0) {
         $initialCheckedId = $meta['id'];
+        $initialColorKey  = $coul;
         $initialMax       = (int)$roses[$coul]['STOCK'];
+        $initialPrice     = (float)$roses[$coul]['PRO_PRIX'];
+        $initialName      = $roses[$coul]['PRO_NOM'] ?: 'La rose';
+        break;
+    }
+}
+// Si aucune en stock, prends la première existante pour le prix affiché
+if (!$initialCheckedId) {
+    foreach ($imgMap as $coul => $meta) {
+        if (!isset($roses[$coul])) continue;
+        $initialColorKey  = $coul;
+        $initialPrice     = (float)$roses[$coul]['PRO_PRIX'];
+        $initialName      = $roses[$coul]['PRO_NOM'] ?: 'La rose';
         break;
     }
 }
@@ -77,6 +99,8 @@ foreach ($imgMap as $coul => $meta) {
         .btn-add[disabled]{opacity:.6;cursor:not-allowed}
         .btn_accueil{display:flex;gap:10px;margin-top:18px}
         .button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;color: #610202}
+        .product-title{margin:0 0 6px}
+        .product-price{font-weight:600;margin-top:6px}
     </style>
 
     <!-- Expose BASE + API_URL au JS -->
@@ -96,13 +120,15 @@ foreach ($imgMap as $coul => $meta) {
     <section class="catalogue">
         <div class="produit">
             <div class="produit-info">
-                <h3 class="product-title">La rose</h3>
+                <h3 class="product-title">
+                    <?= htmlspecialchars($initialName, ENT_QUOTES, 'UTF-8') ?></h3>
                 <p class="product-desc">Elle symbolise l’amour au premier regard et l’unicité.</p>
 
                 <!-- Radios couleurs -->
                 <?php foreach ($imgMap as $coul => $meta): if (!isset($roses[$coul])) continue;
                     $proId   = (int)$roses[$coul]['PRO_ID'];
-                    $proNom  = $roses[$coul]['PRO_NOM'];
+                    $proNom  = $roses[$coul]['PRO_NOM'] ?: 'La rose';
+                    $price   = (float)$roses[$coul]['PRO_PRIX'];
                     $stock   = (int)$roses[$coul]['STOCK'];
                     $checked = ($meta['id'] === $initialCheckedId);
                     $disabled = ($stock <= 0);
@@ -116,9 +142,11 @@ foreach ($imgMap as $coul => $meta) {
                         <?= $disabled ? 'disabled' : '' ?>
                             data-pro-id="<?= $proId ?>"
                             data-name="<?= htmlspecialchars($proNom) ?>"
+                            data-color="<?= htmlspecialchars($imgMap[$coul]['title']) ?>"
                             data-img="<?= htmlspecialchars($meta['file']) ?>"
                             data-img-class="<?= htmlspecialchars($meta['class']) ?>"
                             data-stock="<?= $stock ?>"
+                            data-price="<?= number_format($price, 2, '.', '') ?>"
                     >
                 <?php endforeach; ?>
 
@@ -152,14 +180,13 @@ foreach ($imgMap as $coul => $meta) {
 
                 <!-- Prix dynamique -->
                 <div class="product-price" id="rosePrice">
-                    <?= isset($roses[$fallbackClass]['PRO_PRIX']) ? number_format($roses[$fallbackClass]['PRO_PRIX'], 2, ',', ' ') . ' €' : '' ?>
+                    <?= $initialPrice !== null ? number_format($initialPrice, 2, '.', "'") . ' CHF' : '' ?>
                 </div>
 
                 <div class="stock-msg" id="stockMsg" role="status" aria-live="polite">
                     <span class="dot" aria-hidden="true"></span>
                     <span class="text"></span>
                 </div>
-
 
                 <!-- Quantité -->
                 <input
@@ -175,9 +202,7 @@ foreach ($imgMap as $coul => $meta) {
                 >
 
                 <!-- Bouton -->
-                <button id="btn-add-rose" class="btn-add" type="button">
-                    Ajouter au panier
-                </button>
+                <button id="btn-add-rose" class="btn-add" type="button">Ajouter au panier</button>
             </div>
         </div>
 
@@ -192,13 +217,15 @@ foreach ($imgMap as $coul => $meta) {
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const radios  = document.querySelectorAll('.color-radio');
-        const qty     = document.querySelector('.qty');
-        const msgBox  = document.getElementById('stockMsg');
-        const msgTxt  = msgBox ? msgBox.querySelector('.text') : null;
-        const images  = document.querySelectorAll('.img-rose');
-        const fallback= document.body.dataset.fallback || '';
-        const btn     = document.getElementById('btn-add-rose');
+        const radios   = document.querySelectorAll('.color-radio');
+        const qty      = document.querySelector('.qty');
+        const msgBox   = document.getElementById('stockMsg');
+        const msgTxt   = msgBox ? msgBox.querySelector('.text') : null;
+        const images   = document.querySelectorAll('.img-rose');
+        const fallback = document.body.dataset.fallback || '';
+        const btn      = document.getElementById('btn-add-rose');
+        const titleEl  = document.querySelector('.product-title');
+        const priceBox = document.getElementById('rosePrice');
 
         function showImageByClass(cls){
             images.forEach(img => img.classList.toggle('show', img.classList.contains(cls)));
@@ -207,10 +234,12 @@ foreach ($imgMap as $coul => $meta) {
             const sel = document.querySelector('.color-radio:checked');
             if (!sel) return null;
             return {
-                id:   parseInt(sel.dataset.proId || '0', 10),
-                name: sel.dataset.name || ('Produit #' + sel.dataset.proId),
-                cls:  sel.dataset.imgClass || '',
-                stk:  parseInt(sel.dataset.stock || '0', 10)
+                id:     parseInt(sel.dataset.proId || '0', 10),
+                name:   sel.dataset.name || ('La rose'),
+                color:  sel.dataset.color || '',
+                cls:    sel.dataset.imgClass || '',
+                stk:    parseInt(sel.dataset.stock || '0', 10),
+                price:  parseFloat(sel.dataset.price || '0')
             };
         }
         function showMsg(html){ if (msgBox && msgTxt){ msgTxt.innerHTML = html; msgBox.classList.add('show'); } }
@@ -220,6 +249,18 @@ foreach ($imgMap as $coul => $meta) {
             const s = selected();
             if (s){
                 if (s.cls) showImageByClass(s.cls);
+
+                // Titre dynamique : "La rose — Rouge"
+                if (titleEl){
+                    titleEl.textContent = (s.name || 'La rose') ;
+                }
+
+                // Prix dynamique (depuis data-price)
+                if (priceBox && !Number.isNaN(s.price)){
+                    priceBox.textContent = s.price.toFixed(2) + ' CHF';
+                }
+
+                // Stock / quantité / bouton
                 if (qty){
                     const m = Math.max(1, s.stk);
                     qty.max = m;
@@ -227,10 +268,26 @@ foreach ($imgMap as $coul => $meta) {
                     if ((parseInt(qty.value,10) || 1) > m) qty.value = m;
                 }
                 if (btn) btn.disabled = (s.stk <= 0);
-                if (priceBox) priceBox.textContent = s.price.toFixed(2).replace('.',',') + ' €';
                 hideMsg();
+
+                // (Optionnel) Vérifier "live" prix/stock côté serveur
+                // fetch(`${window.DKBASE || '/'}api/product.php?id=${encodeURIComponent(s.id)}`, {cache:'no-store'})
+                //   .then(r => r.ok ? r.json() : null)
+                //   .then(data => {
+                //     if (!data || !data.ok) return;
+                //     if (priceBox && typeof data.price === 'number') priceBox.textContent = data.price.toFixed(2) + ' CHF';
+                //     if (typeof data.stock === 'number' && qty){
+                //         const m2 = Math.max(1, data.stock);
+                //         qty.max = m2;
+                //         qty.disabled = (data.stock <= 0);
+                //         if ((parseInt(qty.value,10) || 1) > m2) qty.value = m2;
+                //         if (btn) btn.disabled = (data.stock <= 0);
+                //     }
+                //   }).catch(()=>{});
             } else {
                 if (fallback) showImageByClass(fallback);
+                if (titleEl) titleEl.textContent = 'La rose';
+                if (priceBox) priceBox.textContent = '';
                 if (qty){ qty.disabled = true; qty.max = 1; qty.value = 1; }
                 if (btn) btn.disabled = true;
                 hideMsg();
@@ -267,7 +324,7 @@ foreach ($imgMap as $coul => $meta) {
         else if (fallback) showImageByClass(fallback);
         refreshUI();
 
-        // ✅ Appel vers commande.js global
+        // Appel vers commande.js global
         if (btn) {
             btn.addEventListener('click', () => {
                 const q = parseInt(qty?.value || '1', 10);
