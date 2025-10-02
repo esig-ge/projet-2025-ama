@@ -30,7 +30,11 @@ $tailles = $pdo->query("
 $bouquets = []; // ex: [ ['nb'=>12, 'prix'=>45.00, 'variants'=>[['pro_id'=>1,'couleur'=>'rouge','stock'=>10,'prix'=>45.00], ...]], ... ]
 foreach ($tailles as $nb) {
     $st = $pdo->prepare("
+<<<<<<< HEAD
+        SELECT p.PRO_ID, p.PRO_PRIX, p.PRO_NOM, b.BOU_COULEUR,b.BOU_DESCRIPTION, b.BOU_QTE_STOCK
+=======
         SELECT p.PRO_ID, p.PRO_PRIX, b.BOU_COULEUR, b.BOU_QTE_STOCK
+>>>>>>> fa55c79541d63de4a3b2e64f368b59c68daf630d
         FROM BOUQUET b
         JOIN PRODUIT p ON p.PRO_ID = b.PRO_ID
         WHERE b.BOU_NB_ROSES = :nb
@@ -38,9 +42,14 @@ foreach ($tailles as $nb) {
     ");
     $st->execute([':nb' => $nb]);
     $variants = $st->fetchAll(PDO::FETCH_ASSOC);
+<<<<<<< HEAD
+    if (!$variants) { continue; }
+// PAS OUBLIER DE RAJOUTER LES VARIABLES DE BOU_DESCRIPTION
+=======
     if (!$variants) continue;
 
     // je prends le prix depuis la 1ère variante (supposé identique pour toutes les couleurs)
+>>>>>>> fa55c79541d63de4a3b2e64f368b59c68daf630d
     $bouquets[] = [
         'nb'       => (int)$nb,
         'prix'     => (float)$variants[0]['PRO_PRIX'],
@@ -263,12 +272,22 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
             foreach ($item['variants'] as $v) { if ($v['stock'] > 0) { $def = $v; break; } }
             if (!$def) $def = $item['variants'][0];
             ?>
+<<<<<<< HEAD
+            <form class="card product bouquet-card"
+                  data-nb="<?= (int)$nb ?>"
+                  onsubmit="return addBouquetForm(event, this)">
+                <!-- valeur mise à jour à chaque changement de radio -->
+=======
             <form class="card product bouquet-card" onsubmit="return addBouquetForm(event, this)">
                 <!-- pro_id mis à jour quand je change la couleur -->
+>>>>>>> fa55c79541d63de4a3b2e64f368b59c68daf630d
                 <input type="hidden" name="pro_id" value="<?= (int)$def['pro_id'] ?>">
-
                 <img src="<?= htmlspecialchars($img) ?>" alt="Bouquet <?= (int)$nb ?> roses" loading="lazy">
+<<<<<<< HEAD
+                <h3>  <?= htmlspecialchars($def['pro_nom'], ENT_QUOTES, 'UTF-8')  ?></h3>
+=======
                 <h3>Bouquet <?= (int)$nb ?></h3>
+>>>>>>> fa55c79541d63de4a3b2e64f368b59c68daf630d
                 <p class="price"><?= number_format($prix, 2, '.', "'") ?> CHF</p>
 
                 <!-- pastilles de couleurs -->
@@ -314,8 +333,13 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                 <button
                         type="submit"
                         class="add-to-cart"
+<<<<<<< HEAD
+                        data-pro-name="<?= htmlspecialchars($def['pro_nom'] , ENT_QUOTES, 'UTF-8') ?>"
+                    <?= $def['stock']<=0 ? 'disabled' : '' ?>>
+=======
                         data-pro-name="Bouquet <?= (int)$nb ?>"
                     <?= $def['stock'] <= 0 ? 'disabled' : '' ?>>
+>>>>>>> fa55c79541d63de4a3b2e64f368b59c68daf630d
                     Ajouter
                 </button>
             </form>

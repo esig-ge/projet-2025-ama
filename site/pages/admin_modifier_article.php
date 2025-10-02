@@ -194,9 +194,11 @@ function recup_donnee_emballage(PDO $pdo): array {
                     <tr><td colspan="6" class="empty">Aucun article trouvé</td></tr>
                 <?php } else {
                     foreach ($bouquets as $b) {
-                        $id = (int)$b['PRO_ID']; ?>
+                        $id = (int)$b['PRO_ID'];
+                        $nomBouquet = htmlspecialchars($b['PRO_NOM']);
+                        ?>
                         <tr>
-                            <td><input type="text" name="rows[<?= $id ?>][PRO_NOM]" value="<?= htmlspecialchars($b['PRO_NOM']) ?>" required></td>
+                            <td><input type="text" name="rows[<?= $id ?>][PRO_NOM]" value="<?= $nomBouquet ?>" required></td>
                             <td><input type="number" step="0.05" min="0" name="rows[<?= $id ?>][PRO_PRIX]" value="<?= htmlspecialchars($b['PRO_PRIX']) ?>" required></td>
                             <td><input type="number" step="1" min="0" name="rows[<?= $id ?>][BOU_NB_ROSES]" value="<?= htmlspecialchars($b['BOU_NB_ROSES'] ?? 0) ?>"></td>
                             <td><input type="text" name="rows[<?= $id ?>][BOU_COULEUR]" value="<?= htmlspecialchars($b['BOU_COULEUR'] ?? '') ?>"></td>
