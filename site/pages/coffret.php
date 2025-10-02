@@ -2,6 +2,11 @@
 // /site/pages/coffret.php (robuste + détection d'image)
 session_start();
 
+// Anti-cache (toujours refléter la BDD au reload)
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 // Base URL (toujours slash final)
 if (!isset($BASE)) {
     $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
@@ -44,14 +49,13 @@ function find_image_for_event(string $event): string {
     ];
 
     $imgDirFs  = __DIR__ . '/img/';    // FS path
-    $imgDirWeb = rtrim(dirname($_SERVER['PHP_SELF']), '/\\') . '/img/'; // Web path (équiv. $BASE.'img/')
+    $imgDirWeb = rtrim(dirname($_SERVER['PHP_SELF']), '/\\') . '/img/'; // équiv. $BASE.'img/'
 
     foreach ($candidates as $file) {
         if (is_file($imgDirFs . $file)) {
             return $imgDirWeb . $file;
         }
     }
-    // En dernier recours, renvoie quand même une URL (même si le fichier n’existe pas)
     return $imgDirWeb . 'coffret.png';
 }
 ?>
@@ -105,27 +109,10 @@ function find_image_for_event(string $event): string {
             margin:0 auto;
             align-items:stretch;
         }
-        /* cartes full-width dans leur colonne */
-        #coffret-grid .card.product{
-            width:100% !important;
-            max-width:none !important;
-            background:#fff;
-            padding:12px;
-            border-radius:12px;
-            box-shadow:0 4px 12px rgba(0,0,0,.1);
-            text-align:center;
-        }
-        /* images contenues pour éviter l’effet “trop large” */
+        #coffret-grid .card.product{ width:100% !important; max-width:none !important; }
         #coffret-grid .card.product img{
-            width:100%;
-            height:180px;               /* ajuste si besoin */
-            object-fit:contain;         /* garde le ratio */
-            display:block;
-            margin:0 auto 10px;
-            border-radius:10px;
+            width:100%; height:180px; object-fit:contain; display:block; margin:0 auto 10px; border-radius:10px;
         }
-
-        /* breakpoints pour garder un joli rendu */
         @media (max-width: 1280px){ #coffret-grid{ grid-template-columns:repeat(4,1fr); } }
         @media (max-width: 1024px){ #coffret-grid{ grid-template-columns:repeat(3,1fr); } }
         @media (max-width: 768px) { #coffret-grid{ grid-template-columns:repeat(2,1fr); } }
@@ -166,6 +153,56 @@ function find_image_for_event(string $event): string {
             if (typeof addToCart === 'function') addToCart(proInput.value, btn, extra);
             return false;
         }
+
+        // (Optionnel) petite aide pour rafraîchir prix/stock "live" via /api/product.php?id=PRO_ID
+        async function fetchLive(productId){
+            try{
+                const res = await fetch(`${window.DKBASE || '/'}api/product.php?id=${encodeURIComponent(productId)}`, {cache:'no-store'});
+                if(!res.ok) return null;
+                const json = await res.json();
+                return json && json.ok ? json : null;
+            }catch(e){ return null; }
+        }
+        function formatCHF(n){ return (Number(n)||0).toFixed(2) + ' CHF'; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Parcourt toutes les cartes pour “peaufiner” prix/stock au chargement
+            document.querySelectorAll('#coffret-grid .card.product').forEach(card => {
+                const proId   = parseInt(card.querySelector('input[name="pro_id"]')?.value || '0', 10);
+                const priceEl = card.querySelector('.price');
+                const qtyEl   = card.querySelector('.qty');
+                const addBtn  = card.querySelector('.add-to-cart');
+                const badge   = card.querySelector('.stock-badge');
+
+                // Mémorise le pro_id sur le prix (utile si tu fais d’autres hooks)
+                if (priceEl) priceEl.dataset.proId = String(proId);
+
+                // 👉 Dé-commente pour activer la vérification “live” côté serveur :
+                // if (proId > 0) {
+                //     fetchLive(proId).then(data => {
+                //         if (!data) return;
+                //         if (priceEl && typeof data.price === 'number') {
+                //             priceEl.textContent = formatCHF(data.price);
+                //         }
+                //         if (typeof data.stock === 'number' && qtyEl && badge) {
+                //             const s = Math.max(0, data.stock|0);
+                //             qtyEl.max = String(Math.max(1, s));
+                //             qtyEl.disabled = (s <= 0);
+                //             if (s > 0) {
+                //                 badge.textContent = 'Stock : ' + s;
+                //                 badge.classList.remove('oos');
+                //                 if (addBtn) addBtn.disabled = false;
+                //             } else {
+                //                 badge.textContent = 'Rupture de stock';
+                //                 badge.classList.add('oos');
+                //                 if (addBtn) addBtn.disabled = true;
+                //                 qtyEl.value = '1'; qtyEl.max = '1';
+                //             }
+                //         }
+                //     });
+                // }
+            });
+        });
     </script>
 </head>
 
@@ -189,7 +226,9 @@ function find_image_for_event(string $event): string {
 
                 <img src="<?= htmlspecialchars($img) ?>" alt="Coffret <?= htmlspecialchars($evt) ?>" loading="lazy">
                 <h3><?= htmlspecialchars($evt) ?></h3>
-                <p class="price"><?= number_format($prix, 2, '.', "'") ?> CHF</p>
+
+                <!-- Prix initial (BDD) ; data-pro-id pour éventuel rafraîchissement live -->
+                <p class="price" data-pro-id="<?= $proId ?>"><?= number_format($prix, 2, '.', "'") ?> CHF</p>
 
                 <label class="sr-only" for="qty-<?= $proId ?>">Quantité</label>
                 <input
