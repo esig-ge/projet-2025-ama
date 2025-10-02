@@ -145,3 +145,10 @@ a.button:hover, a.add-to-cart:hover{
 @media (max-width:900px){
     .catalogue .produit{ flex-direction:column; align-items:center; }
 }
+
+#rosePrice {
+    font-size: 1.5rem;   /* plus grand */
+    font-weight: bold;    /* en gras */
+    color: #9f1313;       /* couleur rouge foncé */
+    margin: 12px 0;
+}

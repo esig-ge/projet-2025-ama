@@ -22,7 +22,7 @@ $imgMap = [
 ];
 
 // Récupération BDD
-$sql = "SELECT p.PRO_ID, p.PRO_NOM, f.FLE_COULEUR, COALESCE(f.FLE_QTE_STOCK,0) AS STOCK
+$sql = "SELECT p.PRO_ID, p.PRO_NOM, p.PRO_PRIX, f.FLE_COULEUR, COALESCE(f.FLE_QTE_STOCK,0) AS STOCK
         FROM FLEUR f
         JOIN PRODUIT p ON p.PRO_ID = f.PRO_ID
         ORDER BY FIELD(f.FLE_COULEUR,'rouge','rose clair','rose','blanc','bleu','noir')";
@@ -150,10 +150,16 @@ foreach ($imgMap as $coul => $meta) {
                     <?php endforeach; ?>
                 </fieldset>
 
+                <!-- Prix dynamique -->
+                <div class="product-price" id="rosePrice">
+                    <?= isset($roses[$fallbackClass]['PRO_PRIX']) ? number_format($roses[$fallbackClass]['PRO_PRIX'], 2, ',', ' ') . ' €' : '' ?>
+                </div>
+
                 <div class="stock-msg" id="stockMsg" role="status" aria-live="polite">
                     <span class="dot" aria-hidden="true"></span>
                     <span class="text"></span>
                 </div>
+
 
                 <!-- Quantité -->
                 <input
@@ -221,6 +227,7 @@ foreach ($imgMap as $coul => $meta) {
                     if ((parseInt(qty.value,10) || 1) > m) qty.value = m;
                 }
                 if (btn) btn.disabled = (s.stk <= 0);
+                if (priceBox) priceBox.textContent = s.price.toFixed(2).replace('.',',') + ' €';
                 hideMsg();
             } else {
                 if (fallback) showImageByClass(fallback);

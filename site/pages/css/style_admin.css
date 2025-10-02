@@ -112,7 +112,7 @@ body.aside-closed .adm-main{ margin-left:0 }
 .burger:hover{background: rgb(255, 255, 255)
 }
 .welcome h1{margin:0 0 4px 0; font-size:22px}
-welcome p {
+.welcome p {
     color: #fff !important;
     opacity: 1; /* enlève l’effet "grisé" */
 }
@@ -140,15 +140,15 @@ welcome p {
     backdrop-filter: blur(4px);
 }
 .kpi-card.alert{outline:2px solid var(--alert)}
-.kpi-label{color:var(--muted); font-size:13px}
+.kpi-card .kpi-label {
+    font-size: 15px !important;
+}
 .kpi-value{font-size:28px; font-weight:800; letter-spacing:.3px}
 .kpi-badge{
     position:absolute; right:12px; top:12px; background:rgba(255,255,255,.15);
-    color:#fff; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--stroke)
+    color: black; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--stroke)
 }
-kpi-label{
-    color: darkred;
-}
+
 
 .spark, .bar{
     height:34px; border-radius:10px;
@@ -248,7 +248,6 @@ kpi-label{
 
 /* Titres & valeurs */
 .card-head h2{ color:var(--brand-1); }
-.kpi-label{ color: rgba(120, 4, 57, 0.17); }      /* gris lisible sur blanc */
 .kpi-value{ color:var(--brand-1); }
 
 /* Petits graphs/decors dans les KPI */

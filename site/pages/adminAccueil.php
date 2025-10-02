@@ -145,32 +145,32 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
 
     <section class="kpi-grid">
         <article class="kpi-card">
-            <div class="kpi-label">Commandes (7 jours)</div>
+            <div class="kpi-label"  style="color: black;">Commandes (7 jours)</div>
             <div class="kpi-value"><?= htmlspecialchars((string)$kpi['orders_week']) ?></div>
             <div class="kpi-trend spark" aria-hidden="true"></div>
         </article>
         <article class="kpi-card">
-            <div class="kpi-label">Revenu (7 jours)</div>
+            <div class="kpi-label" style="color: black;">Revenu (7 jours)</div>
             <div class="kpi-value"><?= htmlspecialchars((string)$kpi['revenue_week']) ?></div>
             <div class="kpi-trend spark" aria-hidden="true"></div>
         </article>
         <article class="kpi-card">
-            <div class="kpi-label">Panier moyen</div>
+            <div class="kpi-label" style="color: black;">Panier moyen</div>
             <div class="kpi-value"><?= htmlspecialchars((string)$kpi['avg_basket']) ?></div>
             <div class="kpi-trend spark" aria-hidden="true"></div>
         </article>
         <article class="kpi-card">
-            <div class="kpi-label">Produits en catalogue</div>
+            <div class="kpi-label" style="color: black;">Produits en catalogue</div>
             <div class="kpi-value"><?= htmlspecialchars((string)$kpi['products']) ?></div>
             <div class="kpi-trend bar" aria-hidden="true"></div>
         </article>
         <article class="kpi-card">
-            <div class="kpi-label">Clients</div>
+            <div class="kpi-label" style="color: black;">Clients</div>
             <div class="kpi-value"><?= htmlspecialchars((string)$kpi['clients']) ?></div>
             <div class="kpi-trend bar" aria-hidden="true"></div>
         </article>
         <article class="kpi-card alert">
-            <div class="kpi-label">Alertes stock</div>
+            <div class="kpi-label" style="color: black;">Alertes stocks</div>
             <div class="kpi-value"><?= htmlspecialchars((string)$kpi['stock_alerts']) ?></div>
             <div class="kpi-badge">⚠️ À vérifier</div>
         </article>
