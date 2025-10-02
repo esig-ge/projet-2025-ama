@@ -44,7 +44,7 @@ if (!function_exists('isAdmin')) {
                 <h1>
                     Bienvenu<?php if (!empty($_SESSION['per_prenom'])): ?>e <?= htmlspecialchars($_SESSION['per_prenom']) ?>
                     <?php else: ?>
-                        <span class="accent"> Johany </span>
+                        <span class="accent"> à DK Bloom </span>
                     <?php endif; ?>
                 </h1>
 
