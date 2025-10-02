@@ -269,3 +269,168 @@ aside.card {
     padding: 20px;
     border-radius: 12px;
 }
+
+/* ---------- Palette (hérite si présent) ---------- */
+:root{
+    --brand: var(--accent, #8d0e0e);
+    --brand-2: var(--accent-2, #d86074);
+    --ink: var(--ink, #1a1a1a);
+    --bg: var(--bg, #ffffff);
+    --card: var(--card, #ffffff);
+    --radius: var(--radius, 22px);
+    --shadow: 0 18px 40px rgba(0,0,0,.10);
+}
+
+/* ====== 1) HERO MAP ====== */
+.contact-hero{
+    padding: clamp(16px, 2vw, 24px) 0 0;
+    background: var(--bg);
+}
+
+.map-blob{
+    width: min(1100px, 94vw);
+    margin: 0 auto;
+    box-shadow: var(--shadow);
+    overflow: hidden;                /* masque l’iframe dans la forme */
+    border-radius: 24px;             /* fallback si clip-path non supporté */
+    /* Forme organique inspirée de ton exemple */
+    clip-path: path("M24 60Q24 24 60 24H940Q980 24 1000 60Q1020 96 1000 132L960 208Q940 244 960 280Q980 316 940 352H60Q24 352 24 316Z");
+}
+
+.map-iframe{
+    display: block;
+    width: 100%;
+    height: clamp(280px, 48vh, 420px);
+    border: 0;
+}
+
+/* Si clip-path: path() n’est pas supporté, on arrondit seulement */
+@supports not (clip-path: path("M0,0L1,1")){
+    .map-blob{ clip-path: none; }
+}
+
+/* ====== 2) LET'S TALK ====== */
+.contact-talk{
+    padding: clamp(28px, 6vh, 56px) 0;
+    text-align: center;
+}
+
+.talk-title{
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 800;
+    letter-spacing: .02em;
+    margin: 0 0 18px;
+}
+.talk-title span{ color: var(--brand); }
+
+.talk-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(20px, 4vw, 46px);
+    align-items: start;
+    text-align: left;
+    margin-top: 10px;
+}
+.talk-col h2{
+    margin: 0 0 10px;
+    font-size: 1.1rem;
+    color: var(--ink);
+}
+.talk-list{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.talk-list li{
+    background: var(--card);
+    border: 1px solid var(--stroke, #e7e7ea);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.04);
+}
+.talk-list a{ color: var(--brand); text-decoration: none; }
+.talk-list a:hover{ text-decoration: underline; }
+
+/* Socials */
+.socials{
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.social-btn{
+    width: 42px; height: 42px;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    border-radius: 999px;
+    background: #f3f3f5;
+    color: var(--brand);
+    box-shadow: 0 6px 14px rgba(0,0,0,.08);
+    transition: transform .15s ease, background .25s ease, color .25s ease;
+}
+.social-btn:hover{
+    transform: translateY(-2px);
+    background: #fff;
+    color: var(--brand-2);
+}
+
+/* ====== 3) HOW CAN WE HELP ====== */
+.contact-help{
+    padding: clamp(24px, 6vh, 56px) 0;
+    text-align: center;
+}
+.contact-help h2{
+    font-size: clamp(22px, 3.4vw, 30px);
+    font-weight: 800;
+    margin: 0 0 18px;
+}
+.contact-help h2 span{ color: var(--brand); }
+
+.help-cards{
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 18px;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+}
+.help-card{
+    background: var(--card);
+    border: 1px solid var(--stroke, #e7e7ea);
+    border-radius: 18px;
+    padding: 20px 16px;
+    box-shadow: 0 10px 22px rgba(0,0,0,.06);
+}
+.help-icon{
+    width: 64px; height: 64px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    display: grid; place-items: center;
+    background: color-mix(in oklab, var(--brand) 20%, white 80%);
+    font-size: 28px;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 900px){
+    .talk-grid{ grid-template-columns: 1fr; text-align: left; }
+}
+@media (max-width: 680px){
+    .help-cards{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 460px){
+    .help-cards{ grid-template-columns: 1fr; }
+}
+
+/* état par défaut : forme organique */
+.map-blob{
+    box-shadow: 0 18px 40px rgba(0,0,0,.10);
+    overflow: hidden;                 /* masque la forme */
+    border-radius: 24px;              /* fallback */
+    clip-path: path("M24 60Q24 24 60 24H940Q980 24 1000 60Q1020 96 1000 132L960 208Q940 244 960 280Q980 316 940 352H60Q24 352 24 316Z");
+    transition: clip-path .25s ease;
+}
+
+/* état interactif : on enlève le clip pour laisser respirer l’UI Google */
+.map-blob.is-interactive{
+    clip-path: none;                  /* plein rectangle */
+    overflow: visible;                /* rien n’est rogné */
+    border-radius: 24px;              /* on garde des coins doux */
+}

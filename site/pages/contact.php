@@ -58,37 +58,97 @@ if (!isset($BASE)) {
 include __DIR__ . '/includes/header.php';
 ?>
 
-<main class="container" role="main">
-    <h1 class="page-title">Nous contacter</h1>
-
-    <div class="grid">
-        <!-- Bloc coordonnées + carte -->
-        <aside class="card" aria-labelledby="titre-infos">
-            <h2 id="titre-infos">Nos coordonnées</h2>
-
-            <ul class="info-list">
-                <li><strong>E-mail&nbsp;:</strong> <a href="mailto:contact@dkbloom.ch">contact@dkbloom.ch</a></li>
-                <li><strong>Téléphone&nbsp;:</strong> <a href="tel:+41791234567">+41&nbsp;79&nbsp;123&nbsp;45&nbsp;67</a></li>
-                <li><strong>Adresse&nbsp;:</strong> Rue des Fleurs&nbsp;12, 1200&nbsp;Genève</li>
-                <li><strong>Horaires&nbsp;:</strong> Mar–Sam&nbsp;09:00–18:30</li>
-            </ul>
-
-            <div class="spacer-xs"></div>
-
-            <!--
-              Google Maps sans clé API (recherche). Tu peux cibler précisément l’adresse
-              en remplaçant la requête q=… par ton adresse encodée URL.
-            -->
+<main role="main">
+    <!-- MAP HERO -->
+    <section class="contact-hero">
+        <div class="map-blob" id="mapBlob">
             <iframe
-                    class="map"
+                    class="map-iframe"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
                     src="https://www.google.com/maps?q=Rue%20des%20Fleurs%2012%2C%201200%20Gen%C3%A8ve&output=embed"
                     title="Localisation DK Bloom"
             ></iframe>
-        </aside>
-    </div>
+        </div>
+    </section>
+
+    <!-- Informations de contact -->
+    <section class="contact-talk container">
+        <h1 class="talk-title"> INFOS ET <span> CONTACT </span></h1>
+
+        <div class="talk-grid">
+            <div class="talk-col">
+                <h2>DK Bloom </h2>
+                <ul class="talk-list">
+                    <li><strong>Adresse</strong><br>Rue des Fleurs 12<br>1200 Genève, CH</li>
+                    <li><strong>Téléphone</strong><br><a href="tel:+41791234567">+41 79 123 45 67</a></li>
+                    <li><strong>E-mail</strong><br><a href="mailto:dk.bloom@gmail.com">dk.bloom@gmail.com</a></li>
+                    <li><strong>Horaires</strong><br>Mar–Sam · 09:00–18:30</li>
+                </ul>
+            </div>
+
+            <div class="talk-col">
+                <h2>Suivez-nous dans nos réseaux-sociaux</h2>
+                <div class="socials">
+                    <!-- TikTok -->
+                    <a href="https://www.tiktok.com/@_dkbloom"
+                       target="_blank" rel="noopener" aria-label="TikTok">
+                        <img src="<?= $BASE ?>img/tiktok.png"
+                             alt="TikTok" width="32" height="32" loading="lazy">
+                    </a>
+
+                    <!-- Instagram -->
+                    <a href="https://www.instagram.com/_dkbloom/"
+                       target="_blank" rel="noopener" aria-label="Instagram">
+                        <img src="<?= $BASE ?>img/Instagram_icon.png"
+                             alt="Instagram" width="32" height="32" loading="lazy">
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SEPARATOR + 3 ICONS -->
+    <section class="contact-help container">
+        <h2>Comment pouvons-nous <span> vous aider ?</span></h2>
+        <ul class="help-cards">
+            <li class="help-card">
+                <div class="help-icon">?</div>
+                <p>Questions fréquentes</p>
+            </li>
+            <li class="help-card">
+                <div class="help-icon">🤝</div>
+                <p>Événements & partenariats</p>
+            </li>
+            <li class="help-card">
+                <div class="help-icon">📷</div>
+                <p>Prestations & médias</p>
+            </li>
+        </ul>
+    </section>
 </main>
+
+<script>
+    const blob = document.getElementById('mapBlob');
+
+    // Desktop : survol = mode interactif
+    blob.addEventListener('mouseenter', () => blob.classList.add('is-interactive'));
+    blob.addEventListener('mouseleave', () => blob.classList.remove('is-interactive'));
+
+    // Clavier / accessibilité
+    blob.addEventListener('focusin',  () => blob.classList.add('is-interactive'));
+    blob.addEventListener('focusout', () => blob.classList.remove('is-interactive'));
+
+    // Mobile : premier tap = interactif ; tap en dehors = revient
+    document.addEventListener('touchstart', (e) => {
+        if (blob.contains(e.target)) {
+            blob.classList.add('is-interactive');
+        } else {
+            blob.classList.remove('is-interactive');
+        }
+    }, {passive:true});
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
