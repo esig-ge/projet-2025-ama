@@ -1,65 +1,202 @@
-:root{
-    --brand:#7a0000;      /* même couleur que header/footer */
-    --header-h:64px;      /* adapte à ton header réel */
-    --footer-h:120px;     /* hauteur approx. de ton footer */
+/* ============================================================
+   DK Bloom — style_apropos.css
+   Page: apropos.php
+   NOTE: on réutilise les variables/globales de style.css + header/footer
+   ============================================================ */
+
+/* --- Mise en forme générale de la page --- */
+/* On garde le fond “à pois” global défini dans style.css */
+.apropos { position: relative; isolation: isolate; }
+
+/* --- HERO (bandeau d’intro) --- */
+.hero {
+    /* Dégradé bordeaux DK ; on s’appuie sur la palette globale */
+    background: linear-gradient(180deg, rgba(92,0,18,1) 0%, rgba(138,27,46,1) 100%);
+    color: #fff;
+    text-align: center;
+    padding: clamp(64px, 12vw, 140px) 0 64px;
+    position: relative;
+}
+.hero h1 {
+    margin: 0 0 8px;
+    font-size: clamp(34px, 4.5vw, 56px);
+    letter-spacing: .5px;
+}
+.hero p {
+    margin: 0;
+    opacity: .95;
+    font-size: clamp(16px, 2.1vw, 20px);
 }
 
-/* Mise en page de la page À propos */
-body .container.apropos{
-    /* laisse la place au header fixe + footer */
-    min-height: calc(100vh - var(--header-h) - var(--footer-h));
+/* --- STORY (texte + image) --- */
+.story {
     display: grid;
-    grid-template-rows: auto 1fr auto; /* titre / texte centré / slider en bas */
+    grid-template-columns: 1.1fr .9fr; /* texte un peu plus large que l’image */
+    gap: clamp(24px, 4vw, 48px);
     align-items: center;
-    justify-items: center;
-    padding: 24px 16px;
+    padding: clamp(40px, 6vw, 72px) 0;
+}
+.story__text h2 {
+    margin: 0 0 12px;
+    font-size: clamp(26px, 3vw, 34px);
+    color: var(--ink);
+}
+.story__text p {
+    margin: 0;
+    line-height: 1.75;
+    color: var(--muted);
+    font-size: clamp(16px, 2vw, 18px);
+}
+.story__image {
+    background: var(--paper);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+}
+.story__image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+}
+
+/* --- VALEURS (3 cartes) --- */
+.values { padding: 16px 0 8px; }
+.values h2 {
+    text-align: center;
+    margin: 0 0 18px;
+    color: var(--ink);
+    font-size: clamp(24px, 3vw, 30px);
+}
+.values__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+.values .card {
+    background: var(--paper);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--ring);
     text-align: center;
 }
-
-/* Titre en haut, centré, même couleur que header/footer */
-body .container.apropos .section-title{
-    margin: 0 0 12px;
-    color: var(--brand);
-    font-size: clamp(28px, 4vw, 40px);
-    font-weight: 700;
+.values .card h3 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: var(--ink);
 }
-
-/* Texte centré au milieu */
-body .container.apropos .texte_propos{
-    max-width: 900px;
-    display: flex;
-    align-items: center;    /* centrage vertical du paragraphe */
-    justify-content: center;
-    margin: 0 auto;
+.values .card p {
+    margin: 0;
+    color: var(--muted);
     line-height: 1.6;
-    font-size: 1.1rem;
-    color: #111;
 }
 
-/* Slider (ou galerie) collé en bas de la zone main */
-body .container.apropos .slider{
-    align-self: end;        /* force la ligne tout en bas */
-    width: 100%;
-    margin-top: 24px;
+/* --- MARQUEE (bande d’images défilantes) --- */
+.marquee {
+    --fade: 80px; /* largeur des masques latéraux */
+    margin: clamp(30px, 6vw, 60px) 0;
+    position: relative;
+    overflow: hidden;
+    padding: 18px 0;
+    background: var(--paper);
+    border-top: 1px solid var(--ring);
+    border-bottom: 1px solid var(--ring);
+}
+.marquee::before,
+.marquee::after {
+    /* dégradés de masquage pour fondre l’apparition/disparition */
+    content: "";
+    position: absolute; top: 0; bottom: 0; width: var(--fade);
+    pointer-events: none; z-index: 2;
+    mask-image: linear-gradient(to right, black, transparent);
+    -webkit-mask-image: linear-gradient(to right, black, transparent);
+    background: linear-gradient(90deg, var(--paper), transparent);
+}
+.marquee::after {
+    right: 0; left: auto;
+    transform: scaleX(-1);
+}
+.marquee__track {
+    display: flex; gap: 40px; align-items: center;
+    animation: marquee-scroll 28s linear infinite;
+    will-change: transform;
+}
+.marquee__track img {
+    height: 120px; width: auto;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,.08));
+    opacity: .98;
+}
+@keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
 }
 
-/* si tes images ne sont pas dans .slider, sécurités : */
-body .container.apropos .galerie,
-body .container.apropos .images,
-body .container.apropos .carrousel{
-    align-self: end;
-    width: 100%;
+/* --- CITATION --- */
+.quote { padding: clamp(28px, 5vw, 48px) 0; }
+.quote blockquote {
+    margin: 0;
+    text-align: center;
+    font-size: clamp(18px, 2.2vw, 22px);
+    color: var(--ink);
+    background: var(--paper);
+    border-radius: var(--radius);
+    padding: clamp(18px, 3vw, 28px);
+    border-left: 6px solid #B08D57; /* gold soft */
+    box-shadow: var(--shadow);
 }
 
-.apropos .slider {
-    margin-top: 40px;
-    width:100%; overflow:hidden;
+/* --- STATS --- */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding: 8px 0 40px;
+}
+.stats__item {
+    background: var(--paper);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: center;
+    border: 1px solid var(--ring);
+    box-shadow: var(--shadow);
+}
+.stats__number {
+    font-size: clamp(26px, 3.2vw, 34px);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+}
+.stats__label { color: var(--muted); margin-top: 6px; }
+
+/* --- CTA (ruban) --- */
+.cta {
+    background: linear-gradient(90deg, rgba(92,0,18,1), rgba(138,27,46,1));
+    color: #fff;
+    text-align: center;
+    padding: 28px 0;
+}
+.cta p { margin: 0 0 10px; font-size: clamp(16px, 2vw, 18px); }
+.cta .btn {
+    display: inline-block;
+    background: #fff;
+    color: rgba(92,0,18,1);
+    padding: 10px 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 700;
+    border: 2px solid transparent;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.cta .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+    border-color: #fff;
 }
 
-.slide-track{ display:flex; gap:10px; animation:scroll 40s linear infinite; }
-.slide-track img{
-    width:250px; height:180px; object-fit:cover; margin-right:5px;
-    border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.15);
+/* --- Responsive --- */
+@media (max-width: 900px) {
+    .story { grid-template-columns: 1fr; }
+    .values__grid, .stats { grid-template-columns: 1fr; }
+    .marquee__track img { height: 96px; }
 }
-@keyframes scroll{ 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-

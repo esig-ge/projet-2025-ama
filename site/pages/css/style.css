@@ -33,66 +33,50 @@
 /* 2) Reset simple + fond global à pois    */
 /*    -> S’applique à TOUTES les pages     */
 /* --------------------------------------- */
-*{ box-sizing:border-box; }
-html,body {
+* { box-sizing: border-box; }
+
+html, body {
     margin: 0;
     padding: 0;
     min-height: 100%;
     color: var(--ink);
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-    /* Motif à pois performant (2 calques, léger décalage) */
     position: relative;
     isolation: isolate;
-    background: radial-gradient(3px 3px at 20px 20px, rgba(92, 0, 18, .06) 98%, transparent 100%) 0 0/120px 120px,
-    radial-gradient(3px 3px at 80px 60px, rgba(92, 0, 18, .05) 98%, transparent 100%) 0 0/120px 120px,
-    #fff; /* couleur de base */
+    background:
+            radial-gradient(3px 3px at 20px 20px, rgba(92, 0, 18, .06) 98%, transparent 100%) 0 0/120px 120px,
+            radial-gradient(3px 3px at 80px 60px, rgba(92, 0, 18, .05) 98%, transparent 100%) 0 0/120px 120px,
+            #fff;
 
-    img {
-        max-width: 100%;
-        display: block;
-    }
+img { max-width: 100%; display: block; }
+a { color: var(--ink); text-decoration: none; }
+.container { width: min(1200px, 92%); margin-inline: auto; }
 
-    a {
-        color: var(--ink);
-        text-decoration: none;
-    }
+.container {
+    width: min(1200px, 92%);
+    margin-inline: auto;
+}
 
-    .container {
-        width: min(1200px, 92%);
-        margin-inline: auto;
-    }
+/* Focus visible global (meilleure accessibilité clavier) */
+:focus-visible {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 2px;
+}
 
-    /* -------------------------------- */
+/* Défilement doux, sans gêner ceux qui préfèrent réduire les animations */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}
+
+/* -------------------------------- */
     /* 3) Utilitaires typiques          */
     /* -------------------------------- */
 
-    .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-    }
-
-    .reveal {
-        opacity: 0;
-        transform: translateY(12px);
-        transition: opacity .6s ease, transform .6s ease;
-    }
-
-    .reveal--visible {
-        opacity: 1;
-        transform: none;
-    }
-
-    .accent {
-        color: var(--accent);
-        text-shadow: 0 0 18px #e0112b22;
-    }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.reveal { opacity: 0; transform: translateY(12px); transition: opacity .6s ease, transform .6s ease; }
+.reveal--visible { opacity: 1; transform: none; }
+.accent { color: var(--accent); text-shadow: 0 0 18px #e0112b22; }
 
     /* --------------- */
     /* 4) Boutons      */
@@ -276,7 +260,7 @@ html,body {
         min-height: calc(100vh - var(--header-h, 64px) - 120px); /* 120 ≈ footer */
         display: flex;
         align-items: center;
-        padding: 48px 0;
+        padding: 24px 0;
     }
 
     .image_texte{
@@ -522,3 +506,54 @@ html,body {
         color: var(--ink);
     }
 }
+
+.trust-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:min(3vw,24px);
+}
+
+.trust-item{
+    display:grid;
+    grid-template-columns:56px 1fr;  /* 1re colonne = icône */
+    grid-auto-rows:auto;
+    align-items:start;
+    gap:8px 12px;
+    background:var(--paper);
+    border:1px solid var(--ring);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:var(--shadow);
+}
+
+.trust-item .trust-ico{
+    grid-column:1;
+    grid-row:1 / span 2;     /* l’icône occupe la hauteur du titre + texte */
+    width:44px; height:44px; /* sécurité même si le CSS ne charge pas */
+    object-fit:contain;
+    display:block;
+}
+
+.trust-item h3,
+.trust-item p{ grid-column:2; }  /* force le texte en colonne 2 */
+
+@media (max-width:900px){
+    .trust-grid{ grid-template-columns:1fr; }
+}
+
+/* Séparateur : même taille, moins d'espace autour */
+#separateur{
+    display:block;
+    margin: -30px auto -40px;        /* AVANT: 8px auto 16px */
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,.12));
+}
+
+/* Bloc "Confiance" : réduit l'espace au-dessus */
+.home-trust{
+    padding-top: -30px;            /* AVANT: 32px si tu avais ma version initiale */
+}
+
+/* Si tu veux coller encore plus : décommente UNE des deux lignes ci-dessous */
+.home-trust{ margin-top: -6px; }             /* tire légèrement le bloc vers le haut */
+#separateur{ margin-bottom: -4px; }          /* ou remonte visuellement la suite */
+
