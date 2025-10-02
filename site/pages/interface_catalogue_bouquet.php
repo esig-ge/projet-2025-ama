@@ -23,7 +23,7 @@ $tailles = $pdo->query("
 $bouquets = []; // tableau [{nb, prix, variants: [{pro_id,couleur,stock,prix}]}]
 foreach ($tailles as $nb) {
     $st = $pdo->prepare("
-        SELECT p.PRO_ID, p.PRO_PRIX, b.BOU_COULEUR, b.BOU_QTE_STOCK
+        SELECT p.PRO_ID, p.PRO_PRIX, p.PRO_NOM, b.BOU_COULEUR, b.BOU_QTE_STOCK
         FROM BOUQUET b
         JOIN PRODUIT p ON p.PRO_ID = b.PRO_ID
         WHERE b.BOU_NB_ROSES = :nb
@@ -39,6 +39,7 @@ foreach ($tailles as $nb) {
         'variants' => array_map(function($v){
             return [
                 'pro_id'  => (int)$v['PRO_ID'],
+                'pro_nom' => $v['PRO_NOM'],
                 'couleur' => $v['BOU_COULEUR'],
                 'stock'   => (int)$v['BOU_QTE_STOCK'],
                 'prix'    => (float)$v['PRO_PRIX'],
@@ -219,10 +220,20 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
 
                 function refreshFromRadio(r){
                     const proId = r.getAttribute('data-pro-id');
+                    const proNom  = r.getAttribute('data-pro-nom') || '';
                     const stock = parseInt(r.getAttribute('data-stock') || '0', 10);
                     const color = r.value || '';
 
                     hiddenPro.value = proId;
+                    // MAJ titre
+                    const titleEl = card.querySelector('.pname');
+                    if (titleEl && proNom) titleEl.textContent = proNom;
+
+                    // MAJ nom utilisé par le bouton / toasts / addToCart
+                    if (addBtn && proNom) {
+                        addBtn.dataset.proName = proNom;
+                        addBtn.setAttribute('data-pro-name', proNom);
+                    }
 
                     if (stock > 0) {
                         qtyInput.disabled = false;
@@ -317,7 +328,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                 <input type="hidden" name="pro_id" value="<?= (int)$def['pro_id'] ?>">
 
                 <img src="<?= htmlspecialchars($img) ?>" alt="Bouquet <?= (int)$nb ?> roses" loading="lazy">
-                <h3>Bouquet <?= (int)$nb ?></h3>
+                <h3>Bouquet <?= (int)$nb); htmlspecialchars($def['pro_n']) ?></h3>
                 <p class="price"><?= number_format($prix, 2, '.', "'") ?> CHF</p>
 
                 <div class="swatches" role="group" aria-label="Couleur">
@@ -330,6 +341,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
                                    name="couleur_<?= (int)$nb ?>"
                                    value="<?= htmlspecialchars($c, ENT_QUOTES, 'UTF-8') ?>"
                                    data-pro-id="<?= (int)$v['pro_id'] ?>"
+                                   data-pro-nom="<?= htmlspecialchars($v['pro_nom'], ENT_QUOTES, 'UTF-8') ?>"
                                    data-stock="<?= $stock ?>"
                                 <?= $checked ? 'checked' : '' ?>
                                 <?= $stock<=0 ? 'disabled' : '' ?>>
