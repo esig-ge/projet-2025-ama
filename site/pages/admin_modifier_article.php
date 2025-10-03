@@ -92,6 +92,12 @@ function recup_donnee_emballage(PDO $pdo): array {
     <title>Admin — Modifier les articles</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <style>/*  a ajouter sur le css plus tard*/
+        .btn-add{
+            display:inline-block;padding:8px 12px;border-radius:10px;
+            background:var(--brand,#7a0000);color:#fff;text-decoration:none;
+            margin:6px 0 14px; border:1px solid rgba(0,0,0,.06)
+        }
+        .btn-add:hover{filter:brightness(1.05)}
         body { font-family: system-ui, Arial, sans-serif; margin: 0; background:#fafafa; color:#111; }
         .admin-header { padding:16px 20px; background:#fff; border-bottom:1px solid #eee; }
         .breadcrumb a { color:#a00; text-decoration:none; }
@@ -112,6 +118,18 @@ function recup_donnee_emballage(PDO $pdo): array {
         .msg.ok { background:#e9f7ef; border:1px solid #b7e1c6; }
         .msg.err { background:#fdecea; border:1px solid #f5c2be; }
         .empty { color:#666; }
+        .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:1000}
+        .modal[hidden]{display:none}
+        .modal-card{background:#fff;border-radius:14px;box-shadow:0 20px 40px rgba(0,0,0,.15);padding:18px;max-width:520px;width:92%}
+        .modal-card .close{float:right;font-size:22px;background:transparent;border:0;cursor:pointer}
+        .modal-card label{display:block;margin-top:10px;font-weight:600}
+        .modal-card input[type="text"],
+        .modal-card input[type="number"],
+        .modal-card textarea{width:100%;padding:8px;border:1px solid #e7e7ea;border-radius:8px}
+        .modal-card .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+        .btn-primary{background:var(--brand,#7a0000);color:#fff;border:0;border-radius:10px;padding:8px 14px}
+        .btn-cancel{background:#fff;border:1px solid #e7e7ea;border-radius:10px;padding:8px 14px}
+
     </style>
 </head>
 <body>
@@ -132,6 +150,8 @@ function recup_donnee_emballage(PDO $pdo): array {
     <!-- ===========================
          ROSES (FLEUR + PRODUIT)
          =========================== -->
+    <h2>Fleurs</h2>
+    <a class="btn-add" href="<?= $BASE ?>admin_produit_ajt.php?type=fleur">➕ Ajouter une fleur</a>
     <section class="product-details">
         <h3>Données de l’article des Roses</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -173,6 +193,8 @@ function recup_donnee_emballage(PDO $pdo): array {
     <!-- ===========================
          BOUQUETS
          =========================== -->
+    <h2>Bouquets</h2>
+    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=bouquet">➕ Ajouter un bouquet</a>
     <section class="product-details">
         <h3>Données de l’article des Bouquets</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -218,6 +240,8 @@ function recup_donnee_emballage(PDO $pdo): array {
     <!-- ===========================
          COFFRETS
          =========================== -->
+    <h2>Coffrets</h2>
+    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=coffret">➕ Ajouter un coffret</a>
     <section class="product-details">
         <h3>Données de l’article des Coffrets</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -259,6 +283,9 @@ function recup_donnee_emballage(PDO $pdo): array {
     <!-- ===========================
          SUPPLÉMENTS
          =========================== -->
+
+    <h2>Suppléments</h2>
+    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=supplement">➕ Ajouter un supplément</a>
     <section class="product-details">
         <h3>Données de l’article des Suppléments</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -300,6 +327,8 @@ function recup_donnee_emballage(PDO $pdo): array {
     <!-- ===========================
          EMBALLAGES
          =========================== -->
+    <h2>Emballages</h2>
+    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=emballage">➕ Ajouter un emballage</a>
     <section class="product-details">
         <h3>Données de l’article des Emballages</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -336,5 +365,55 @@ function recup_donnee_emballage(PDO $pdo): array {
         </form>
     </section>
 </div>
+<!-- Modale d'ajout produit -->
+<div id="modal-add" class="modal" hidden>
+    <div class="modal-card">
+        <button class="close" type="button" aria-label="Fermer">&times;</button>
+        <h3 id="modal-title">Ajouter un produit</h3>
+
+        <form id="form-add" method="post" action="<?= $BASE ?>admin_produit_add.php" enctype="multipart/form-data">
+            <input type="hidden" name="pro_type" id="add-type" value="autre">
+
+            <label>Nom *</label>
+            <input type="text" name="pro_nom" required>
+
+            <label>Prix (CHF) *</label>
+            <input type="number" name="pro_prix" step="0.05" min="0.05" required>
+
+            <label>Couleur *</label>
+            <input type="text" name="" required>
+
+            <label>Description</label>
+            <textarea name="pro_desc"></textarea>
+
+            <label>Image (JPEG/PNG/WebP/GIF, max 5 Mo)</label>
+            <input type="file" name="pro_img" accept="image/*">
+
+            <div class="actions">
+                <button type="button" class="btn-cancel">Annuler</button>
+                <button type="submit" class="btn-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    document.querySelectorAll('.btn-add').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+            e.preventDefault();
+            const type = btn.dataset.type || 'autre';
+            document.getElementById('add-type').value = type;
+            document.getElementById('modal-title').textContent = 'Ajouter ' + type;
+            document.getElementById('modal-add').hidden = false;
+        });
+    });
+
+    document.querySelector('#modal-add .close')?.addEventListener('click', ()=> {
+        document.getElementById('modal-add').hidden = true;
+    });
+    document.querySelector('#modal-add .btn-cancel')?.addEventListener('click', ()=> {
+        document.getElementById('modal-add').hidden = true;
+    });
+</script>
+
 </body>
 </html>
