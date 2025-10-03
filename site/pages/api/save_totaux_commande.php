@@ -1,4 +1,5 @@
 <?php
+// /site/pages/api/save_totaux_commande.php
 declare(strict_types=1);
 session_start();
 header('Content-Type: application/json');
@@ -15,61 +16,51 @@ try {
     $pdo = require __DIR__ . '/../../database/config/connexionBDD.php';
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $comId       = (int)($_POST['com_id'] ?? 0);
-    $tvaTaux     = (float)($_POST['tva_taux'] ?? 0);      // ex 7.7
-    $tvaMontant  = (float)($_POST['tva_chf']  ?? 0);      // ex 1.18
-    $livMontant  = (float)($_POST['liv_chf']  ?? 0);      // ex 5
-    $livMode     = trim((string)($_POST['liv_mode'] ?? 'standard')); // "standard", "boutique", etc.
+    $comId      = (int)($_POST['com_id'] ?? 0);
+    $tvaTaux    = (float)($_POST['tva_taux'] ?? 0);   // ex 8.1
+    $tvaMontant = (float)($_POST['tva_chf']  ?? 0);   // ex 1.18
+    $livMontant = (float)($_POST['liv_chf']  ?? 0);   // ex 5.00
+    $livMode    = trim((string)($_POST['liv_mode'] ?? 'standard'));
 
-    // garde-fous
     if ($comId <= 0) throw new RuntimeException('COM_ID manquant');
 
-    // Vérifie la commande
+    // Vérifie la commande en préparation
     $ok = $pdo->prepare("SELECT 1 FROM COMMANDE WHERE COM_ID=:c AND PER_ID=:p AND COM_STATUT='en preparation' LIMIT 1");
     $ok->execute([':c'=>$comId, ':p'=>$perId]);
     if (!$ok->fetchColumn()) throw new RuntimeException('Commande invalide');
 
     $pdo->beginTransaction();
 
-    // 1) Crée/Met à jour la LIVRAISON si nécessaire
-    $livId = null;
-    if ($livMontant > 0 || $livMode !== '') {
-        // S'il existe déjà une livraison reliée on la met à jour, sinon on l'insère
-        $getLiv = $pdo->prepare("SELECT LIV_ID FROM COMMANDE WHERE COM_ID=:c FOR UPDATE");
-        $getLiv->execute([':c'=>$comId]);
-        $livId = $getLiv->fetchColumn();
+    // 1) LIVRAISON : créer ou MAJ + relier COMMANDE.LIV_ID
+    $get = $pdo->prepare("SELECT LIV_ID FROM COMMANDE WHERE COM_ID=:c FOR UPDATE");
+    $get->execute([':c'=>$comId]);
+    $livId = $get->fetchColumn();
 
-        if ($livId) {
-            $st = $pdo->prepare("
-                UPDATE LIVRAISON
-                SET LIV_MODE = :m, LIV_MONTANT_FRAIS = :f
-                WHERE LIV_ID = :id
-            ");
-            $st->execute([':m'=>$livMode, ':f'=>$livMontant, ':id'=>$livId]);
-        } else {
-            $st = $pdo->prepare("
-                INSERT INTO LIVRAISON (LIV_STATUT, LIV_MODE, LIV_MONTANT_FRAIS, LIV_DATE)
-                VALUES ('en preparation', :m, :f, NOW())
-            ");
-            $st->execute([':m'=>$livMode, ':f'=>$livMontant]);
-            $livId = (int)$pdo->lastInsertId();
-
-            $up = $pdo->prepare("UPDATE COMMANDE SET LIV_ID=:liv WHERE COM_ID=:c");
-            $up->execute([':liv'=>$livId, ':c'=>$comId]);
-        }
+    if ($livId) {
+        $up = $pdo->prepare("
+            UPDATE LIVRAISON
+               SET LIV_MODE=:m, LIV_MONTANT_FRAIS=:f
+             WHERE LIV_ID=:id
+        ");
+        $up->execute([':m'=>$livMode, ':f'=>$livMontant, ':id'=>$livId]);
+    } else {
+        $ins = $pdo->prepare("
+            INSERT INTO LIVRAISON (LIV_STATUT, LIV_MODE, LIV_MONTANT_FRAIS, LIV_DATE)
+            VALUES ('en preparation', :m, :f, NOW())
+        ");
+        $ins->execute([':m'=>$livMode, ':f'=>$livMontant]);
+        $livId = (int)$pdo->lastInsertId();
+        $link = $pdo->prepare("UPDATE COMMANDE SET LIV_ID=:liv WHERE COM_ID=:c");
+        $link->execute([':liv'=>$livId, ':c'=>$comId]);
     }
 
-    // 2) Met à jour la TVA de la commande
+    // 2) TVA : stocker sur COMMANDE
     $upTva = $pdo->prepare("
         UPDATE COMMANDE
-        SET COM_TVA_TAUX = :taux, COM_TVA_MONTANT = :montant
-        WHERE COM_ID = :c
+           SET COM_TVA_TAUX=:taux, COM_TVA_MONTANT=:mt
+         WHERE COM_ID=:c
     ");
-    $upTva->execute([
-        ':taux'    => $tvaTaux,
-        ':montant' => $tvaMontant,
-        ':c'       => $comId
-    ]);
+    $upTva->execute([':taux'=>$tvaTaux, ':mt'=>$tvaMontant, ':c'=>$comId]);
 
     $pdo->commit();
     echo json_encode(['ok'=>true, 'liv_id'=>$livId]);

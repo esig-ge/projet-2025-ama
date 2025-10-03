@@ -431,6 +431,14 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
                 <div class="hr"></div>
 
+                <input type="hidden" name="csrf_checkout" value="<?= htmlspecialchars($_SESSION['csrf_checkout'] ?? '') ?>">
+                <div id="totaux"
+                     data-com-id="<?= (int)($_SESSION['current_com_id'] ?? 0) ?>"
+                     data-tva-taux="8.1"
+                     data-tva-chf="1.18"
+                     data-liv-chf="5.00"
+                     data-liv-mode="standard"></div>
+
                 <button type="submit" id="btn-pay" class="btn-primary">Payer maintenant</button>
                 <p id="form-msg" class="muted" role="status" style="margin-top:10px"></p>
             </section>
@@ -572,6 +580,44 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
        3) Mini-récap du panier (lecture seule) — laissé en commentaire
        ========================== */
     // renderMiniCart();
+
+    document.querySelector('#btn-pay').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const box = document.getElementById('totaux');
+        const body = new URLSearchParams({
+            csrf: document.querySelector('[name="csrf_checkout"]').value,
+            com_id: box.dataset.comId,
+            tva_taux: box.dataset.tvaTaux,     // calcule-les comme tu veux, ici c’est un exemple
+            tva_chf:  box.dataset.tvaChf,
+            liv_chf:  box.dataset.livChf,
+            liv_mode: box.dataset.livMode,
+        });
+
+        // 1) Sauvegarder TVA + livraison en BDD
+        const r1 = await fetch('api/save_totaux_commande.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body
+        });
+        const j1 = await r1.json();
+        if (!j1.ok) { alert(j1.error || 'Erreur save_totaux'); return; }
+
+        // 2) Créer la session Stripe
+        const r2 = await fetch('create_checkout.php', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({
+                action: 'create_checkout',
+                csrf: document.querySelector('[name="csrf_checkout"]').value,
+                pay_method: 'card' // ou 'twint', 'revolut_pay' selon ton UI
+            })
+        });
+        const j2 = await r2.json();
+        if (j2.ok && j2.url) location.href = j2.url;
+        else alert(j2.error || 'Impossible de démarrer le paiement');
+    });
+
 </script>
+
 </body>
 </html>
