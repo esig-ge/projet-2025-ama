@@ -11,8 +11,6 @@ if (!isset($BASE)) {
 
         <nav class="footer-links" aria-label="Pied de page">
             <a href="<?= $BASE ?>mentions.php"> Mentions légales </a>
-            <a href="<?= $BASE ?>contact.php"> Contact </a>
-            <a href="<?= $BASE ?>login.php"> Espace client </a>
         </nav>
     </div>
 </footer>

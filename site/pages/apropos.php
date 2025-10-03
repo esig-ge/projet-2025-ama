@@ -110,14 +110,6 @@ $isLogged = !empty($_SESSION['per_id']);
             <div class="stats__label">service client</div>
         </div>
     </section>
-
-    <!-- CTA : lien vers le catalogue -->
-    <section class="cta">
-        <div class="container">
-            <p>Envie d’offrir une émotion qui dure&nbsp;?</p>
-            <a class="btn" href="<?= $BASE ?>interface_selection_produit.php">Voir le catalogue</a>
-        </div>
-    </section>
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -541,13 +541,6 @@ html { scroll-behavior: smooth; }
     .trust-grid{ grid-template-columns:1fr; }
 }
 
-/* Séparateur : même taille, moins d'espace autour */
-#separateur{
-    display:block;
-    margin: -30px auto -40px;        /* AVANT: 8px auto 16px */
-    filter: drop-shadow(0 6px 14px rgba(0,0,0,.12));
-}
-
 /* Bloc "Confiance" : réduit l'espace au-dessus */
 .home-trust{
     padding-top: -30px;            /* AVANT: 32px si tu avais ma version initiale */

@@ -1,8 +1,8 @@
 <?php
-// /site/pages/coffret.php (robuste + détection d'image)
+// /site/pages/coffret.php — coffrets + mini-carrousel d’images
 session_start();
 
-// Anti-cache (toujours refléter la BDD au reload)
+// Anti-cache
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
@@ -25,38 +25,70 @@ $sql = "SELECT p.PRO_ID, p.PRO_NOM, p.PRO_PRIX,
 $coffrets = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
 /**
- * Slugifier un texte (accents -> ascii, tirets bas, minuscules)
+ * Slugifier (accents -> ascii, underscores, minuscules)
  */
 function slugify(string $txt): string {
-    $txt = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $txt);
+    $txt = trim($txt);
+    if (function_exists('iconv')) {
+        $t = @iconv('UTF-8','ASCII//TRANSLIT//IGNORE',$txt);
+        if ($t !== false) $txt = $t;
+    }
     $txt = preg_replace('~[^A-Za-z0-9]+~', '_', $txt);
     return strtolower(trim($txt, '_'));
 }
 
 /**
- * Trouver un fichier image disponible dans /site/pages/img
- * Essaie plusieurs candidats (évènement spécifique puis fallback générique),
- * en .png et .PNG pour éviter les soucis de casse sur l’hébergement.
+ * Renvoie un tableau d’URLs d’images pour un évènement.
+ * - Si une correspondance explicite existe (map), on l'utilise (string ou array).
+ * - Sinon, on cherche tous les fichiers "coffret_<slug>*.png/PNG" dans /img.
+ * - Fallback sur "coffret.png" si rien trouvé.
  */
-function find_image_for_event(string $event): string {
-    $slug = slugify($event);
+function find_images_for_event(string $event): array {
+    $event = trim($event);
+    $slug  = slugify($event);
 
-    $candidates = [
-        "coffret_{$slug}.png",
-        "coffret_{$slug}.PNG",
-        "coffret.png",
-        "coffret.PNG",
+    // 1) Correspondances explicites (tu peux mettre plusieurs images par clé)
+    //    -> mets 1 string OU un array de strings
+    $map = [
+        'Anniversaire'   => ['ExempleAnniversaire.png'],
+        'Saint-Valentin' => ['ExempleSaintValentin.png'],
+        'Fête des Mères' => ['ExempleFeteMeres3.png', 'ExempleFeteMeres2.png', 'ExempleFeteMeres.png'],
+        'Baptême'        => ['PackBleu.png'],
+        'Mariage'        => ['ExempleMariage.png'],
+        'Pâques'         => ['ExemplePaques.png', 'ExemplePaques2.png'],
+        'Noël'           => ['ExempleNoel.png'],
+        'Nouvel An'      => ['ExempleNouvelAn.png'],
     ];
 
-    $imgDirFs  = __DIR__ . '/img/';    // FS path
-    $imgDirWeb = rtrim(dirname($_SERVER['PHP_SELF']), '/\\') . '/img/'; // équiv. $BASE.'img/'
+    $imgDirFs  = __DIR__ . '/img/';
+    $imgDirWeb = rtrim(dirname($_SERVER['PHP_SELF']), '/\\') . '/img/';
 
-    foreach ($candidates as $file) {
-        if (is_file($imgDirFs . $file)) {
-            return $imgDirWeb . $file;
+    // 1a) Map explicite
+    if (isset($map[$event])) {
+        $files = is_array($map[$event]) ? $map[$event] : [$map[$event]];
+        $out   = [];
+        foreach ($files as $f) {
+            if (is_file($imgDirFs . $f)) {
+                $out[] = $imgDirWeb . $f;
+            }
         }
+        if ($out) return $out;
     }
-    return $imgDirWeb . 'coffret.png';
+
+    // 2) Recherche auto par motif: coffret_<slug>*.png/PNG
+    $cands = array_merge(
+        glob($imgDirFs . "coffret_{$slug}*.png") ?: [],
+        glob($imgDirFs . "coffret_{$slug}*.PNG") ?: []
+    );
+    $out = [];
+    foreach ($cands as $absPath) {
+        $out[] = $imgDirWeb . basename($absPath);
+    }
+
+    // 3) Fallback
+    if (!$out) $out[] = $imgDirWeb . 'coffret.png';
+
+    return $out;
 }
 ?>
 <!DOCTYPE html>
@@ -67,7 +99,8 @@ function find_image_for_event(string $event): string {
     <title>DK Bloom — Coffrets</title>
 
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_catalogue.css">
 
     <script>
         window.DKBASE  = <?= json_encode($BASE) ?>;
@@ -89,9 +122,47 @@ function find_image_for_event(string $event): string {
             text-align:center;
             width:100%; max-width:260px;
         }
-        .catalogue .card.product img{
-            max-width:200px; height:auto; display:block; margin:0 auto 10px; border-radius:10px;
+
+        /* === Bloc carrousel image === */
+        .product-images{ position:relative; }
+        .product-images .slides{
+            position:relative;
+            width:100%;
+            height:180px;
+            border-radius:10px;
+            overflow:hidden;
+            background:#fdfbf7;       /* blanc cassé */
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:12px;
         }
+        .product-images .slides img{
+            max-width:100%;
+            max-height:100%;
+            object-fit:contain;
+            display:none;
+        }
+        .product-images .slides img.active{ display:block; }
+
+        .product-images .dots{
+            text-align:center;
+            margin-top:8px;
+        }
+        .product-images .dot{
+            height:8px; width:8px;
+            margin:0 3px;
+            background:#cfcfcf;
+            border-radius:50%;
+            display:inline-block;
+            cursor:pointer;
+            transition:transform .15s ease;
+        }
+        .product-images .dot.active{
+            background:#7a0000; /* ton rouge DK si défini ailleurs tu peux le remplacer par var(--brand) */
+            transform:scale(1.1);
+        }
+
         .price{ font-weight:600; }
         .stock-note{ font-size:.9rem; color:#666; margin:6px 0 0; }
         .stock-badge{
@@ -101,6 +172,7 @@ function find_image_for_event(string $event): string {
         .oos{ color:#a30000; }
         .add-to-cart[disabled]{ opacity:.55; cursor:not-allowed; }
         .sr-only{ position:absolute; left:-9999px; }
+
         #coffret-grid{
             display:grid !important;
             grid-template-columns:repeat(5, minmax(0, 1fr));
@@ -110,9 +182,24 @@ function find_image_for_event(string $event): string {
             align-items:stretch;
         }
         #coffret-grid .card.product{ width:100% !important; max-width:none !important; }
-        #coffret-grid .card.product img{
-            width:100%; height:180px; object-fit:contain; display:block; margin:0 auto 10px; border-radius:10px;
+
+        #coffret-grid .card.product > img{
+            width:100%;
+            height:180px;
+            object-fit:contain;
+            display:block;
+            margin:0 auto 10px;
+            border-radius:10px;
+            /* si tu avais mis un background ici, enlève-le, le carrousel a son propre fond */
         }
+        .product-images .slides img{
+            display:none !important;
+        }
+        .product-images .slides img.active{
+            display:block !important;
+        }
+
+
         @media (max-width: 1280px){ #coffret-grid{ grid-template-columns:repeat(4,1fr); } }
         @media (max-width: 1024px){ #coffret-grid{ grid-template-columns:repeat(3,1fr); } }
         @media (max-width: 768px) { #coffret-grid{ grid-template-columns:repeat(2,1fr); } }
@@ -154,53 +241,37 @@ function find_image_for_event(string $event): string {
             return false;
         }
 
-        // (Optionnel) petite aide pour rafraîchir prix/stock "live" via /api/product.php?id=PRO_ID
-        async function fetchLive(productId){
-            try{
-                const res = await fetch(`${window.DKBASE || '/'}api/product.php?id=${encodeURIComponent(productId)}`, {cache:'no-store'});
-                if(!res.ok) return null;
-                const json = await res.json();
-                return json && json.ok ? json : null;
-            }catch(e){ return null; }
-        }
-        function formatCHF(n){ return (Number(n)||0).toFixed(2) + ' CHF'; }
-
+        // Carrousel: points cliquables
         document.addEventListener('DOMContentLoaded', () => {
-            // Parcourt toutes les cartes pour “peaufiner” prix/stock au chargement
-            document.querySelectorAll('#coffret-grid .card.product').forEach(card => {
-                const proId   = parseInt(card.querySelector('input[name="pro_id"]')?.value || '0', 10);
-                const priceEl = card.querySelector('.price');
-                const qtyEl   = card.querySelector('.qty');
-                const addBtn  = card.querySelector('.add-to-cart');
-                const badge   = card.querySelector('.stock-badge');
+            document.querySelectorAll('.product-images').forEach(container => {
+                const imgs = [...container.querySelectorAll('.slides img')];
+                const dots = [...container.querySelectorAll('.dot')];
 
-                // Mémorise le pro_id sur le prix (utile si tu fais d’autres hooks)
-                if (priceEl) priceEl.dataset.proId = String(proId);
+                const show = (i) => {
+                    imgs.forEach((im, idx) => im.classList.toggle('active', idx === i));
+                    dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+                };
 
-                // 👉 Dé-commente pour activer la vérification “live” côté serveur :
-                // if (proId > 0) {
-                //     fetchLive(proId).then(data => {
-                //         if (!data) return;
-                //         if (priceEl && typeof data.price === 'number') {
-                //             priceEl.textContent = formatCHF(data.price);
-                //         }
-                //         if (typeof data.stock === 'number' && qtyEl && badge) {
-                //             const s = Math.max(0, data.stock|0);
-                //             qtyEl.max = String(Math.max(1, s));
-                //             qtyEl.disabled = (s <= 0);
-                //             if (s > 0) {
-                //                 badge.textContent = 'Stock : ' + s;
-                //                 badge.classList.remove('oos');
-                //                 if (addBtn) addBtn.disabled = false;
-                //             } else {
-                //                 badge.textContent = 'Rupture de stock';
-                //                 badge.classList.add('oos');
-                //                 if (addBtn) addBtn.disabled = true;
-                //                 qtyEl.value = '1'; qtyEl.max = '1';
-                //             }
-                //         }
-                //     });
-                // }
+                dots.forEach(d => d.addEventListener('click', () => {
+                    show(parseInt(d.dataset.index, 10) || 0);
+                }));
+
+                // Touch swipe (petit bonus)
+                let startX = null;
+                container.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive:true});
+                container.addEventListener('touchend', e => {
+                    if (startX == null) return;
+                    const dx = e.changedTouches[0].clientX - startX;
+                    if (Math.abs(dx) > 40) {
+                        const cur = dots.findIndex(d => d.classList.contains('active'));
+                        const next = dx < 0 ? (cur+1) % imgs.length : (cur-1+imgs.length) % imgs.length;
+                        show(next);
+                    }
+                    startX = null;
+                });
+
+                // Affiche la 1ère image
+                show(0);
             });
         });
     </script>
@@ -218,13 +289,31 @@ function find_image_for_event(string $event): string {
             $evt    = $c['COF_EVENEMENT']; // Anniversaire, Noël…
             $prix   = (float)$c['PRO_PRIX'];
             $stock  = max(0, (int)$c['COF_QTE_STOCK']);
-            $img    = find_image_for_event($evt);
+            $imgs   = find_images_for_event($evt);     // <- tableau d’images
             $disabled = ($stock <= 0) ? 'disabled' : '';
             ?>
             <form class="card product" method="POST" onsubmit="return addCoffretForm(event, this)">
                 <input type="hidden" name="pro_id" value="<?= $proId ?>">
 
-                <img src="<?= htmlspecialchars($img) ?>" alt="Coffret <?= htmlspecialchars($evt) ?>" loading="lazy">
+                <!-- Bloc carrousel -->
+                <div class="product-images">
+                    <div class="slides">
+                        <?php foreach ($imgs as $i => $url): ?>
+                            <img src="<?= htmlspecialchars($url) ?>"
+                                 alt="Coffret <?= htmlspecialchars($evt) ?> — image <?= $i+1 ?>"
+                                 loading="lazy"
+                                 class="<?= $i === 0 ? 'active' : '' ?>">
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if (count($imgs) > 1): ?>
+                        <div class="dots" aria-label="Changer d'image">
+                            <?php foreach ($imgs as $i => $_): ?>
+                                <span class="dot <?= $i === 0 ? 'active' : '' ?>" data-index="<?= $i ?>"></span>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
                 <h3><?= htmlspecialchars($evt) ?></h3>
 
                 <!-- Prix initial (BDD) ; data-pro-id pour éventuel rafraîchissement live -->
