@@ -94,6 +94,7 @@ function recup_produit($pdo)
     <h1>PRODUITS</h1>
 
 <!---------------    tableau fleur ---------------->
+    <a href='admin_modifier_article.php?type=fleur&id='>Modifier les produits</a>
     <h2 id="toggleFleur" style="cursor:pointer;">Fleur </h2>
 
     <div id="tableFleur" style="display:none;">
@@ -104,10 +105,7 @@ function recup_produit($pdo)
                 <th>ID</th>
                 <th>Couleur</th>
                 <th>Prix</th>
-                <th>Qté max</th>
                 <th>Quantité actuelle</th>
-                <th class="modif"><a href='admin_modifier_article.php?type=fleur&id='>Modifier</a>
-                </th>
                 <th> </th>
             </tr>
             </thead>
@@ -120,7 +118,6 @@ function recup_produit($pdo)
                 echo '<td>' . htmlspecialchars($row['PRO_ID']) . '</td>';
                 echo '<td>' . htmlspecialchars($row['FLE_COULEUR'] ?? '-') . '</td>';
                 echo '<td>' . htmlspecialchars($row['PRO_PRIX'] ?? '-') . '</td>';
-                echo '<td>' . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . '</td>';
                 echo '<td>' . htmlspecialchars($row['FLE_QTE_STOCK'] ?? '-') . '</td>';
                 echo '<td><a href="admin_supprimer_article.php?type=fleur&id=">Supprimer</a></td>';
                 echo "<tr>";
@@ -157,9 +154,9 @@ function recup_produit($pdo)
         <th>ID</th>
         <th>Couleur</th>
         <th>Prix</th>
-        <th>Qté max</th>
+
         <th>Quantité actuelle</th>
-        <th><a href='admin_modifier_article.php?type=fleur&id='>Modifier</a>
+
         <th> </th>
     </tr>
     </thead>
@@ -172,7 +169,7 @@ function recup_produit($pdo)
         echo "<td>" . htmlspecialchars($row['PRO_ID']) . "</td>";
         echo "<td>" . htmlspecialchars($row['BOU_COULEUR'] ?? '-') . "</td>";
         echo "<td>" . htmlspecialchars($row['PRO_PRIX'] ?? '-') . "</td>";
-        echo "<td>" . htmlspecialchars($row['BOU_QTE_MAX'] ?? '-') . "</td>";
+
         echo "<td>" . htmlspecialchars($row['BOU_QTE_STOCK'] ?? '-') . "</td>";
         echo "<td><a href='admin_supprimer_article.php?id=" . urlencode($row['PRO_ID']) . "'>Supprimer</a></td>";
         echo "</tr>";
@@ -207,9 +204,9 @@ function recup_produit($pdo)
             <th>ID</th>
             <th>Evènement</th>
             <th>Prix</th>
-            <th>Qté max</th>
+
             <th>Quantité actuelle</th>
-            <th><a href='admin_modifier_article.php?type=fleur&id='>Modifier</a>            <th> </th>
+                    <th> </th>
         </tr>
         </thead>
 
@@ -222,7 +219,7 @@ function recup_produit($pdo)
             echo "<td>" . htmlspecialchars($row['PRO_ID']) . "</td>";
             echo "<td>" . htmlspecialchars($row['COF_EVENEMENT'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['PRO_PRIX'] ?? '-') . "</td>";
-            echo "<td>" . htmlspecialchars($row['COF_QTE_MAX'] ?? '-') . "</td>";
+
             echo "<td>" . htmlspecialchars($row['COF_QTE_STOCK'] ?? '-') . "</td>";
             echo "<td><a href='admin_supprimer_article.php?id=" . urlencode($row['PRO_ID']) . "'>Supprimer</a></td>";
             echo "</tr>";
@@ -258,9 +255,9 @@ function recup_produit($pdo)
             <th>ID</th>
             <th>Couleur</th>
             <th>Prix</th>
-            <th>Qté max</th>
+
             <th>Quantité actuelle</th>
-            <th><a href='admin_modifier_article.php?type=fleur&id='>Modifier</a>            <th> </th>
+                    <th> </th>
         </tr>
         </thead>
 
@@ -273,7 +270,7 @@ function recup_produit($pdo)
             echo "<td>" . htmlspecialchars($row['SUP_ID']) . "</td>";
             echo "<td>" . htmlspecialchars($row['SUP_COULEUR'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['SUP_PRIX_UNITAIRE'] ?? '-') . "</td>";
-            echo "<td>" . htmlspecialchars($row['SUP_QTE_MAX'] ?? '-') . "</td>";
+
             echo "<td>" . htmlspecialchars($row['SUP_QTE_STOCK'] ?? '-') . "</td>";
             echo "<td><a href='admin_supprimer_article.php?id=" . urlencode($row['SUP_ID']) . "'>Supprimer</a></td>";
             echo "</tr>";
@@ -308,9 +305,8 @@ function recup_produit($pdo)
             <th>ID</th>
             <th>Couleur</th>
             <th>Prix</th>
-            <th>Qté max</th>
             <th>Quantité actuelle</th>
-            <th><a href='admin_modifier_article.php?type=fleur&id='>Modifier</a>            <th> </th>
+            <th> </th>
         </tr>
         </thead>
 
@@ -323,7 +319,6 @@ function recup_produit($pdo)
             echo "<td>" . htmlspecialchars($row['EMB_ID']) . "</td>";
             echo "<td>" . htmlspecialchars($row['EMB_COULEUR'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['PRO_PRIX'] ?? '-') . "</td>";
-            echo "<td>" . htmlspecialchars($row['PRO_QTE_MAX'] ?? '-') . "</td>";
             echo "<td>" . htmlspecialchars($row['EMB_QTE_STOCK'] ?? '-') . "</td>";
             echo "<td><a href='admin_modifier_article.php?id=" . urlencode($row['EMB_ID']) . "'>Supprimer</a></td>";
             echo "</tr>";

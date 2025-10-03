@@ -129,11 +129,13 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
             $disabled = $stock <= 0;
             ?>
             <div class="card product"
-                 data-sup-id="<?= $id ?>"
+                 data-sup-id="<?= (int)$id ?>"
                  data-name="<?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?>"
-                 data-stock="<?= $stock ?>"
+                 data-price="<?= htmlspecialchars(number_format($price, 2, '.', ''), ENT_QUOTES, 'UTF-8') ?>"
+                 data-stock="<?= (int)$stock ?>"
                  data-disabled="<?= $disabled ? '1' : '0' ?>">
-                <?php if ($imgUrl): ?>
+
+            <?php if ($imgUrl): ?>
                     <img src="<?= htmlspecialchars($imgUrl) ?>"
                          alt="<?= htmlspecialchars($name) ?>"
                          loading="lazy">
@@ -331,6 +333,25 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
 
         });
     })();
+
+        document.addEventListener('DOMContentLoaded', () => {
+        const fmt = n => (Number(n) || 0).toFixed(2) + ' CHF';
+
+        document.querySelectorAll('#supp-grid .card.product').forEach(card => {
+        const nameEl  = card.querySelector('.supp-name');
+        const priceEl = card.querySelector('.price');
+        const supId   = parseInt(card.dataset.supId || '0', 10);
+
+        // 1) Met en cohérence nom/prix avec data-* (ne change pas la mise en page)
+        if (nameEl && card.dataset.name)  nameEl.textContent  = card.dataset.name;
+        if (priceEl && card.dataset.price) priceEl.textContent = fmt(card.dataset.price);
+
+
+    });
+    });
+
+
+
 </script>
 </body>
 </html>
