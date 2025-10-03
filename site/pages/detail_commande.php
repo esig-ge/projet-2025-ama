@@ -49,24 +49,18 @@ $sqlHead = "
 $head = fetchOne($pdo, $sqlHead, [':cid'=>$comId, ':per'=>$perId]);
 if (!$head) { http_response_code(404); exit("Commande introuvable."); }
 
-/* Paiement & livraison (sans supposer les colonnes d’adresse) */
+/* Paiement & livraison */
 $paiement = fetchOne($pdo, "
   SELECT PAI_ID, PAI_MODE, PAI_STATUT, PAI_MONTANT
   FROM PAIEMENT WHERE PAI_ID = :pid
 ", [':pid' => (int)($head['PAI_ID'] ?? 0)]) ?: [];
 
 $livraison = fetchOne($pdo, "
-  SELECT LIV_ID, LIV_STATUT
+  SELECT LIV_ID, LIV_STATUT, LIV_MODE, COALESCE(LIV_MONTANT_FRAIS,0) AS LIV_FRAIS
   FROM LIVRAISON WHERE LIV_ID = :lid
 ", [':lid' => (int)($head['LIV_ID'] ?? 0)]) ?: [];
 
-/* ===== 2) Adresse de livraison — détection schéma =====
-   Ordre de priorité:
-   A) COMMANDE.ADR_ID_LIVRAISON (si existe)
-   B) COMMANDE.ADR_ID (si existe)
-   C) LIVRAISON.ADR_ID (si existe)
-   D) Fallback: dernière adresse LIVRAISON de l’utilisateur
-*/
+/* ===== 2) Adresse de livraison — détection schéma ===== */
 $adresse = null;
 
 if (columnExists($pdo, 'COMMANDE', 'ADR_ID_LIVRAISON')) {
@@ -78,7 +72,6 @@ if (columnExists($pdo, 'COMMANDE', 'ADR_ID_LIVRAISON')) {
       LIMIT 1
     ", [':cid'=>$comId]);
 }
-
 if (!$adresse && columnExists($pdo, 'COMMANDE', 'ADR_ID')) {
     $adresse = fetchOne($pdo, "
       SELECT a.ADR_RUE, a.ADR_NUMERO, a.ADR_NPA, a.ADR_VILLE, a.ADR_PAYS
@@ -88,7 +81,6 @@ if (!$adresse && columnExists($pdo, 'COMMANDE', 'ADR_ID')) {
       LIMIT 1
     ", [':cid'=>$comId]);
 }
-
 if (!$adresse && !empty($head['LIV_ID']) && columnExists($pdo, 'LIVRAISON', 'ADR_ID')) {
     $adresse = fetchOne($pdo, "
       SELECT a.ADR_RUE, a.ADR_NUMERO, a.ADR_NPA, a.ADR_VILLE, a.ADR_PAYS
@@ -98,7 +90,6 @@ if (!$adresse && !empty($head['LIV_ID']) && columnExists($pdo, 'LIVRAISON', 'ADR
       LIMIT 1
     ", [':lid'=>(int)$head['LIV_ID']]);
 }
-
 if (!$adresse) {
     // Fallback: dernière adresse de type LIVRAISON pour ce client
     $adresse = fetchOne($pdo, "
@@ -127,24 +118,24 @@ $st = $pdo->prepare("
 $st->execute([':cid'=>$comId]);
 $items = $st->fetchAll(PDO::FETCH_ASSOC);
 
-/* ===== 4) (Optionnel) Suppléments ===== */
+/* ===== 4) Suppléments ===== */
 $supps = [];
 try {
     $st = $pdo->prepare("
-  SELECT 
-    s.SUP_NOM,
-    s.SUP_PRIX_UNITAIRE AS prix_u,
-    COALESCE(cs.CS_QTE_COMMANDEE, 1) AS qte
-  FROM COMMANDE_SUPP cs
-  JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
-  WHERE cs.COM_ID = :cid
-  ORDER BY s.SUP_NOM
-");
+      SELECT 
+        s.SUP_NOM,
+        s.SUP_PRIX_UNITAIRE AS prix_u,
+        COALESCE(cs.CS_QTE_COMMANDEE, 1) AS qte
+      FROM COMMANDE_SUPP cs
+      JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
+      WHERE cs.COM_ID = :cid
+      ORDER BY s.SUP_NOM
+    ");
     $st->execute([':cid'=>$comId]);
     $supps = $st->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) { /* table absente -> on ignore */ }
 
-/* ===== 5) (Optionnel) Emballages ===== */
+/* ===== 5) Emballages (gratuits) ===== */
 $embs = [];
 $sqlEmb = "
   SELECT 
@@ -160,13 +151,35 @@ $st = $pdo->prepare($sqlEmb);
 $st->execute([':cid'=>$comId]);
 $embs = $st->fetchAll(PDO::FETCH_ASSOC);
 
-/* ===== 6) Totaux ===== */
+/* ===== 5bis) Totaux stockés sur COMMANDE (livraison + TVA) ===== */
+$totaux = fetchOne($pdo, "
+  SELECT 
+    COALESCE(c.COM_TVA_TAUX, 0)      AS TVA_TAUX,
+    COALESCE(c.COM_TVA_MONTANT, 0)   AS TVA_CHF,
+    COALESCE(l.LIV_MONTANT_FRAIS, 0) AS LIV_CHF
+  FROM COMMANDE c
+  LEFT JOIN LIVRAISON l ON l.LIV_ID = c.LIV_ID
+  WHERE c.COM_ID = :cid
+  LIMIT 1
+", [':cid'=>$comId]) ?: ['TVA_TAUX'=>0,'TVA_CHF'=>0,'LIV_CHF'=>0];
+
+$tvaTaux = (float)$totaux['TVA_TAUX'];
+$tvaCHF  = (float)$totaux['TVA_CHF'];
+$livCHF  = (float)$totaux['LIV_CHF'];
+
+/* ===== 6) Calcul des totaux (TTC) ===== */
 $fmt = fn($n) => number_format((float)$n, 2, '.', ' ') . ' CHF';
-$subtotal = 0.0; foreach ($items as $it){ $subtotal += (float)$it['prix_u'] * (int)$it['qte']; }
-$suppTotal= 0.0; foreach ($supps as $sp){ $suppTotal+= (float)$sp['prix_u'] * (int)$sp['qte']; }
-$embTotal = 0.0; foreach ($embs as $em){ $embTotal += (float)$em['prix_u'] * (int)$em['qte']; }
-$grandTotal = $subtotal + $suppTotal + $embTotal;
-$paidAmount = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT'] : null;
+
+$subtotal  = 0.0; foreach ($items as $it){  $subtotal  += (float)$it['prix_u'] * (int)$it['qte']; }
+$suppTotal = 0.0; foreach ($supps as $sp){  $suppTotal += (float)$sp['prix_u'] * (int)$sp['qte']; }
+$embTotal  = 0.0; foreach ($embs  as $em){  $embTotal  += (float)$em['prix_u'] * (int)$em['qte']; }
+
+/* Mode TTC: total payé = lignes TTC + livraison TTC.
+   La TVA affichée est informative (déjà incluse dans les prix). */
+$grandHTlike = $subtotal + $suppTotal + $embTotal;
+$totalPaye   = $grandHTlike + $livCHF;
+
+$paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT'] : null;
 ?>
 <!doctype html>
 <html lang="fr">
@@ -218,7 +231,13 @@ $paidAmount = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT'] 
                 <div><b>Date</b><?= h(date('d.m.Y', strtotime((string)$head['COM_DATE']))) ?></div>
                 <div><b>Statut</b><span class="badge"><?= h((string)$head['COM_STATUT']) ?></span></div>
                 <div><b>Paiement</b><?= h((string)($paiement['PAI_MODE'] ?? '—')) ?> — <?= h((string)($paiement['PAI_STATUT'] ?? '—')) ?></div>
-                <div><b>Livraison</b><?= h((string)($livraison['LIV_STATUT'] ?? '—')) ?></div>
+                <div>
+                    <b>Livraison</b>
+                    <?= h((string)($livraison['LIV_STATUT'] ?? '—')) ?>
+                    <?php if (!empty($livraison['LIV_MODE'])): ?>
+                        — <?= h((string)$livraison['LIV_MODE']) ?>
+                    <?php endif; ?>
+                </div>
             </div>
 
             <h2 class="section-title">Articles</h2>
@@ -278,9 +297,25 @@ $paidAmount = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT'] 
 
             <div class="totals">
                 <div class="row"><span>Sous-total produits</span><strong><?= h($fmt($subtotal)) ?></strong></div>
-                <?php if ($suppTotal>0): ?><div class="row"><span>Suppléments</span><strong><?= h($fmt($suppTotal)) ?></strong></div><?php endif; ?>
-                <?php if ($embTotal>0):  ?><div class="row"><span>Emballages</span><strong><?= h($fmt($embTotal)) ?></strong></div><?php endif; ?>
-                <div class="row grand"><span>Total</span><strong><?= h($fmt($grandTotal)) ?></strong></div>
+                <?php if ($suppTotal>0): ?>
+                    <div class="row"><span>Suppléments</span><strong><?= h($fmt($suppTotal)) ?></strong></div>
+                <?php endif; ?>
+                <?php if ($embTotal>0):  ?>
+                    <div class="row"><span>Emballages</span><strong><?= h($fmt($embTotal)) ?></strong></div>
+                <?php endif; ?>
+                <?php if ($livCHF>0):   ?>
+                    <div class="row"><span>Livraison</span><strong><?= h($fmt($livCHF)) ?></strong></div>
+                <?php endif; ?>
+
+                <?php if ($tvaCHF>0): ?>
+                    <div class="row" style="opacity:.9">
+                        <span class="muted">TVA (<?= h(number_format($tvaTaux,1)) ?>%) — incluse</span>
+                        <strong class="muted"><?= h($fmt($tvaCHF)) ?></strong>
+                    </div>
+                <?php endif; ?>
+
+                <div class="row grand"><span>Total</span><strong><?= h($fmt($totalPaye)) ?></strong></div>
+
                 <?php if ($paidAmount !== null): ?>
                     <div class="row"><span class="muted">Montant facturé</span><strong><?= h($fmt($paidAmount/100)) ?></strong></div>
                 <?php endif; ?>
@@ -304,7 +339,6 @@ $paidAmount = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT'] 
                 <a class="btn" href="<?= $BASE ?>info_perso.php">Mes commandes</a>
             </div>
 
-            <!-- 🔽 Nouveau bouton PDF -->
             <div style="margin-top:10px">
                 <a class="btn" href="<?= $BASE ?>facture_pdf.php?com_id=<?= (int)$head['COM_ID'] ?>">
                     Télécharger la facture (PDF)

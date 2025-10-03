@@ -93,6 +93,40 @@ $embTotal = array_reduce($embs,  fn($a,$em)=>$a + (float)$em['prix_u']*(int)$em[
 $grandTotal= $subtotal + $suppTotal + $embTotal;
 $paidAmount = isset($paiement['PAI_MONTANT']) ? ((float)$paiement['PAI_MONTANT']/100.0) : null;
 
+/* ===== 4bis) Livraison & TVA ===== */
+/* 1) Frais de livraison : on tente plusieurs colonnes/tables, sinon 0 */
+$shipping = 0.0;
+
+// a) COMMANDE.COM_FRAIS_LIVRAISON ?
+if (columnExists($pdo, 'COMMANDE', 'COM_FRAIS_LIVRAISON')) {
+    $s = fetchOne($pdo, "SELECT COALESCE(COM_FRAIS_LIVRAISON,0) AS f FROM COMMANDE WHERE COM_ID=:cid", [':cid'=>$comId]);
+    if ($s && isset($s['f'])) $shipping = (float)$s['f'];
+}
+// b) LIVRAISON.LIV_FRAIS ? (si LIV_ID existe)
+elseif (!empty($head['LIV_ID']) && columnExists($pdo, 'LIVRAISON', 'LIV_FRAIS')) {
+    $s = fetchOne($pdo, "SELECT COALESCE(LIV_FRAIS,0) AS f FROM LIVRAISON WHERE LIV_ID=:lid", [':lid'=>(int)$head['LIV_ID']]);
+    if ($s && isset($s['f'])) $shipping = (float)$s['f'];
+}
+
+/* 2) TVA : taux (prends ta valeur depuis la BDD si tu l’as, sinon fallback 8.1%) */
+$TVA_RATE = 0.081;  // 8.1% CH
+// Exemple si tu as une table PARAMETRE(tva) :
+// $row = fetchOne($pdo, "SELECT VALEUR FROM PARAMETRE WHERE CLE='TVA_RATE' LIMIT 1", []);
+// if ($row) $TVA_RATE = (float)$row['VALEUR'];
+
+/* 3) Tes prix semblent être TTC (c’était l’intention jusqu’ici).
+      On calcule donc un éclaté HT + TVA à partir du TTC. */
+$total_ttc = $grandTotal + $shipping;
+$base_ht   = $total_ttc / (1.0 + $TVA_RATE);
+$tva_amt   = $total_ttc - $base_ht;
+
+/* Arrondis (comme Stripe : 2 décimales) */
+$shipping  = round($shipping, 2);
+$base_ht   = round($base_ht, 2);
+$tva_amt   = round($tva_amt, 2);
+$total_ttc = round($total_ttc, 2);
+
+
 /* ===== 5) HTML facture ===== */
 $logoUri = img_to_data_uri(__DIR__.'/../img/logo.png');
 $when    = date('d.m.Y', strtotime((string)$head['COM_DATE']));
@@ -154,49 +188,194 @@ th{text-align:left;color:#444}.r{text-align:right}.section td{background:#faf5f6
 <div class="footer">Prix affichés TTC. Pour la Suisse, la TVA est incluse le cas échéant. En cas de question, contactez-nous depuis la page Contact.</div>
 </body></html>';
 
-/* ===== 6) Dompdf ===== */
-/* Chemin de l’autoloader (version repo sans Composer) */
-/* ===== 6) Dompdf (sans Composer) ===== */
-$ROOT = dirname(__DIR__, 2); // /.../racine du projet
+/* ===== 6) PDFMonkey — génération synchrone puis téléchargement ===== */
 
-// 1) Autoloader Dompdf (notre version adaptée à ton arbo /src)
-require_once $ROOT . '/app/libs/dompdf/src/Autoloader.php';
-\Dompdf\Autoloader::register();
+// 0) CONFIG
+$PDFMONKEY_API_KEY = getenv('PDFMONKEY_API_KEY') ?: 'soyoppLu1LxJJPXq14J4';
+$PDFMONKEY_TEMPLATE_ID = '5B6A2713-DF19-4A54-BFB0-4679F46B950E';
 
-// 2) Autoload des dépendances du dossier /lib (normalement gérées par Composer)
-if (is_file($ROOT . '/app/libs/dompdf/lib/php-svg-lib/src/autoload.php')) {
-    require_once $ROOT . '/app/libs/dompdf/lib/php-svg-lib/src/autoload.php';
+// 1) Construire le payload attendu par ton template
+$lines = [];
+foreach ($items as $it) {
+    $qty  = (int)$it['qte'];
+    $unit = (float)$it['prix_u'];
+    $lines[] = [
+        'group' => 'Produit',
+        'name'  => (string)$it['PRO_NOM'],
+        'qty'   => $qty,
+        'unit'  => round($unit, 2),
+        'total' => round($qty * $unit, 2),
+    ];
 }
-if (is_file($ROOT . '/app/libs/dompdf/lib/php-font-lib/src/FontLib/Autoloader.php')) {
-    require_once $ROOT . '/app/libs/dompdf/lib/php-font-lib/src/FontLib/Autoloader.php';
-    if (class_exists('\FontLib\Autoloader')) {
-        \FontLib\Autoloader::register();
+if (!empty($supps)) {
+    foreach ($supps as $sp) {
+        $qty  = (int)$sp['qte'];
+        $unit = (float)$sp['prix_u'];
+        $lines[] = [
+            'group' => 'Supplément',
+            'name'  => (string)$sp['SUP_NOM'],
+            'qty'   => $qty,
+            'unit'  => round($unit, 2),
+            'total' => round($qty * $unit, 2),
+        ];
     }
 }
-// CPDF (backend PDF historique)
-if (is_file($ROOT . '/app/libs/dompdf/lib/Cpdf.php')) {
-    require_once $ROOT . '/app/libs/dompdf/lib/Cpdf.php';
+if (!empty($embs)) {
+    foreach ($embs as $em) {
+        $qty  = (int)$em['qte'];
+        $unit = (float)$em['prix_u'];
+        $lines[] = [
+            'group' => 'Emballage',
+            'name'  => (string)$em['EMB_NOM'],
+            'qty'   => $qty,
+            'unit'  => round($unit, 2),
+            'total' => round($qty * $unit, 2),
+        ];
+    }
 }
-// Certaines versions attendent la classe legacy "DompdfCpdf" (sans namespace)
-if (!class_exists('DompdfCpdf') && class_exists('\Dompdf\Cpdf')) {
-    class_alias('\Dompdf\Cpdf', 'DompdfCpdf');
+
+$payload = [
+    'invoice' => [
+        'number' => (int)$head['COM_ID'],
+        'date'   => date('Y-m-d', strtotime((string)$head['COM_DATE'])),
+        'status' => (string)$head['COM_STATUT'],
+        'payment'=> [
+            'mode'   => (string)($paiement['PAI_MODE'] ?? '—'),
+            'status' => (string)($paiement['PAI_STATUT'] ?? '—'),
+        ],
+    ],
+    'customer' => [
+        'address1' => $adresse ? ($adresse['ADR_RUE'].' '.$adresse['ADR_NUMERO']) : '',
+        'zip'      => $adresse['ADR_NPA']   ?? '',
+        'city'     => $adresse['ADR_VILLE'] ?? '',
+        'country'  => $adresse['ADR_PAYS']  ?? '',
+    ],
+    'lines' => $lines,
+    'totals' => [
+        'subtotal'     => round($subtotal, 2),
+        'supplements'  => round($suppTotal, 2),
+        'packaging'    => round($embTotal, 2),
+        'grand_total'  => round($grandTotal, 2),
+        'paid'         => $paidAmount !== null ? round($paidAmount, 2) : null,
+        'currency'     => 'CHF',
+    ],
+
+    'totals' => [
+        'subtotal'       => round($subtotal, 2),     // produits (TTC)
+        'supplements'    => round($suppTotal, 2),    // TTC
+        'packaging'      => round($embTotal, 2),     // TTC
+        'shipping'       => $shipping,               // frais de livraison
+        'vat_rate'       => $TVA_RATE,               // ex: 0.081
+        'vat_rate_pct'   => round($TVA_RATE * 100, 2), // 8.1
+        'vat_amount'     => $tva_amt,                // montant TVA
+        'total_excl_vat' => $base_ht,               // HT
+        'grand_total'    => $total_ttc,             // TTC (produits+supp+emb+livraison)
+        'paid'           => $paidAmount !== null ? round($paidAmount, 2) : null,
+        'currency'       => 'CHF',
+    ],
+
+    'branding' => [
+        'company' => 'DK Bloom',
+        'city'    => 'Genève',
+        'logo'    => null, // Astuce: si tu veux, héberge le logo en HTTPS et utilise son URL dans le template
+    ],
+];
+
+// 2) Appel API synchrone
+function http_json($method, $url, array $headers, array $body = null, int $timeout = 25) {
+    $ch = curl_init($url);
+    $h  = array_merge($headers, ['Accept: application/json']);
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST  => strtoupper($method),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT        => $timeout,
+        CURLOPT_HTTPHEADER     => $h,
+    ]);
+    if ($body !== null) {
+        $json = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $h[] = 'Content-Type: application/json';
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $h);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+    }
+    $resp = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err  = curl_error($ch);
+    curl_close($ch);
+    return [$code, $resp, $err];
 }
 
-use Dompdf\Dompdf;
-use Dompdf\Options;
+$docBody = [
+    'document' => [
+        'document_template_id' => $PDFMONKEY_TEMPLATE_ID,
+        'status'  => 'pending',             // queue + génération
+        'payload' => $payload,              // tes données
+        'meta'    => ['_filename' => 'Facture_DK_Bloom_COM-'.$head['COM_ID'].'_'.date('Ymd').'.pdf'],
+    ],
+];
 
-$options = new Options();
-$options->set('isRemoteEnabled', true);
-$options->set('isHtml5ParserEnabled', true);
-$options->set('defaultPaperSize', 'a4');
+[$code, $resp, $err] = http_json(
+    'POST',
+    'https://api.pdfmonkey.io/api/v1/documents/sync',
+    ['Authorization: Bearer '.$PDFMONKEY_API_KEY],
+    $docBody,
+    60 // timeout un peu plus large
+);
 
-$dompdf = new Dompdf($options);
-$dompdf->loadHtml($html, 'UTF-8');
-$dompdf->setPaper('A4', 'portrait');
-$dompdf->render();
+if ($err || $code >= 400) {
+    http_response_code(500);
+    exit('PDFMonkey erreur HTTP '.$code.' : '.$err.' / '.$resp);
+}
 
-/* ===== 7) Téléchargement ===== */
-$fname = 'Facture_DK_Bloom_COM-'.$head['COM_ID'].'_'.date('Ymd').'.pdf';
-$dompdf->stream($fname, ['Attachment' => true]);
+$data = json_decode($resp, true);
+$card = $data['document_card'] ?? null;
+if (!$card) {
+    http_response_code(500);
+    exit('Réponse inattendue de PDFMonkey.');
+}
+
+// 3) Récupérer l’URL de téléchargement (selon la doc, sync attend le succès, mais on gère le cas contraire)
+$downloadUrl = $card['download_url'] ?? null;
+$docId       = $card['id'] ?? null;
+
+if (!$downloadUrl && $docId) {
+    // fallback: refetch le Document complet pour un download_url frais
+    [$code2, $resp2, $err2] = http_json(
+        'GET',
+        'https://api.pdfmonkey.io/api/v1/documents/'.$docId,
+        ['Authorization: Bearer '.$PDFMONKEY_API_KEY]
+    );
+    if (!$err2 && $code2 < 400) {
+        $doc = json_decode($resp2, true)['document'] ?? null;
+        $downloadUrl = $doc['download_url'] ?? null;
+    }
+}
+
+if (!$downloadUrl) {
+    http_response_code(502);
+    exit('PDF généré mais pas encore disponible (download_url manquant). Réessaie dans quelques secondes.');
+}
+
+// 4) Télécharger le binaire et le streamer au navigateur
+$fname = $card['filename'] ?? ('Facture_DK_Bloom_COM-'.$head['COM_ID'].'_'.date('Ymd').'.pdf');
+
+$ch = curl_init($downloadUrl);
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_TIMEOUT        => 60,
+]);
+$pdfBinary = curl_exec($ch);
+$codePdf   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($codePdf >= 400 || !$pdfBinary) {
+    http_response_code(502);
+    exit('Impossible de récupérer le PDF ('.$codePdf.').');
+}
+
+header('Content-Type: application/pdf');
+header('Content-Disposition: attachment; filename="'.$fname.'"');
+header('Content-Length: '.strlen($pdfBinary));
+echo $pdfBinary;
 exit;
-
