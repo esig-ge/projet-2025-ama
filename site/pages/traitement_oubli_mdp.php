@@ -51,7 +51,7 @@ try {
     ");
     $upd->execute([':code' => $code, ':em' => $email]);
 
-    // 3) Lien de confort (pré-remplir l'email sur la page)
+    //Lien
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
     $link   = $scheme . $_SERVER['HTTP_HOST'] . $BASE . "reinitialisation_mdp.php?email=" . urlencode($email);
 
@@ -81,8 +81,8 @@ try {
     $message .= "L’équipe DK Bloom 🌹";
 
     // En-têtes propres (utilise une adresse de TON domaine)
-    $headers  = "From: DK Bloom <no-reply@dk.bloom@gmail.com>\r\n";
-    $headers .= "Reply-To: contact@dk.bloom@gmail.com.ch\r\n";
+    $headers  = "From: DK Bloom <no-reply@dk-bloom.ch>\r\n";
+    $headers .= "Reply-To: contact@dk-bloom.ch\r\n";
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
     $headers .= "Content-Transfer-Encoding: 8bit\r\n";
 
