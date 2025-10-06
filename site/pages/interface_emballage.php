@@ -42,13 +42,13 @@ $embs = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
    -> retourne l’URL publique (BASE/…) ou null si rien trouvé
    ============================================================ */
 
-$legacyMap = [
+$legacyMap = array(
     1 => 'emballage_blanc.PNG',
-    2 => 'emballage_gris.PNG',
-    3 => 'emballage_noir.PNG',
-    4 => 'emballage_rose.PNG',
-    5 => 'emballage_violet.PNG',
-];
+    4 => 'emballage_gris.PNG',
+    2 => 'emballage_noir.PNG',
+    3 => 'emballage_rose.PNG',
+    5 => 'emballage_violet.PNG'
+);
 
 function slugify_name(string $name): string {
     $slug = @iconv('UTF-8','ASCII//TRANSLIT//IGNORE',$name);
@@ -204,11 +204,11 @@ function resolveEmbImage(int $id, string $name, string $BASE, array $legacyMap):
                 <span class="stock-badge <?= $disabled ? 'out':'' ?>" data-stock-badge>
           <?= $disabled ? 'Rupture de stock' : ('En stock : '.$stock) ?>
         </span>
-<!--
-                <div class="stock-msg" data-stock-msg>
-                    <span class="dot" aria-hidden="true"></span>
-                    <span class="text" data-stock-text></span>
-                </div>-->
+                <!--
+                                <div class="stock-msg" data-stock-msg>
+                                    <span class="dot" aria-hidden="true"></span>
+                                    <span class="text" data-stock-text></span>
+                                </div>-->
 
                 <br>
                 <button type="button" class="add-to-cart" data-add <?= $disabled ? 'disabled' : '' ?>>
