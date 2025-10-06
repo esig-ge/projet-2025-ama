@@ -155,3 +155,29 @@ body.reset-page{
 @media (max-width: 720px){
     .reset-card{ padding: 22px; }
 }
+
+/* --------- MDP ----------*/
+
+.toggle-pw {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #8A1B2E; /* ton bordeaux doux DK Bloom */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.toggle-pw:hover {
+    background: rgba(138, 27, 46, 0.1);
+    transform: scale(1.1);
+}
+
+.eye-icon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+}

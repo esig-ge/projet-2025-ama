@@ -147,7 +147,7 @@ if (empty($_SESSION['csrf'])) {
                         <label style="display:flex; align-items:center; gap:8px; font-weight:600; color:#5C0012;">
                             <input type="checkbox" name="remember" value="1"> Se souvenir de moi
                         </label>
-                        <a href="<?= $BASE ?>interface_modification_mdp.php">Mot de passe oublié ?</a>
+                        <a href="<?= $BASE ?>interface_oubli_mdp.php">Mot de passe oublié ?</a>
                     </div>
 
                     <div class="actions">

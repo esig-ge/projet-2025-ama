@@ -24,46 +24,71 @@ try {
     $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Vérifie l'existence du compte (on ne révèle pas le résultat à l'utilisateur)
-    $st = $pdo->prepare("SELECT PER_ID FROM PERSONNE WHERE PER_EMAIL = :em LIMIT 1");
+    // Récupère aussi le prénom
+    $st = $pdo->prepare("SELECT PER_ID, PER_PRENOM FROM PERSONNE WHERE PER_EMAIL = :em LIMIT 1");
     $st->execute([':em' => $email]);
     $user = $st->fetch(PDO::FETCH_ASSOC);
 
-    // Message générique
+    // Message générique (ne divulgue rien)
     $_SESSION['toast_type'] = 'info';
     $_SESSION['toast_msg']  = "Si un compte existe, un e-mail a été envoyé.";
 
     if (!$user) {
-        // Retourner à la page de demande (message générique déjà préparé)
         header('Location: ' . $BASE . 'interface_oubli_mdp.php');
         exit;
     }
 
-    // Générer un code à 6 chiffres
+    // 1) Code à 6 chiffres
     $code = random_int(100000, 999999);
 
-    // Stocker le code en clair (par simplicité) et l'expiration (15 minutes)
-    $upd = $pdo->prepare("UPDATE PERSONNE SET reset_token_hash = :code, reset_token_expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE PER_EMAIL = :em LIMIT 1");
+    // 2) Stockage en clair + expiration 15 min
+    $upd = $pdo->prepare("
+        UPDATE PERSONNE
+           SET reset_token_hash = :code,
+               reset_token_expires_at = DATE_ADD(NOW(), INTERVAL 15 MINUTE)
+         WHERE PER_EMAIL = :em
+         LIMIT 1
+    ");
     $upd->execute([':code' => $code, ':em' => $email]);
 
-    // Préparer le lien de réinitialisation (optionnel)
+    // 3) Lien de confort (pré-remplir l'email sur la page)
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https://' : 'http://';
     $link   = $scheme . $_SERVER['HTTP_HOST'] . $BASE . "reinitialisation_mdp.php?email=" . urlencode($email);
 
-    // Afficher le code/link en session pour pouvoir tester si mail() ne passe pas
+    // 4) Toast + note dev (utile si mail() ne marche pas)
     $_SESSION['dev_code']   = "Code : $code (valide 15 min)\nLien : $link";
     $_SESSION['toast_type'] = 'success';
     $_SESSION['toast_msg']  = "Si un compte existe, un e-mail a été envoyé (ou le code est affiché pour tester).";
 
-    // Tenter d'envoyer le mail (si l'envoi échoue, l'utilisateur peut utiliser le code affiché)
-    @mail(
-        $email,
-        "DK Bloom — Code de réinitialisation",
-        "Bonjour,\n\nVotre code de réinitialisation est : $code\nValide 15 minutes.\n\nSi vous ne recevez pas l'email, utilisez le formulaire de réinitialisation et collez ce code.",
-        "From: no-reply@tondomaine.ch\r\nContent-Type: text/plain; charset=UTF-8"
-    );
+    // 5) Email avec emojis et prénom (Chère + prénom), en UTF-8 propre
+    $prenom = trim((string)($user['PER_PRENOM'] ?? ''));
+    if ($prenom !== '') {
+        $prenom = function_exists('mb_convert_case')
+            ? mb_convert_case($prenom, MB_CASE_TITLE, 'UTF-8')
+            : ucfirst(strtolower($prenom));
+    }
 
-    // Rediriger vers la page de réinitialisation (email en query pour pré-remplir)
+    $salut   = "Chère " . ($prenom !== '' ? $prenom : "cliente");
+    $subject = function_exists('mb_encode_mimeheader')
+        ? mb_encode_mimeheader("DK Bloom — Code de réinitialisation", 'UTF-8', 'B', "\r\n")
+        : "DK Bloom — Code de réinitialisation";
+
+    // >>> Contenu tel que tu le veux (emojis conservés) <<<
+    $message  = $salut . ",\n\n";
+    $message .= "Voici votre code de réinitialisation 💖 : $code\n";
+    $message .= "Il est valable 15 minutes.\n";
+    $message .= "Merci de la confiance que tu nous accordes !.\n\n";
+    $message .= "L’équipe DK Bloom 🌹";
+
+    // En-têtes propres (utilise une adresse de TON domaine)
+    $headers  = "From: DK Bloom <no-reply@dk.bloom@gmail.com>\r\n";
+    $headers .= "Reply-To: contact@dk.bloom@gmail.com.ch\r\n";
+    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $headers .= "Content-Transfer-Encoding: 8bit\r\n";
+
+    @mail($email, $subject, $message, $headers);
+
+    // 6) Redirection vers la page de réinitialisation
     header('Location: ' . $BASE . 'reinitialisation_mdp.php?email=' . urlencode($email));
     exit;
 

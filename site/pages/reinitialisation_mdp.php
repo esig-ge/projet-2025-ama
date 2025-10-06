@@ -91,13 +91,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="hidden" name="email" value="<?= htmlspecialchars($email) ?>">
 
             <label class="reset-label" for="code">Code reçu</label>
-            <div class="reset-input"><input id="code" name="code" type="text" required maxlength="6" placeholder="123456"></div>
+            <div class="reset-input">
+                <input id="code" name="code" type="text" required maxlength="6"
+                       inputmode="numeric" autocomplete="one-time-code" autocapitalize="off" autocorrect="off"
+                       placeholder="123456">
+            </div>
 
             <label class="reset-label" for="new_password">Nouveau mot de passe</label>
-            <div class="reset-input"><input id="new_password" name="new_password" type="text" required placeholder="Nouveau mot de passe"></div>
+            <div class="reset-input">
+                <input type="password" id="new_password" name="new_password" required
+                       minlength="4" autocomplete="new-password" placeholder="Nouveau mot de passe">
+                <button type="button" class="toggle-pw" data-target="new_password" aria-label="Afficher/masquer">
+                    <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
 
             <label class="reset-label" for="new_password2">Confirmez le mot de passe</label>
-            <div class="reset-input"><input id="new_password2" name="new_password2" type="text" required placeholder="Confirmez le mot de passe"></div>
+            <div class="reset-input">
+                <input type="password" id="new_password2" name="new_password2" required
+                       minlength="4" autocomplete="new-password" placeholder="Confirmez le mot de passe">
+                <button type="button" class="toggle-pw" data-target="new_password2" aria-label="Afficher/masquer">
+                    <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
 
             <button type="submit" class="btn-primary">Changer le mot de passe</button>
         </form>
@@ -112,6 +134,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button class="toast-close" aria-label="Fermer">&times;</button>
     </div>
 <?php endif; ?>
+<script>
+    // ===== Afficher / masquer mot de passe =====
+    document.querySelectorAll('.toggle-pw').forEach(btn => {
+        const input = document.getElementById(btn.dataset.target);
+        btn.addEventListener('click', () => {
+            const svg = btn.querySelector('.eye-icon');
+            const visible = input.type === 'text';
+            input.type = visible ? 'password' : 'text';
+            // Petite animation
+            btn.style.color = visible ? '#8A1B2E' : '#E45C84';
+            svg.style.transform = visible ? 'scale(1)' : 'scale(1.1)';
+        });
+    });
+
+    // ===== Champ code : autoriser le coller et nettoyer =====
+    const codeInput = document.getElementById('code');
+    if (codeInput) {
+        // Nettoie tout ce qui n'est pas chiffre, et coupe à 6
+        const normalize = v => v.replace(/\D/g, '').slice(0, 6);
+
+        // Au collage : on force la valeur propre
+        codeInput.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+            codeInput.value = normalize(text);
+        });
+
+        // À la saisie : on garde uniquement des chiffres (utile si clavier alpha)
+        codeInput.addEventListener('input', () => {
+            const cleaned = normalize(codeInput.value);
+            if (codeInput.value !== cleaned) codeInput.value = cleaned;
+        });
+    }
+</script>
 
 <script>
     (function(){
