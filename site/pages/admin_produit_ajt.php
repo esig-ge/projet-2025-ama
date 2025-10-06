@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
             $_SESSION['message'] = "✅ Produit « {$pro_nom} » ajouté avec succès.";
-            header('Location: '.$BASE.'admin_produits.php?ok=1');
+            header('Location: '.$BASE.'admin_modifier_article.php?ok=1');
             exit;
 
         } catch (Throwable $ex) {

@@ -194,7 +194,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          BOUQUETS
          =========================== -->
     <h2>Bouquets</h2>
-    <a class="btn-add" data-type="bouquet" href="<?= $BASE ?>admin_produit_add.php?type=bouquet">➕ Ajouter un bouquet</a>
+    <a class="btn-add" data-type="bouquet" href="<?= $BASE ?>admin_produit_ajt.php?type=bouquet">➕ Ajouter un bouquet</a>
     <section class="product-details">
         <h3>Données de l’article des Bouquets</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -241,7 +241,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          COFFRETS
          =========================== -->
     <h2>Coffrets</h2>
-    <a class="btn-add" data-type="coffret" href="<?= $BASE ?>admin_produit_add.php?type=coffret">➕ Ajouter un coffret</a>
+    <a class="btn-add" data-type="coffret" href="<?= $BASE ?>admin_produit_ajt.php?type=coffret">➕ Ajouter un coffret</a>
     <section class="product-details">
         <h3>Données de l’article des Coffrets</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -285,7 +285,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          =========================== -->
 
     <h2>Suppléments</h2>
-    <a class="btn-add" data-type="supplement" href="<?= $BASE ?>admin_produit_add.php?type=supplement">➕ Ajouter un supplément</a>
+    <a class="btn-add" data-type="supplement" href="<?= $BASE ?>admin_produit_ajt.php?type=supplement">➕ Ajouter un supplément</a>
     <section class="product-details">
         <h3>Données de l’article des Suppléments</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -328,7 +328,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          EMBALLAGES
          =========================== -->
     <h2>Emballages</h2>
-    <a class="btn-add" data-type="emballage" href="<?= $BASE ?>admin_produit_add.php?type=emballage">➕ Ajouter un emballage</a>
+    <a class="btn-add" data-type="emballage" href="<?= $BASE ?>admin_produit_ajt.php?type=emballage">➕ Ajouter un emballage</a>
     <section class="product-details">
         <h3>Données de l’article des Emballages</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -371,7 +371,7 @@ function recup_donnee_emballage(PDO $pdo): array {
         <button class="close" type="button" aria-label="Fermer">&times;</button>
         <h3 id="modal-title">Ajouter un produit</h3>
 
-        <form id="form-add" method="post" action="<?= $BASE ?>admin_produit_add.php" enctype="multipart/form-data" novalidate>
+        <form id="form-add" method="post" action="<?= $BASE ?>admin_produit_ajt.php" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="pro_type" id="add-type" value="autre">
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf'] ??= bin2hex(random_bytes(16))) ?>">
 
