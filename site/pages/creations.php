@@ -101,6 +101,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 </div>
             </div>
         </div>
+        <div> <img src="img/bouquet_avec_lettre.jpg"></div>
     </section>
 
     <!-- JS du carrousel: simple et commenté -->
