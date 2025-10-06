@@ -101,6 +101,7 @@ $BASE = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/'; // ex: /.../site/pag
                 </div>
             </div>
         </div>
+
     </section>
 
     <!-- JS du carrousel: simple et commenté -->

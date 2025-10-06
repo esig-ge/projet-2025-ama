@@ -151,7 +151,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          ROSES (FLEUR + PRODUIT)
          =========================== -->
     <h2>Fleurs</h2>
-    <a class="btn-add" href="<?= $BASE ?>admin_produit_ajt.php?type=fleur">➕ Ajouter une fleur</a>
+    <a class="btn-add" data-type="fleur" href="<?= $BASE ?>admin_produit_ajt.php?type=fleur">➕ Ajouter une fleur</a>
     <section class="product-details">
         <h3>Données de l’article des Roses</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -194,7 +194,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          BOUQUETS
          =========================== -->
     <h2>Bouquets</h2>
-    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=bouquet">➕ Ajouter un bouquet</a>
+    <a class="btn-add" data-type="bouquet" href="<?= $BASE ?>admin_produit_add.php?type=bouquet">➕ Ajouter un bouquet</a>
     <section class="product-details">
         <h3>Données de l’article des Bouquets</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -241,7 +241,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          COFFRETS
          =========================== -->
     <h2>Coffrets</h2>
-    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=coffret">➕ Ajouter un coffret</a>
+    <a class="btn-add" data-type="coffret" href="<?= $BASE ?>admin_produit_add.php?type=coffret">➕ Ajouter un coffret</a>
     <section class="product-details">
         <h3>Données de l’article des Coffrets</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -285,7 +285,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          =========================== -->
 
     <h2>Suppléments</h2>
-    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=supplement">➕ Ajouter un supplément</a>
+    <a class="btn-add" data-type="supplement" href="<?= $BASE ?>admin_produit_add.php?type=supplement">➕ Ajouter un supplément</a>
     <section class="product-details">
         <h3>Données de l’article des Suppléments</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -328,7 +328,7 @@ function recup_donnee_emballage(PDO $pdo): array {
          EMBALLAGES
          =========================== -->
     <h2>Emballages</h2>
-    <a class="btn-add" href="<?= $BASE ?>admin_produit_add.php?type=emballage">➕ Ajouter un emballage</a>
+    <a class="btn-add" data-type="emballage" href="<?= $BASE ?>admin_produit_add.php?type=emballage">➕ Ajouter un emballage</a>
     <section class="product-details">
         <h3>Données de l’article des Emballages</h3>
         <form method="post" action="<?= htmlspecialchars($BASE) ?>admin_update_article.php">
@@ -365,35 +365,100 @@ function recup_donnee_emballage(PDO $pdo): array {
         </form>
     </section>
 </div>
-<!-- Modale d'ajout produit -->
+<!------------------------------------------------------------ Modale d'ajout produit ------------------------------------------------------------------>
 <div id="modal-add" class="modal" hidden>
     <div class="modal-card">
         <button class="close" type="button" aria-label="Fermer">&times;</button>
         <h3 id="modal-title">Ajouter un produit</h3>
 
-        <form id="form-add" method="post" action="<?= $BASE ?>admin_produit_add.php" enctype="multipart/form-data">
+        <form id="form-add" method="post" action="<?= $BASE ?>admin_produit_add.php" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="pro_type" id="add-type" value="autre">
+            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf'] ??= bin2hex(random_bytes(16))) ?>">
 
-            <label>Nom *</label>
-            <input type="text" name="pro_nom" required>
+            <!-- ===== Commun PRODUIT (pour FLEUR/BOUQUET/COFFRET) ===== -->
+            <div class="common-produit" hidden>
+                <label>Nom *</label>
+                <input type="text" name="pro_nom" required>
 
-            <label>Prix (CHF) *</label>
-            <input type="number" name="pro_prix" step="0.05" min="0.05" required>
+                <label>Prix (CHF) *</label>
+                <input type="number" name="pro_prix" step="0.05" min="0.00" required>
+            </div>
 
-            <label>Couleur *</label>
-            <input type="text" name="" required>
+            <!-- ===== FLEUR ===== -->
+            <div class="type-fields" data-type="fleur" hidden>
+                <!-- colonnes de ton tableau Fleurs -->
+                <label>Couleur *</label>
+                <input type="text" name="fle_couleur" required>
 
-            <label>Description</label>
-            <textarea name="pro_desc"></textarea>
+                <label>Stock *</label>
+                <input type="number" name="fle_qte_stock" step="1" min="0" value="0" required>
+            </div>
 
+            <!-- ===== BOUQUET ===== -->
+            <div class="type-fields" data-type="bouquet" hidden>
+                <!-- colonnes de ton tableau Bouquets -->
+                <label>Nb Roses *</label>
+                <input type="number" name="bou_nb_roses" step="1" min="1" value="12" required>
+
+                <label>Couleur *</label>
+                <input type="text" name="bou_couleur" required>
+
+                <label>Stock *</label>
+                <input type="number" name="bou_qte_stock" step="1" min="0" value="0" required>
+            </div>
+
+            <!-- ===== COFFRET ===== -->
+            <div class="type-fields" data-type="coffret" hidden>
+                <!-- colonnes de ton tableau Coffrets -->
+                <label>Événement</label>
+                <input type="text" name="cof_evenement" placeholder="Anniversaire, Mariage…">
+
+                <label>Stock *</label>
+                <input type="number" name="cof_qte_stock" step="1" min="0" value="0" required>
+            </div>
+
+            <!-- ===== SUPPLÉMENT ===== -->
+            <div class="type-fields" data-type="supplement" hidden>
+                <!-- colonnes de ton tableau Suppléments (+ couleur que tu veux gérer) -->
+                <label>Nom *</label>
+                <input type="text" name="sup_nom" required>
+
+                <label>Description</label>
+                <input type="text" name="sup_description">
+
+                <label>Prix unitaire (CHF) *</label>
+                <input type="number" name="sup_prix_unitaire" step="0.05" min="0.00" required>
+
+                <label>Couleur <!-- si tu as SUP_COULEUR --></label>
+                <input type="text" name="sup_couleur" placeholder="(optionnel si non utilisé)">
+
+                <label>Stock *</label>
+                <input type="number" name="sup_qte_stock" step="1" min="0" value="0" required>
+            </div>
+
+            <!-- ===== EMBALLAGE ===== -->
+            <div class="type-fields" data-type="emballage" hidden>
+                <!-- colonnes de ton tableau Emballages -->
+                <label>Nom *</label>
+                <input type="text" name="emb_nom" required>
+
+                <label>Couleur</label>
+                <input type="text" name="emb_couleur">
+
+                <label>Stock *</label>
+                <input type="number" name="emb_qte_stock" step="1" min="0" value="0" required>
+            </div>
+
+            <!-- (facultatif) Image pour les types liés à PRODUIT -->
             <label>Image (JPEG/PNG/WebP/GIF, max 5 Mo)</label>
-            <input type="file" name="pro_img" accept="image/*">
+            <input type="file" name="pro_img" accept="image/jpeg,image/png,image/webp,image/gif">
 
             <div class="actions">
                 <button type="button" class="btn-cancel">Annuler</button>
                 <button type="submit" class="btn-primary">Enregistrer</button>
             </div>
         </form>
+
     </div>
 </div>
 <script>
@@ -413,7 +478,40 @@ function recup_donnee_emballage(PDO $pdo): array {
     document.querySelector('#modal-add .btn-cancel')?.addEventListener('click', ()=> {
         document.getElementById('modal-add').hidden = true;
     });
+
+        (function(){
+        function showType(type){
+            // Affiche le bloc commun PRODUIT seulement pour: fleur/bouquet/coffret
+            const common = document.querySelector('#form-add .common-produit');
+            if (common) common.hidden = !['fleur','bouquet','coffret'].includes(type);
+
+            // Affiche les champs du type demandé
+            document.querySelectorAll('#form-add .type-fields').forEach(div=>{
+                div.hidden = (div.dataset.type !== type);
+            });
+        }
+
+        // Ouverture modale + affichage champs
+        document.querySelectorAll('.btn-add').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+        e.preventDefault();
+        const type = (btn.dataset.type || 'autre').toLowerCase();
+
+        // fixe pro_type
+        document.getElementById('add-type').value = type;
+        document.getElementById('modal-title').textContent = 'Ajouter ' + type;
+
+        // reset le form
+        const f = document.getElementById('form-add');
+        f?.reset();
+
+        showType(type);
+        document.getElementById('modal-add').hidden = false;
+    });
+    });
+    })();
 </script>
+
 
 </body>
 </html>

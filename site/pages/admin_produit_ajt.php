@@ -2,6 +2,10 @@
 // /site/pages/admin_produit_add.php
 session_start();
 
+if (empty($_SESSION['csrf'])) {
+    $_SESSION['csrf'] = bin2hex(random_bytes(16));
+}
+
 /* ===== Accès admin strict ===== */
 $isAdmin = !empty($_SESSION['is_admin']) || !empty($_SESSION['adm_id']);
 if (!$isAdmin) { http_response_code(403); exit('Accès réservé à l’administrateur'); }
@@ -38,6 +42,10 @@ $errors = [];
 $okMsg  = '';
 
 /* ===== Traitement POST ===== */
+if (empty($_POST['csrf']) || !hash_equals($_SESSION['csrf'], $_POST['csrf'])) {
+    $errors[] = "Session expirée (CSRF).";
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Champs communs
     $pro_nom  = trim($_POST['pro_nom']  ?? '');
@@ -104,45 +112,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+// après lecture de fleur/bouquet existants…
+    $cof_evenement = trim($_POST['cof_evenement'] ?? '');
+    $cof_stock     = (int)($_POST['cof_stock'] ?? 0);
+
+    $sup_nom   = trim($_POST['sup_nom'] ?? '');
+    $sup_desc  = trim($_POST['sup_description'] ?? '');
+    $sup_pu_in = (string)($_POST['sup_prix_unitaire'] ?? '');
+    $sup_stock = (int)($_POST['sup_qte_stock'] ?? 0);
+    $sup_coul  = trim($_POST['sup_couleur'] ?? '');
+
+    $emb_nom   = trim($_POST['emb_nom'] ?? '');
+    $emb_coul  = trim($_POST['emb_couleur'] ?? '');
+    $emb_stock = (int)($_POST['emb_qte_stock'] ?? 0);
+
+// validations minimales
+    if ($pro_type === 'coffret' && $cof_stock < 0) $errors[] = "Le stock coffret doit être ≥ 0.";
+    if ($pro_type === 'supplement') {
+        if ($sup_nom === '') $errors[] = "Nom du supplément requis.";
+        if (!preg_match('~^\d+(?:\.\d{1,2})?$~', $sup_pu_in)) $errors[] = "Prix unitaire supplément invalide.";
+        if ($sup_stock < 0) $errors[] = "Stock supplément ≥ 0.";
+    }
+    if ($pro_type === 'emballage') {
+        if ($emb_nom === '') $errors[] = "Nom d’emballage requis.";
+        if ($emb_stock < 0) $errors[] = "Stock emballage ≥ 0.";
+    }
 
     // Insertion
     if (!$errors) {
         try {
             $pdo->beginTransaction();
 
-            // PRODUIT
-            $sql = "INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX, PRO_TYPE, PRO_DESC, PRO_IMG)
-                    VALUES (:nom, :prix, :type, :descr, :img)";
-            $st = $pdo->prepare($sql);
-            $st->execute([
-                ':nom'  => $pro_nom,
-                ':prix' => $pro_prix,
-                ':type' => $pro_type,
-                ':descr'=> $pro_desc !== '' ? $pro_desc : null,
-                ':img'  => $imgPath
-            ]);
-            $newId = (int)$pdo->lastInsertId();
-
-            // Tables filles pour que ça s’affiche au catalogue
-            if ($pro_type === 'bouquet') {
-                $sqlB = "INSERT INTO BOUQUET (PRO_ID, BOU_NB_ROSES, BOU_COULEUR, BOU_QTE_STOCK, BOU_DESCRIPTION)
-                         VALUES (:pid, :nb, :coul, :stk, :descr)";
-                $pdo->prepare($sqlB)->execute([
-                    ':pid'=>$newId, ':nb'=>$bou_nb_roses, ':coul'=>$bou_couleur,
-                    ':stk'=>$bou_stock, ':descr'=>($pro_desc !== '' ? $pro_desc : null)
+            if (in_array($pro_type, ['bouquet','fleur','coffret'], true)) {
+                // 1) PRODUIT (comme tu fais déjà)
+                $sql = "INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX, PRO_TYPE, PRO_DESC, PRO_IMG)
+                VALUES (:nom, :prix, :type, :descr, :img)";
+                $st = $pdo->prepare($sql);
+                $st->execute([
+                    ':nom'  => $pro_nom,
+                    ':prix' => $pro_prix,
+                    ':type' => $pro_type,
+                    ':descr'=> $pro_desc !== '' ? $pro_desc : null,
+                    ':img'  => $imgPath
                 ]);
-            } elseif ($pro_type === 'fleur') {
-                $sqlF = "INSERT INTO FLEUR (PRO_ID, FLE_COULEUR, FLE_QTE_STOCK)
-                         VALUES (:pid, :coul, :stk)";
-                $pdo->prepare($sqlF)->execute([
-                    ':pid'=>$newId, ':coul'=>$fle_couleur, ':stk'=>$fle_stock
+                $newId = (int)$pdo->lastInsertId();
+
+                // 2) Sous-table selon le type
+                if ($pro_type === 'bouquet') {
+                    $sqlB = "INSERT INTO BOUQUET (PRO_ID, BOU_NB_ROSES, BOU_COULEUR, BOU_QTE_STOCK, BOU_DESCRIPTION)
+                     VALUES (:pid, :nb, :coul, :stk, :descr)";
+                    $pdo->prepare($sqlB)->execute([
+                        ':pid'=>$newId, ':nb'=>$bou_nb_roses, ':coul'=>$bou_couleur,
+                        ':stk'=>$bou_stock, ':descr'=>($pro_desc !== '' ? $pro_desc : null)
+                    ]);
+                } elseif ($pro_type === 'fleur') {
+                    $sqlF = "INSERT INTO FLEUR (PRO_ID, FLE_COULEUR, FLE_QTE_STOCK)
+                     VALUES (:pid, :coul, :stk)";
+                    $pdo->prepare($sqlF)->execute([
+                        ':pid'=>$newId, ':coul'=>$fle_couleur, ':stk'=>$fle_stock
+                    ]);
+                } elseif ($pro_type === 'coffret') {
+                    $sqlC = "INSERT INTO COFFRET (PRO_ID, COF_EVENEMENT, COF_QTE_STOCK)
+                     VALUES (:pid, :evt, :stk)";
+                    $pdo->prepare($sqlC)->execute([
+                        ':pid'=>$newId, ':evt'=>($cof_evenement !== '' ? $cof_evenement : null), ':stk'=>$cof_stock
+                    ]);
+                }
+
+            } elseif ($pro_type === 'supplement') {
+                // Pas d'INSERT dans PRODUIT (ta liste lit directement SUPPLEMENT)
+                $sup_pu = (float)str_replace(',', '.', $sup_pu_in);
+                $sqlS = "INSERT INTO SUPPLEMENT (SUP_NOM, SUP_DESCRIPTION, SUP_PRIX_UNITAIRE, SUP_QTE_STOCK, SUP_COULEUR)
+                 VALUES (:nom, :descr, :pu, :stk, :coul)";
+                $pdo->prepare($sqlS)->execute([
+                    ':nom'=>$sup_nom, ':descr'=>($sup_desc !== '' ? $sup_desc : null),
+                    ':pu'=>$sup_pu, ':stk'=>$sup_stock, ':coul'=>($sup_coul !== '' ? $sup_coul : null)
+                ]);
+
+            } elseif ($pro_type === 'emballage') {
+                // Pas d'INSERT dans PRODUIT (ta liste lit directement EMBALLAGE)
+                $sqlE = "INSERT INTO EMBALLAGE (EMB_NOM, EMB_COULEUR, EMB_QTE_STOCK)
+                 VALUES (:nom, :coul, :stk)";
+                $pdo->prepare($sqlE)->execute([
+                    ':nom'=>$emb_nom, ':coul'=>($emb_coul !== '' ? $emb_coul : null), ':stk'=>$emb_stock
                 ]);
             }
-            // TODO: ajouter ici coffret / supplement / emballage si tu as des tables dédiées
 
             $pdo->commit();
-
-            // Flash + redirection PRG vers la page LISTE/MODIF (change le nom si besoin)
             $_SESSION['message'] = "✅ Produit « {$pro_nom} » ajouté avec succès.";
             header('Location: '.$BASE.'admin_produits.php?ok=1');
             exit;
@@ -190,6 +246,8 @@ $defaultType = $_POST['pro_type'] ?? ($prefType ?: 'autre');
 
     <div class="form-card">
         <form method="post" enctype="multipart/form-data" autocomplete="off">
+            <!--permet de cacher le champ--->
+            <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf']) ?>">
             <div class="form-row">
                 <label for="pro_nom">Nom *</label>
                 <input type="text" id="pro_nom" name="pro_nom" required
@@ -224,6 +282,22 @@ $defaultType = $_POST['pro_type'] ?? ($prefType ?: 'autre');
                 <label for="pro_img">Image (JPEG/PNG/WebP/GIF, max 5 Mo)</label>
                 <input type="file" id="pro_img" name="pro_img" accept="image/*">
             </div>
+            <!-- Champs spécifiques FLEUR -->
+            <div class="form-row fleur-row">
+                <label for="fle_couleur">Fleur — Couleur</label>
+                <input type="text" id="fle_couleur" name="fle_couleur"
+                       value="<?= htmlspecialchars($_POST['fle_couleur'] ?? 'rouge') ?>">
+            </div>
+            <div class="form-row fleur-row">
+                <label for="fle_stock">Fleur — Stock</label>
+                <input type="number" id="fle_stock" name="fle_stock" min="0"
+                       value="<?= htmlspecialchars($_POST['fle_stock'] ?? 50) ?>">
+            </div>
+
+            <div class="actions">
+                <a class="button secondary" href="<?= $BASE ?>admin_produits.php">Annuler</a>
+                <button class="button" type="submit">Enregistrer</button>
+            </div>
 
             <!-- Champs spécifiques BOUQUET -->
             <div class="form-row bouquet-row">
@@ -242,34 +316,87 @@ $defaultType = $_POST['pro_type'] ?? ($prefType ?: 'autre');
                        value="<?= htmlspecialchars($_POST['bou_stock'] ?? 10) ?>">
             </div>
 
-            <!-- Champs spécifiques FLEUR -->
-            <div class="form-row fleur-row">
-                <label for="fle_couleur">Fleur — Couleur</label>
-                <input type="text" id="fle_couleur" name="fle_couleur"
-                       value="<?= htmlspecialchars($_POST['fle_couleur'] ?? 'rouge') ?>">
+            <!-- COFFRET -->
+            <div class="form-row coffret-row" style="display:none">
+                <label for="cof_evenement">Coffret — Événement</label>
+                <input type="text" id="cof_evenement" name="cof_evenement" value="<?= htmlspecialchars($_POST['cof_evenement'] ?? '') ?>">
             </div>
-            <div class="form-row fleur-row">
-                <label for="fle_stock">Fleur — Stock</label>
-                <input type="number" id="fle_stock" name="fle_stock" min="0"
-                       value="<?= htmlspecialchars($_POST['fle_stock'] ?? 50) ?>">
+            <div class="form-row coffret-row" style="display:none">
+                <label for="cof_stock">Coffret — Stock</label>
+                <input type="number" id="cof_stock" name="cof_stock" min="0" value="<?= htmlspecialchars($_POST['cof_stock'] ?? 0) ?>">
             </div>
 
-            <div class="actions">
-                <a class="button secondary" href="<?= $BASE ?>admin_produits.php">Annuler</a>
-                <button class="button" type="submit">Enregistrer</button>
+            <!-- SUPPLÉMENT -->
+            <div class="form-row supplement-row" style="display:none">
+                <label for="sup_nom">Supplément — Nom *</label>
+                <input type="text" id="sup_nom" name="sup_nom" value="<?= htmlspecialchars($_POST['sup_nom'] ?? '') ?>">
             </div>
+            <div class="form-row supplement-row" style="display:none">
+                <label for="sup_description">Supplément — Description</label>
+                <input type="text" id="sup_description" name="sup_description" value="<?= htmlspecialchars($_POST['sup_description'] ?? '') ?>">
+            </div>
+            <div class="form-row supplement-row" style="display:none">
+                <label for="sup_prix_unitaire">Supplément — Prix unitaire (CHF) *</label>
+                <input type="number" id="sup_prix_unitaire" name="sup_prix_unitaire" step="0.05" min="0.00" value="<?= htmlspecialchars($_POST['sup_prix_unitaire'] ?? '') ?>">
+            </div>
+            <div class="form-row supplement-row" style="display:none">
+                <label for="sup_couleur">Supplément — Couleur</label>
+                <input type="text" id="sup_couleur" name="sup_couleur" value="<?= htmlspecialchars($_POST['sup_couleur'] ?? '') ?>">
+            </div>
+            <div class="form-row supplement-row" style="display:none">
+                <label for="sup_qte_stock">Supplément — Stock *</label>
+                <input type="number" id="sup_qte_stock" name="sup_qte_stock" min="0" value="<?= htmlspecialchars($_POST['sup_qte_stock'] ?? 0) ?>">
+            </div>
+
+            <!-- EMBALLAGE -->
+            <div class="form-row emballage-row" style="display:none">
+                <label for="emb_nom">Emballage — Nom *</label>
+                <input type="text" id="emb_nom" name="emb_nom" value="<?= htmlspecialchars($_POST['emb_nom'] ?? '') ?>">
+            </div>
+            <div class="form-row emballage-row" style="display:none">
+                <label for="emb_couleur">Emballage — Couleur</label>
+                <input type="text" id="emb_couleur" name="emb_couleur" value="<?= htmlspecialchars($_POST['emb_couleur'] ?? '') ?>">
+            </div>
+            <div class="form-row emballage-row" style="display:none">
+                <label for="emb_qte_stock">Emballage — Stock *</label>
+                <input type="number" id="emb_qte_stock" name="emb_qte_stock" min="0" value="<?= htmlspecialchars($_POST['emb_qte_stock'] ?? 0) ?>">
+            </div>
+
         </form>
     </div>
 </main>
 
 <script>
     /* Affiche/masque les champs spécifiques selon le type */
-    function toggleTypeFields(type){
-        document.querySelectorAll('.bouquet-row').forEach(el => el.style.display = (type==='bouquet') ? 'grid' : 'none');
-        document.querySelectorAll('.fleur-row').forEach(el   => el.style.display = (type==='fleur')   ? 'grid' : 'none');
+
+        function toggleTypeFields(type){
+        // afficher Nom/Prix (PRODUIT) seulement pour fleur/bouquet/coffret
+        document.querySelectorAll('.prod-row').forEach(el =>
+            el.style.display = (['fleur','bouquet','coffret'].includes(type) ? 'grid' : 'none')
+        );
+
+        // groupes spécifiques
+        const groups = {
+        'fleur': '.fleur-row',
+        'bouquet': '.bouquet-row',
+        'coffret': '.coffret-row',
+        'supplement': '.supplement-row',
+        'emballage': '.emballage-row'
+    };
+
+        // tout cacher d'abord
+        Object.values(groups).forEach(sel =>
+        document.querySelectorAll(sel).forEach(el => el.style.display = 'none')
+        );
+
+        // montrer le groupe du type choisi
+        if (groups[type]) {
+        document.querySelectorAll(groups[type]).forEach(el => el.style.display = 'grid');
     }
-    const sel = document.getElementById('pro_type');
-    if (sel) {
+    }
+
+        const sel = document.getElementById('pro_type');
+        if (sel) {
         toggleTypeFields(sel.value);
         sel.addEventListener('change', ()=> toggleTypeFields(sel.value));
     }
