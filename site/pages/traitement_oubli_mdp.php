@@ -68,14 +68,14 @@ try {
             : ucfirst(strtolower($prenom));
     }
 
-    $salut   = "Chère " . ($prenom !== '' ? $prenom : "cliente");
+    $salut   = "Coucou " . ($prenom !== '' ? $prenom : "cliente");
     $subject = function_exists('mb_encode_mimeheader')
         ? mb_encode_mimeheader("DK Bloom — Code de réinitialisation", 'UTF-8', 'B', "\r\n")
         : "DK Bloom — Code de réinitialisation";
 
     // >>> Contenu tel que tu le veux (emojis conservés) <<<
     $message  = $salut . ",\n\n";
-    $message .= "Voici votre code de réinitialisation 💖 : $code\n";
+    $message .= "Voici ton code de réinitialisation 💖 : $code\n";
     $message .= "Il est valable 15 minutes.\n";
     $message .= "Merci de la confiance que tu nous accordes !.\n\n";
     $message .= "L’équipe DK Bloom 🌹";
