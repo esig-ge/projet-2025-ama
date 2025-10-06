@@ -77,6 +77,7 @@ function findDuplicateAddressId(PDO $pdo, int $perId, string $type, string $rue,
 function emailTakenByAnother(PDO $pdo, string $email, int $perId): bool {
     $st = $pdo->prepare("SELECT 1 FROM PERSONNE WHERE PER_EMAIL=:e AND PER_ID<>:id LIMIT 1");
     $st->execute([':e'=>$email, ':id'=>$perId]);
+    $st->execute([':e'=>$email, ':id'=>$perId]);
     return (bool)$st->fetchColumn();
 }
 
@@ -351,7 +352,7 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
                     <button class="btn-primary" type="submit" name="update_profile" value="1">Appliquer</button>
                 </div>
                 <p style="margin-top:10px;font-size:.9rem">
-                    Modifier le mot de passe ? <a href="<?= $BASE ?>modification_mdp.php">Cliquez ici</a>.
+                    Modifier le mot de passe ? <a href="<?= $BASE ?>interface_oubli_mdp.php">Cliquez ici</a>.
                 </p>
             </form>
         </section>

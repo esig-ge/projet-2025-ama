@@ -1,0 +1,157 @@
+/* ============================================================
+   DK Bloom — style_reset_mpd.css
+   Styles communs aux pages : interface_oubli_mdp.php,
+   traitement_oubli_mdp.php (redirige), reinitialisation_mdp.php
+   ============================================================ */
+
+/* --------- Variables et base --------- */
+:root{
+    --dk-bg-1: #5C0012;         /* bordeaux foncé */
+    --dk-bg-2: #8A1B2E;         /* bordeaux rosé */
+    --dk-text-1: #5C0012;
+    --dk-text-2: #7a2350;
+    --dk-surface: #ffffff;
+    --dk-surface-2: #fdf7f9;
+    --dk-border: #ead6dd;
+    --dk-shadow: rgba(0,0,0,.25);
+    --dk-ok: #16a34a;
+    --dk-err: #b00020;
+    --dk-info: #0b4fb9;
+}
+
+/* Page centrée avec gradient */
+body.reset-page{
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(120deg, var(--dk-bg-1), var(--dk-bg-2));
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--dk-text-2);
+}
+
+/* Carte centrale */
+.reset-card{
+    width: min(720px, 96vw);
+    background: var(--dk-surface);
+    border-radius: 20px;
+    box-shadow: 0 18px 50px var(--dk-shadow);
+    padding: 28px;
+}
+
+.reset-card h1,
+.reset-card h2{
+    margin: 0 0 6px;
+    color: var(--dk-text-1);
+}
+
+.reset-card p{
+    margin: 0 0 10px;
+    color: var(--dk-text-2);
+}
+
+/* Formulaire */
+.reset-form{
+    display: grid;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.reset-label{
+    font-weight: 600;
+    color: var(--dk-text-1);
+    font-size: 14px;
+}
+
+/* Champ */
+.reset-input{
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--dk-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: var(--dk-surface-2);
+}
+
+.reset-input input{
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-size: 15px;
+    color: #3d0020;
+}
+
+/* Bouton principal */
+.btn-primary{
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 18px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    background: linear-gradient(120deg, var(--dk-bg-2), var(--dk-bg-1));
+    box-shadow: 0 10px 24px rgba(138,27,46,.35);
+    transition: filter .15s ease;
+}
+.btn-primary:hover{ filter: brightness(1.05); }
+
+/* Petites notes */
+.note{
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff6f9;
+    color: var(--dk-text-1);
+}
+
+.note.ok{ color: var(--dk-ok); background: #f0fff4; }
+.note.err{ color: var(--dk-err); background: #fff1f2; }
+
+/* Liens sous carte */
+.reset-links{
+    margin-top: 12px;
+}
+
+/* --------- Toast (commun) --------- */
+.toast{
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    max-width: 320px;
+    background: #fff;
+    color: #222;
+    border-left: 6px solid #999;
+    padding: 12px 14px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px var(--dk-shadow);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    opacity: 0;
+    transform: translateY(14px);
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 9999;
+}
+.toast.show{ opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+.toast.success{ border-left-color: var(--dk-ok); }
+.toast.error{   border-left-color: var(--dk-err); }
+.toast.info{    border-left-color: var(--dk-info); }
+
+.toast .toast-close{
+    margin-left: auto;
+    background: transparent;
+    border: 0;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+}
+
+/* --------- Responsive --------- */
+@media (max-width: 720px){
+    .reset-card{ padding: 22px; }
+}
