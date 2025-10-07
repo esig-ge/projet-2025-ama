@@ -72,7 +72,8 @@ function resolveSuppImage(int $id, string $name, string $BASE, array $legacyMap)
     <title>DK Bloom — Suppléments</title>
 
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <link rel="stylesheet" href="<?= $BASE ?>css/styleCatalogue.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_catalogue.css">
 
     <style>
         #supp-grid{

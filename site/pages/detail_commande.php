@@ -188,44 +188,18 @@ $paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT']
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>DK Bloom — Détails commande #<?= (int)$head['COM_ID'] ?></title>
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
-    <style>
-        :root{
-            --bordeaux:#5C0012; --bordeaux-2:#8A1B2E; --ink:#1b1b1b; --paper:#fff; --muted:#6b6b6b;
-            --radius:20px; --shadow:0 10px 30px rgba(0,0,0,.12);
-        }
-        body{ background:#faf7f8; color:var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-        .container{ max-width:1100px; margin:24px auto; padding:0 16px; }
-        h1{ font-size:1.6rem; color:var(--bordeaux); margin:8px 0 16px; }
-        .grid{ display:grid; grid-template-columns: 1.2fr .8fr; gap:18px; }
-        .card{ background:var(--paper); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-        .meta{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
-        .meta div{ background:#f7f1f2; border-radius:14px; padding:10px 12px; }
-        .meta b{ display:block; font-size:.85rem; color:var(--muted); }
-        table{ width:100%; border-collapse:collapse; }
-        th, td{ padding:10px 8px; border-bottom:1px solid #eee; text-align:left; }
-        th{ font-size:.9rem; color:#444; }
-        .right{ text-align:right; }
-        .section-title{ color:var(--bordeaux-2); font-size:1.1rem; margin:8px 0 12px; }
-        .totals{ margin-top:12px; }
-        .totals .row{ display:flex; justify-content:space-between; padding:6px 0; }
-        .totals .grand{ border-top:1px solid #eee; margin-top:6px; padding-top:10px; font-weight:700; }
-        .badge{ display:inline-block; padding:6px 10px; border-radius:999px; font-size:.85rem; background:#f1e7e9; color:var(--bordeaux-2); }
-        .back{ display:inline-block; margin-bottom:12px; text-decoration:none; color:var(--bordeaux-2); }
-        .addr{ line-height:1.4; color:#333; }
-        @media(max-width:900px){ .grid{ grid-template-columns:1fr; } }
-        .btn{ display:inline-block; padding:10px 14px; border-radius:12px; background:var(--bordeaux); color:#fff; text-decoration:none; }
-        .muted{ color:var(--muted); font-size:.9rem; }
-    </style>
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style_detail_commande.css">
 </head>
 <body>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
-<main class="container" aria-label="Détails commande">
+<main class="container dk-order" aria-label="Détails commande">
     <a class="back" href="<?= $BASE ?>info_perso.php">← Retour</a>
     <h1>Commande #<?= (int)$head['COM_ID'] ?></h1>
 
     <div class="grid">
-        <!-- Colonne gauche: lignes -->
+        <!-- Colonne gauche -->
         <section class="card">
             <div class="meta">
                 <div><b>Date</b><?= h(date('d.m.Y', strtotime((string)$head['COM_DATE']))) ?></div>
@@ -262,7 +236,7 @@ $paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT']
             <?php endif; ?>
 
             <?php if ($supps): ?>
-                <h2 class="section-title" style="margin-top:16px">Suppléments</h2>
+                <h2 class="section-title">Suppléments</h2>
                 <table>
                     <thead><tr><th>Supplément</th><th class="right">PU</th><th class="right">Qté</th><th class="right">Total</th></tr></thead>
                     <tbody>
@@ -279,7 +253,7 @@ $paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT']
             <?php endif; ?>
 
             <?php if ($embs): ?>
-                <h2 class="section-title" style="margin-top:16px">Emballages</h2>
+                <h2 class="section-title">Emballages</h2>
                 <table>
                     <thead><tr><th>Emballage</th><th class="right">PU</th><th class="right">Qté</th><th class="right">Total</th></tr></thead>
                     <tbody>
@@ -322,7 +296,7 @@ $paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT']
             </div>
         </section>
 
-        <!-- Colonne droite: adresse + actions -->
+        <!-- Colonne droite -->
         <aside class="card">
             <h2 class="section-title">Adresse de livraison</h2>
             <?php if ($adresse): ?>
@@ -332,7 +306,7 @@ $paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT']
                     <?= h((string)$adresse['ADR_PAYS']) ?>
                 </p>
             <?php else: ?>
-                <p class="muted">Aucune adresse de livraison enregistrée pour cette commande.</p>
+                <p class="muted">Aucune adresse de livraison enregistrée.</p>
             <?php endif; ?>
 
             <div style="margin-top:16px">
@@ -355,3 +329,4 @@ $paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT']
 <?php include __DIR__ . '/includes/footer.php'; ?>
 </body>
 </html>
+
