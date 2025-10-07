@@ -46,7 +46,7 @@ $legacyMap = array(
     1 => 'emballage_blanc.PNG',
     4 => 'emballage_gris.PNG',
     2 => 'emballage_noir.PNG',
-    3 => 'emballage_rose.PNG',
+    3 => 'emballage_rose.PNG',  
     5 => 'emballage_violet.PNG'
 );
 
