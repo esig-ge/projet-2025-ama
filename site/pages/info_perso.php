@@ -400,6 +400,7 @@ $orders = $st->fetchAll(PDO::FETCH_ASSOC);
                 <p class="muted">
                     Modifier le mot de passe ? <a href="<?= $BASE ?>interface_oubli_mdp.php">Cliquez ici</a>.
                 </p>
+                <a href="<?= $BASE ?>supprimer_compte.php">Supprimer le compte</a>
             </form>
         </section>
 
