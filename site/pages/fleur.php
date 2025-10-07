@@ -96,7 +96,7 @@ if (!$initialCheckedId) {
     <script src="<?= $BASE ?>js/commande.js?v=final" defer></script>
 </head>
 
-<body data-fallback="<?= htmlspecialchars($fallbackClass ?? '') ?>">
+<body style="--header-h: 140px;" data-fallback="<?= htmlspecialchars($fallbackClass ?? '') ?>">
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <main class="container">

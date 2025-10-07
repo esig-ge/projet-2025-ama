@@ -45,7 +45,7 @@ main.container{ padding-top: 12px; }
 .rose{
     display:flex;
     justify-content:center;
-    margin:10px 0 4px;            /* image plus proche des contrôles */
+    margin:8px 0 2px;            /* image plus proche des contrôles */
 }
 
 /* Sécurité contre d’éventuels styles hérités */
@@ -83,7 +83,7 @@ main.container{ padding-top: 12px; }
     display:flex;
     gap:10px;
     flex-wrap:wrap;
-    margin:6px 0 2px;             /* serré sous l’image */
+    margin:4px 0 2px;             /* serré sous l’image */
     border:0;
     padding:0;
 }
@@ -121,7 +121,7 @@ main.container{ padding-top: 12px; }
     font-size:1.5rem;
     font-weight:700;
     color:#9f1313;
-    margin:4px 0 6px;
+    margin:2px 0 4px;
 }
 
 .stock-msg{
@@ -146,7 +146,7 @@ main.container{ padding-top: 12px; }
 
 .qty{
     width:100px;                  /* plus compacte */
-    margin:6px 0 8px;
+    margin:4px 0 6px;
     padding:.55rem .75rem;
     border:1px solid #e2e2e2;
     border-radius:.6rem;
@@ -163,7 +163,7 @@ main.container{ padding-top: 12px; }
     background:#9f1313;
     color:#fff;
     cursor:pointer;
-    margin-top:4px;               /* collé au champ quantité */
+    margin-top:2px;               /* collé au champ quantité */
 }
 .btn-add[disabled]{ opacity:.6; cursor:not-allowed; }
 
@@ -209,5 +209,9 @@ a.button:hover, a.add-to-cart:hover{
     }
 }
 
-/* Option “ultra-collé” (désactive par défaut) */
-/* .rose + .swatches{ margin-top:-4px; } */
+.rose + .swatches{ margin-top:-50px; }
+/* 1) On annule le padding-top global du body si ton thème l'ajoute */
+body{ padding-top: 0 !important; }
+
+/* 2) On décale uniquement le contenu sous le header fixe */
+main.container{ margin-top: calc(var(--header-h, 80px) + 8px) !important; }
