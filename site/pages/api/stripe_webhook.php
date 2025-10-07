@@ -100,6 +100,37 @@ function findOrderId(PDO $pdo, ?string $clientRef, ?string $pi): ?int {
     return null;
 }
 
+function upsertPaiement(PDO $pdo, array $d): void {
+    // Mets un index unique sur PAI_STRIPE_PAYMENT_INTENT_ID pour fiabiliser l’UPSERT.
+    // ALTER TABLE PAIEMENT ADD UNIQUE KEY uniq_pi (PAI_STRIPE_PAYMENT_INTENT_ID);
+
+    $sql = "INSERT INTO PAIEMENT
+              (PER_ID, PAI_MODE, PAI_MONTANT, PAI_MONNAIE,
+               PAI_STRIPE_PAYMENT_INTENT_ID, PAI_STRIPE_LATEST_CHARGE_ID,
+               PAI_RECEIPT_URL, PAI_STATUT, PAI_DATE_, PAI_DATE_CONFIRMATION,
+               PAI_LAST_EVENT_ID, PAI_LAST_EVENT_TYPE, PAI_LAST_EVENT_PAYLOAD)
+            VALUES
+              (:per_id, :mode, :montant, :currency,
+               :pi_id, :charge_id, :receipt_url, :statut, :date_, :date_conf,
+               :last_event_id, :last_event_type, :payload)
+            ON DUPLICATE KEY UPDATE
+               PER_ID = VALUES(PER_ID),
+               PAI_MODE = VALUES(PAI_MODE),
+               PAI_MONTANT = VALUES(PAI_MONTANT),
+               PAI_MONNAIE = VALUES(PAI_MONNAIE),
+               PAI_STRIPE_LATEST_CHARGE_ID = VALUES(PAI_STRIPE_LATEST_CHARGE_ID),
+               PAI_RECEIPT_URL = VALUES(PAI_RECEIPT_URL),
+               PAI_STATUT = VALUES(PAI_STATUT),
+               PAI_DATE_ = VALUES(PAI_DATE_),
+               PAI_DATE_CONFIRMATION = VALUES(PAI_DATE_CONFIRMATION),
+               PAI_LAST_EVENT_ID = VALUES(PAI_LAST_EVENT_ID),
+               PAI_LAST_EVENT_TYPE = VALUES(PAI_LAST_EVENT_TYPE),
+               PAI_LAST_EVENT_PAYLOAD = VALUES(PAI_LAST_EVENT_PAYLOAD)";
+    $st = $pdo->prepare($sql);
+    $st->execute($d);
+}
+
+
 // Hooks métier (à implémenter si besoin)
 function onOrderPaid(PDO $pdo, int $comId): void { /* TODO: décrément stock, email, etc. */ }
 function onOrderRefunded(PDO $pdo, int $comId): void { /* TODO */ }
