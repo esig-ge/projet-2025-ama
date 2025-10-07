@@ -1,43 +1,54 @@
-/* ====== Fiche produit : mise en page ====== */
+/* ============================================================
+   DK Bloom — Fiche produit (Fleur)
+   But : mise en page claire, compacte et sans doublons
+   ============================================================ */
+
+/* --- 0) Espace sous header fixe (évite que le titre passe dessous) --- */
+/* Adapte la valeur à la hauteur réelle de ton header (logo + nav).      */
+:root{ --header-h: 110px; }    /* ex: 100–120px */
+main.container{ padding-top: 12px; }
+
+/* --- 1) Layout général ------------------------------------------------ */
 .catalogue .produit{
     display:flex;
     justify-content:center;
-    gap:32px;
     align-items:flex-start;
+    gap:16px;                     /* plus compact qu’avant */
 }
+
 .catalogue .produit-info{
     background:#fff;
+    color:darkred;
     display:flex;
     flex-direction:column;
     align-items:center;
-    color:darkred;
 }
 
-/* Titres/paragraphes */
+/* Titres / paragraphes */
 .catalogue .section-title{
     color:darkred;
-    margin:0 0 8px;
     text-align:center;
+    margin:0 0 8px;
 }
-.catalogue .produit-info h3{
+.product-title{                 /* h3 du produit */
     font-size:2rem;
-    margin:8px 0;
+    margin:8px 0 6px;             /* léger espace sous le titre */
 }
-.catalogue .produit-info p{
+.catalogue .produit-info p{     /* description courte */
     font-size:1.125rem;
     line-height:1.5;
     text-align:center;
-    margin:0 0 16px;
+    margin:0 0 8px;               /* resserré */
 }
 
-/* ====== Image de la rose ====== */
+/* --- 2) Image de la rose ---------------------------------------------- */
 .rose{
     display:flex;
     justify-content:center;
-    margin:24px 0;
+    margin:10px 0 4px;            /* image plus proche des contrôles */
 }
 
-/* Reset de sécu contre d’anciens styles (opacity/position) */
+/* Sécurité contre d’éventuels styles hérités */
 .rose .img-rose{
     opacity:1 !important;
     position:static !important;
@@ -45,7 +56,7 @@
     object-fit:contain;
 }
 
-/* Cachées par défaut, on affiche la bonne via les radios */
+/* Par défaut : cachées. On montre la bonne selon la couleur cochée. */
 .img-rose{
     display:none;
     width:min(520px, 90vw);
@@ -53,7 +64,7 @@
     height:auto;
 }
 
-/* Radios cachées mais présentes */
+/* Radios invisibles mais présentes (pour le :checked) */
 .color-radio{
     position:absolute;
     left:-9999px;
@@ -67,28 +78,34 @@
 #c-bleu:checked   ~ .rose .bleue   { display:block; }
 #c-noir:checked   ~ .rose .noire   { display:block; }
 
-/* ====== Pastilles couleur ====== */
+/* --- 3) Pastilles couleur --------------------------------------------- */
 .swatches{
     display:flex;
-    gap:12px;
-    margin:12px 0;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:6px 0 2px;             /* serré sous l’image */
     border:0;
     padding:0;
 }
-.swatch span{
-    --size:28px;
-    display:inline-block;
-    width:var(--size);
-    height:var(--size);
+.swatch{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px; height:28px;
     border-radius:50%;
-    background:var(--swatch); /* défini en inline style */
-    border:2px solid #ccc;
+    border:2px solid #ddd;
     cursor:pointer;
+}
+.swatch > span{
+    display:block;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--swatch);     /* défini inline dans le HTML */
     transition:transform .15s ease;
 }
-.swatch span:hover{ transform:scale(1.1); }
+.swatch > span:hover{ transform:scale(1.1); }
 
-/* Liseré noir sur la pastille sélectionnée (viser le SPAN !) */
+/* Liseré noir sur la pastille sélectionnée (vise le SPAN) */
 #c-rouge:checked  ~ .swatches label[for="c-rouge"]  span,
 #c-roseC:checked  ~ .swatches label[for="c-roseC"] span,
 #c-rose:checked   ~ .swatches label[for="c-rose"]   span,
@@ -99,41 +116,84 @@
     outline-offset:2px;
 }
 
-/* ====== Inputs & boutons ====== */
+/* --- 4) Prix, stock, quantité & actions ------------------------------- */
+#rosePrice{
+    font-size:1.5rem;
+    font-weight:700;
+    color:#9f1313;
+    margin:4px 0 6px;
+}
+
+.stock-msg{
+    display:none;
+    align-items:center;
+    gap:8px;
+    margin:12px 0 0;
+    padding:10px 14px;
+    border-radius:12px;
+    background:#fff5f7;
+    border:1px solid #ffd6e0;
+    color:#7a0000;
+    font-size:.95rem;
+}
+.stock-msg.show{ display:inline-flex; }
+.stock-msg .dot{
+    width:8px; height:8px;
+    border-radius:50%;
+    background:#d90429;
+    display:inline-block;
+}
+
 .qty{
-    width:120px;
-    margin:10px;
+    width:100px;                  /* plus compacte */
+    margin:6px 0 8px;
     padding:.55rem .75rem;
     border:1px solid #e2e2e2;
     border-radius:.6rem;
     font:inherit;
 }
-.btn{
-    background:darkred; color:#fff; border:none;
-    padding:8px 14px; border-radius:15px; cursor:pointer;
-    font-size:.9rem; font-weight:700;
-    transition:background .3s, transform .2s;
-}
-.btn:hover{ background:indianred; transform:scale(1.05); }
 
+.btn-add{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    background:#9f1313;
+    color:#fff;
+    cursor:pointer;
+    margin-top:4px;               /* collé au champ quantité */
+}
+.btn-add[disabled]{ opacity:.6; cursor:not-allowed; }
+
+/* Liens/boutons de navigation */
 a.button, a.add-to-cart{
-    display:inline-block; margin:10px; padding:8px 13px;
-    background:#fff; color:darkred; text-decoration:none; font-weight:700;
-    border-radius:15px; box-shadow:0 2px 5px rgba(0,0,0,.15);
+    display:inline-block;
+    margin:10px;
+    padding:8px 13px;
+    background:#fff;
+    color:darkred;
+    text-decoration:none;
+    font-weight:700;
+    border-radius:15px;
+    box-shadow:0 2px 5px rgba(0,0,0,.15);
     transition:background .3s, transform .2s;
 }
 a.button:hover, a.add-to-cart:hover{
-    background:indianred; color:#fff; transform:scale(1.05);
+    background:indianred;
+    color:#fff;
+    transform:scale(1.05);
 }
 
 .btn_accueil{
     display:flex;
     justify-content:center;
-    gap:8px;
-    margin:12px 0 24px;
+    gap:10px;
+    margin-top:10px;              /* compact */
 }
 
-/* ====== Footer & responsive ====== */
+/* --- 5) Footer & responsive ------------------------------------------ */
 .site-footer p{
     font-size:.9rem !important;
     font-weight:normal !important;
@@ -143,12 +203,11 @@ a.button:hover, a.add-to-cart:hover{
 .site-footer small{ font-size:.85rem !important; }
 
 @media (max-width:900px){
-    .catalogue .produit{ flex-direction:column; align-items:center; }
+    .catalogue .produit{
+        flex-direction:column;
+        align-items:center;
+    }
 }
 
-#rosePrice {
-    font-size: 1.5rem;   /* plus grand */
-    font-weight: bold;    /* en gras */
-    color: #9f1313;       /* couleur rouge foncé */
-    margin: 12px 0;
-}
+/* Option “ultra-collé” (désactive par défaut) */
+/* .rose + .swatches{ margin-top:-4px; } */

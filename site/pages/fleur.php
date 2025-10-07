@@ -1,5 +1,5 @@
 <?php
-// /site/pages/fleur.php
+// /site/pages/fleur.php VFFF
 session_start();
 
 // Anti-cache pour toujours refléter la BDD au reload
@@ -83,25 +83,8 @@ if (!$initialCheckedId) {
     <title>DK Bloom — Fleurs</title>
 
     <link rel="stylesheet" href="<?= $BASE ?>css/style_header_footer.css">
+    <link rel="stylesheet" href="<?= $BASE ?>css/style.css">
     <link rel="stylesheet" href="<?= $BASE ?>css/styleFleurUnique.css">
-
-    <style>
-        .stock-msg{display:none;align-items:center;gap:8px;margin:12px 0 0;padding:10px 14px;border-radius:12px;background:#fff5f7;border:1px solid #ffd6e0;color:#7a0000;font-size:.95rem}
-        .stock-msg.show{display:inline-flex}
-        .stock-msg .dot{width:8px;height:8px;border-radius:50%;background:#d90429;display:inline-block}
-        .img-rose{display:none}
-        .img-rose.show{display:block}
-        .swatches{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
-        .swatch{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:2px solid #ddd;cursor:pointer}
-        .swatch>span{display:block;width:18px;height:18px;border-radius:50%;background:var(--swatch)}
-        .qty{margin:14px 0 18px;width:100px}
-        .btn-add{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid #ccc;background: #9f1313;color:#fff;cursor:pointer}
-        .btn-add[disabled]{opacity:.6;cursor:not-allowed}
-        .btn_accueil{display:flex;gap:10px;margin-top:18px}
-        .button{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;color: #610202}
-        .product-title{margin:0 0 6px}
-        .product-price{font-weight:600;margin-top:6px}
-    </style>
 
     <!-- Expose BASE + API_URL au JS -->
     <script>
@@ -338,5 +321,22 @@ if (!$initialCheckedId) {
         }
     });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const header = document.querySelector('.site-header'); // adapte le sélecteur si besoin
+        if (!header) return;
+
+        // Fonction qui ajuste la variable CSS selon la hauteur réelle du header
+        const apply = () => {
+            const h = Math.ceil(header.getBoundingClientRect().height);
+            document.documentElement.style.setProperty('--header-h', h + 'px');
+        };
+
+        apply(); // premier calcul au chargement
+        window.addEventListener('resize', apply); // recalcule si on redimensionne
+    });
+</script>
+
 </body>
 </html>
