@@ -23,6 +23,25 @@ $COM_STATUTS = [
     'annulee'
 ];
 
+/* ===== Ordre des statuts + règle de transition ===== */
+$STATUS_RANK = [
+    'en preparation'          => 1,
+    "en attente d'expédition" => 2,
+    'expediee'                => 3,
+    'livree'                  => 4,
+    'annulee'                 => -1, // traité à part
+];
+
+function can_transition_status(string $from, string $to, array $rank): bool {
+    $from = strtolower($from);
+    $to   = strtolower($to);
+    if ($from === $to) return true;              // rien ne change
+    if ($from === 'annulee') return ($to === 'annulee'); // une fois annulée, figée
+    if ($to   === 'annulee') return true;        // annulation possible à tout moment
+    if (!isset($rank[$from]) || !isset($rank[$to])) return false;
+    return $rank[$to] >= $rank[$from];           // uniquement vers l'avant
+}
+
 /* Ordre d'affichage des sections (libellés jolis) */
 $DISPLAY_ORDER = [
     'livree'                   => 'Livrées',
@@ -43,14 +62,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $comStatut = $_POST['com_statut'] ?? '';
         if ($comId > 0 && $comStatut !== '' && in_array($comStatut, $COM_STATUTS, true)) {
             try {
-                $pdo->prepare("UPDATE COMMANDE SET COM_STATUT=? WHERE COM_ID=?")->execute([$comStatut, $comId]);
-                $_SESSION['flash'] = "Commande #$comId mise à jour.";
+                // On lit d’abord le statut actuel pour valider la transition
+                $st = $pdo->prepare("SELECT COM_STATUT, COM_ARCHIVE FROM COMMANDE WHERE COM_ID=?");
+                $st->execute([$comId]);
+                $row = $st->fetch(PDO::FETCH_ASSOC);
+
+                if (!$row) {
+                    $_SESSION['flash'] = "Commande #$comId introuvable.";
+                } elseif ((int)($row['COM_ARCHIVE'] ?? 0) === 1) {
+                    $_SESSION['flash'] = "Commande #$comId archivée — modification impossible.";
+                } elseif (!can_transition_status((string)$row['COM_STATUT'], $comStatut, $STATUS_RANK)) {
+                    $_SESSION['flash'] = "Transition refusée : on ne peut pas revenir en arrière (sauf annulation).";
+                } else {
+                    $pdo->prepare("UPDATE COMMANDE SET COM_STATUT=? WHERE COM_ID=?")->execute([$comStatut, $comId]);
+                    $_SESSION['flash'] = "Commande #$comId mise à jour.";
+                }
             } catch (Throwable $e) {
                 $_SESSION['flash'] = "Échec mise à jour (#$comId).";
             }
         }
         header("Location: ".$_SERVER['REQUEST_URI']); exit;
     }
+
     if ($action === 'archive') {
         $comId = (int)($_POST['com_id'] ?? 0);
         if ($comId > 0) {
@@ -340,9 +373,15 @@ function badgeClass($s) {
                                     <input type="hidden" name="com_id" value="<?= (int)$r['commande_id'] ?>">
                                     <select name="com_statut" title="Statut commande">
                                         <option value="">Statut commande…</option>
-                                        <?php foreach ($COM_STATUTS as $opt): ?>
-                                            <option value="<?= h($opt) ?>" <?= ($opt === ($r['statut_commande'] ?? '')) ? 'selected' : '' ?>><?= h($opt) ?></option>
+                                        <?php
+                                        $cur = (string)($r['statut_commande'] ?? '');
+                                        foreach ($COM_STATUTS as $opt):
+                                            $disabled = can_transition_status($cur, $opt, $STATUS_RANK) ? '' : 'disabled';
+                                            $selected = ($opt === $cur) ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= h($opt) ?>" <?= $selected ?> <?= $disabled ?>><?= h($opt) ?></option>
                                         <?php endforeach; ?>
+
                                     </select>
                                     <button class="btn" type="submit">Mettre à jour</button>
                                 </form>
