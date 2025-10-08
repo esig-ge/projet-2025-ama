@@ -244,6 +244,7 @@ function img_for_bouquet_by_nb(int $nb, string $base): string {
 
     <?php
     $cssColor = [
+            'violet' => '#800080',
         'rouge'      => 'red',
         'rose clair' => 'pink',
         'rose'       => '#ff4d7a',
