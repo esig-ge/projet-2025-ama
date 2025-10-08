@@ -55,8 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
         session_destroy();
 
         // Redirection vers la page d’adieu
-        header('Location: '.$BASE.'pages/goodbye.php');
+        header('Location: '.$BASE.'goodbye.php');
         exit;
+
 
     } catch (Throwable $e) {
         // Rollback uniquement si la transaction est active
