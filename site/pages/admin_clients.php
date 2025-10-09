@@ -241,7 +241,7 @@ function qurl(array $merge = []): string {
         </div>
         <div class="right">
             <a class="btn secondary" href="<?= h(qurl(['export'=>1])) ?>">Exporter CSV</a>
-            <a class="btn" href="<?= h($BASE.'adminAccueil.php') ?>">Retour admin</a>
+            <a class="btn" href="<?= h($BASE.'adminAccueil.php') ?>">Dashboard</a>
         </div>
     </div>
 
@@ -272,7 +272,7 @@ function qurl(array $merge = []): string {
                         <td>
                             <!-- Liens d’exemple (ajuste les routes si besoin) -->
                             <a class="page" href="<?= h($BASE.'admin_client_detail.php?per_id='.$r['PER_ID']) ?>">Voir</a>
-                            <a class="page" href="<?= h($BASE.'admin_commandes.php?per_id='.$r['PER_ID']) ?>">Commandes</a>
+                            <a class="page" href="<?= h($BASE.'admin_client_commandes.php?per_id='.$r['PER_ID']) ?>">Commandes</a>
                         </td>
                     </tr>
                 <?php endforeach; endif; ?>
