@@ -120,11 +120,7 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
         </a>
         <a class="nav-item" href="<?= $BASE ?>admin_catalogue.php"><span class="ico">💐</span> <span>Produits</span></a>
         <a class="nav-item" href="<?= $BASE ?>admin_commande.php"><span class="ico">🧾</span> <span>Commandes</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminClients.php"><span class="ico">👤</span> <span>Clients</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminPromos.php"><span class="ico">🏷️</span> <span>Promotions</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminAvis.php"><span class="ico">⭐</span> <span>Avis</span></a>
-        <a class="nav-item" href="<?= $BASE ?>admin_messages.php"><span class="ico">📩</span> <span>Messages</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminParametres.php"><span class="ico">⚙️</span> <span>Paramètres</span></a>
+        <a class="nav-item" href="<?= $BASE ?>admin_clients.php"><span class="ico">👤</span> <span>Clients</span></a>
     </nav>
     <div class="adm-footer">© <?= date('Y') ?> DK Bloom</div>
 </aside>
