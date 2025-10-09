@@ -409,16 +409,10 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
         document.body.classList.toggle('aside-closed');
     });
 </script>
+
 <script>
     (() => {
-        const admId = <?= json_encode($admId, JSON_UNESCAPED_UNICODE) ?>;
-        const STORAGE_KEY = `dkb_admin_todos_${admId||'guest'}`;
-
-        /*** State ***/
-        let todos = load() ?? seed();
-        let filter = 'all';
-
-        /*** Elements ***/
+        const API = '<?= $BASE ?>api/todo.php';
         const $list   = document.getElementById('todo-list');
         const $input  = document.getElementById('todo-input');
         const $form   = document.getElementById('todo-add');
@@ -428,17 +422,47 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
         const $clearD = document.getElementById('todo-clear-done');
         const $clearA = document.getElementById('todo-clear-all');
 
-        /*** Init ***/
-        render();
+        let todos = [];
+        let filter = 'all';
 
-        /*** Events ***/
-        $form.addEventListener('submit', (e)=>{
+        // --- util fetch ---
+        async function post(data) {
+            const body = new URLSearchParams(data);
+            const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+            return r.json();
+        }
+        async function load() {
+            const r = await fetch(API + '?op=list');
+            const j = await r.json();
+            todos = (j.items || []).map(x => ({
+                id: String(x.TODO_ID),
+                text: x.TEXTE,
+                done: Number(x.DONE) === 1
+            }));
+            render();
+        }
+
+        // --- events ---
+        $form.addEventListener('submit', async (e)=>{
             e.preventDefault();
             const t = ($input.value||'').trim();
-            if(!t) return;
-            todos.push({ id: uid(), text: t, done:false });
-            $input.value='';
-            save(); render();
+            if (!t) return;
+            $input.value = '';
+            // Optimiste
+            const tempId = 'tmp_'+Date.now();
+            todos.push({id:tempId, text:t, done:false});
+            render();
+            // Persist
+            const j = await post({op:'add', text:t});
+            if (j.ok && j.item) {
+                const i = todos.findIndex(x=>x.id===tempId);
+                if (i>=0) todos[i].id = String(j.item.TODO_ID || j.item.todo_id || j.item.id || todos[i].id);
+            } else {
+                // rollback
+                todos = todos.filter(x=>x.id!==tempId);
+                alert("Erreur ajout tâche");
+            }
+            render();
         });
 
         $chips.forEach(ch=>{
@@ -450,15 +474,20 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             });
         });
 
-        $clearD.addEventListener('click', ()=>{
+        $clearD.addEventListener('click', async ()=>{
             todos = todos.filter(t=>!t.done);
-            save(); render();
-        });
-        $clearA.addEventListener('click', ()=>{
-            if(confirm('Tout effacer ?')) { todos = []; save(); render(); }
+            render();
+            await post({op:'clear_done'});
         });
 
-        /*** Drag to reorder ***/
+        $clearA.addEventListener('click', async ()=>{
+            if (!confirm('Tout effacer ?')) return;
+            todos = [];
+            render();
+            await post({op:'clear_all'});
+        });
+
+        // --- DnD re-order ---
         let dragId = null;
         $list.addEventListener('dragstart', e=>{
             const li = e.target.closest('li.todo-item');
@@ -476,23 +505,25 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             if(!dragging) return;
             if(after==null) $list.appendChild(dragging); else $list.insertBefore(dragging, after);
         });
-        $list.addEventListener('drop', ()=>{
-            // Rebuild order from DOM
+        $list.addEventListener('drop', async ()=>{
             const ids = [...$list.querySelectorAll('.todo-item')].map(li=>li.dataset.id);
+            // local reorder
             todos.sort((a,b)=> ids.indexOf(a.id) - ids.indexOf(b.id));
-            save(); render(); // re-render to reset classes
+            render();
+            // persist order
+            const form = new URLSearchParams(); form.append('op','reorder');
+            ids.forEach(id=>form.append('ids[]', id));
+            await fetch(API, {method:'POST', body:form});
         });
 
-        /*** Helpers ***/
+        // --- render helpers ---
         function render(){
-            // filter
             const filtered = todos.filter(t=>{
                 if(filter==='open') return !t.done;
                 if(filter==='done') return t.done;
                 return true;
             });
 
-            // list
             $list.innerHTML = '';
             filtered.forEach(t=>{
                 const li = document.createElement('li');
@@ -503,26 +534,32 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
                 const check = document.createElement('button');
                 check.className = 'todo-check'+(t.done?' checked':'');
                 check.innerHTML = '<span class="mark">✔</span>';
-                check.addEventListener('click', ()=>{
-                    t.done = !t.done; save(); render();
+                check.addEventListener('click', async ()=>{
+                    t.done = !t.done; render();
+                    await post({op:'toggle', id:t.id, done: t.done ? 1 : 0});
                 });
 
                 const lbl = document.createElement('div');
                 lbl.className = 'todo-label';
                 lbl.textContent = t.text;
+                lbl.title = 'Double-clic pour renommer';
+                lbl.addEventListener('dblclick', async ()=>{
+                    const nv = prompt('Modifier la tâche :', t.text);
+                    if (nv===null) return;
+                    t.text = (nv||'').trim(); render();
+                    await post({op:'edit', id:t.id, text:t.text});
+                });
 
                 const del = document.createElement('button');
                 del.className = 'todo-del';
                 del.title = 'Supprimer';
                 del.innerHTML = '🗑️';
-                del.addEventListener('click', ()=>{
-                    todos = todos.filter(x=>x.id!==t.id);
-                    save(); render();
+                del.addEventListener('click', async ()=>{
+                    const keep = todos; // rollback possible
+                    todos = todos.filter(x=>x.id!==t.id); render();
+                    const j = await post({op:'delete', id:t.id});
+                    if (!j.ok) { todos = keep; render(); alert('Suppression échouée'); }
                 });
-
-                const wrap = document.createElement('div');
-                wrap.className = 'todo-check-wrap';
-                wrap.appendChild(check);
 
                 li.appendChild(check);
                 li.appendChild(lbl);
@@ -530,7 +567,6 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
                 $list.appendChild(li);
             });
 
-            // progress
             const total = todos.length;
             const done  = todos.filter(t=>t.done).length;
             $count.textContent = `${done}/${total}`;
@@ -550,24 +586,11 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); }
-        function load(){
-            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); }
-            catch(e){ return null; }
-        }
-        function uid(){ return Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
-        function seed(){
-            // Première visite : quelques tâches de départ (modifiables/supprimables)
-            const s = [
-                {id:uid(), text:'Vérifier les alertes stock', done:false},
-                {id:uid(), text:'Répondre aux avis clients', done:false},
-                {id:uid(), text:'Créer la promo du week-end', done:true},
-            ];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-            return s;
-        }
+        // go
+        load();
     })();
 </script>
+
 
 </body>
 </html>
