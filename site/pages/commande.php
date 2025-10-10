@@ -656,12 +656,6 @@ $total_arrondi = round($total_ttc * 20) / 20;
                aria-disabled="<?= ($subtotal <= 0 ? 'true' : 'false') ?>">
                 Valider ma commande
             </a>
-
-            <div class="coupon">
-                <input type="text" placeholder="Code promo (optionnel)" disabled>
-                <button class="btn-ghost" disabled>Appliquer</button>
-            </div>
-
             <div class="help">
                 <ul>
                     <li>Expédition en 1 semaine</li>
