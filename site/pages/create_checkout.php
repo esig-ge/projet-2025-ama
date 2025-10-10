@@ -57,31 +57,34 @@ try {
 
     // PRODUITS
     $sqlP = $pdo->prepare("
-        SELECT p.PRO_NOM AS name, p.PRO_PRIX AS price, cp.CP_QTE_COMMANDEE AS qty
-          FROM COMMANDE_PRODUIT cp
-          JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
-         WHERE cp.COM_ID = :com
-    ");
+  SELECT 'produit' AS kind, p.PRO_NOM AS name, p.PRO_PRIX AS price,
+         cp.CP_QTE_COMMANDEE AS qty, cp.CP_TYPE_PRODUIT AS subtype
+  FROM COMMANDE_PRODUIT cp
+  JOIN PRODUIT p ON p.PRO_ID = cp.PRO_ID
+  WHERE cp.COM_ID = :com
+");
     $sqlP->execute([':com'=>$comId]);
     $rows = array_merge($rows, $sqlP->fetchAll(PDO::FETCH_ASSOC) ?: []);
 
-    // SUPPLÉMENTS
+// SUPPLÉMENTS
     $sqlS = $pdo->prepare("
-        SELECT s.SUP_NOM AS name, s.SUP_PRIX_UNITAIRE AS price, cs.CS_QTE_COMMANDEE AS qty
-          FROM COMMANDE_SUPP cs
-          JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
-         WHERE cs.COM_ID = :com
-    ");
+  SELECT 'supplement' AS kind, s.SUP_NOM AS name, s.SUP_PRIX_UNITAIRE AS price,
+         cs.CS_QTE_COMMANDEE AS qty, 'supplement' AS subtype
+  FROM COMMANDE_SUPP cs
+  JOIN SUPPLEMENT s ON s.SUP_ID = cs.SUP_ID
+  WHERE cs.COM_ID = :com
+");
     $sqlS->execute([':com'=>$comId]);
     $rows = array_merge($rows, $sqlS->fetchAll(PDO::FETCH_ASSOC) ?: []);
 
-    // EMBALLAGES (gratuits) — CE_QTE, prix 0
+// EMBALLAGES (gratuits)
     $sqlE = $pdo->prepare("
-        SELECT e.EMB_NOM AS name, 0 AS price, ce.CE_QTE AS qty
-          FROM COMMANDE_EMBALLAGE ce
-          JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
-         WHERE ce.COM_ID = :com
-    ");
+  SELECT 'emballage' AS kind, e.EMB_NOM AS name, 0 AS price,
+         ce.CE_QTE AS qty, 'emballage' AS subtype
+  FROM COMMANDE_EMBALLAGE ce
+  JOIN EMBALLAGE e ON e.EMB_ID = ce.EMB_ID
+  WHERE ce.COM_ID = :com
+");
     $sqlE->execute([':com'=>$comId]);
     $rows = array_merge($rows, $sqlE->fetchAll(PDO::FETCH_ASSOC) ?: []);
 
@@ -104,6 +107,50 @@ try {
         $shippingCHF = (float)$r['shipping'];
         $tvaCHF      = (float)$r['tva'];
     }
+
+    // === Fallback : si la livraison n’est pas encore en base, reprendre depuis la session ===
+    if ($shippingCHF <= 0 && isset($_SESSION['ship_mode'])) {
+        $ship_mode = $_SESSION['ship_mode'] ?? 'standard';
+        $ship_zone = $_SESSION['ship_zone'] ?? 'geneve';
+        $shippingCHF = ($ship_mode === 'standard')
+            ? (($ship_zone === 'suisse') ? 10.00 : 5.00)
+            : 0.00;
+    }
+
+    // === TVA Suisse (2024) – recalcule localement pour Stripe ===
+    $RATE_REDUCED = 0.026; // 2,6% fleurs/bouquets
+    $RATE_NORMAL  = 0.081; // 8,1% suppléments/emballages/coffrets
+
+    $base_reduced = 0.0;
+    $base_normal  = 0.0;
+
+    foreach ($rows as $r) {
+        $kind = strtolower((string)($r['kind'] ?? ''));
+        $sub  = strtolower((string)($r['subtype'] ?? ''));
+        $qty  = max(1, (int)($r['qty'] ?? 1));
+        $prc  = (float)($r['price'] ?? 0.0);
+        $lt   = $qty * $prc;
+
+        if ($kind === 'produit' && ($sub === 'fleur' || $sub === 'bouquet')) {
+            $base_reduced += $lt;  // 2.6%
+        } else {
+            $base_normal  += $lt;  // 8.1%
+        }
+    }
+
+// Ventilation de la livraison
+    $ship_red = 0.0; $ship_norm = 0.0;
+    $goods_total = $base_reduced + $base_normal;
+    if ($shippingCHF > 0 && $goods_total > 0) {
+        $ship_red  = $shippingCHF * ($base_reduced / $goods_total);
+        $ship_norm = $shippingCHF - $ship_red;
+    }
+
+// TVA finales (arrondies par taux)
+    $tax_reduced = round(($base_reduced + $ship_red) * $RATE_REDUCED, 2);
+    $tax_normal  = round(($base_normal  + $ship_norm) * $RATE_NORMAL,  2);
+    $tvaCHF      = $tax_reduced + $tax_normal;
+
 
     // Construire les line_items
     $currency  = 'chf';
@@ -149,20 +196,48 @@ try {
         $totalCents += $unit * $qty;
     }
 
-    // Livraison
+    // ---- 1) Livraison (si > 0) ----
     if ($shippingCHF > 0) {
-        $unit = (int)round($shippingCHF * 100);
-        $item = [
+        $unit = (int) round($shippingCHF * 100);
+        $lineItems[] = [
             'quantity'   => 1,
             'price_data' => [
                 'currency'     => $currency,
-                'unit_amount'  => $unit,
-                'product_data' => ['name' => 'Livraison'],
+                'unit_amount'  => $unit, // <-- montant de LIVRAISON
+                'product_data' => [
+                    'name' => ($shippingCHF >= 10.00 ? 'Livraison Suisse (48h)' : 'Livraison Genève (48h)'),
+                ],
+                // optionnel: 'tax_behavior' => 'inclusive', // tu gères la TVA séparément
             ],
         ];
-        if ($taxRateId) $item['tax_rates'] = [$taxRateId];
-        $lineItems[] = $item;
         $totalCents += $unit;
+    }
+
+// ---- 2) TVA (ligne dédiée, si > 0) ----
+    if ($tvaCHF > 0) {
+        $taxUnit = (int) round($tvaCHF * 100);
+        $lineItems[] = [
+            'quantity'   => 1,
+            'price_data' => [
+                'currency'     => $currency,
+                'unit_amount'  => $taxUnit, // <-- montant de TVA
+                'product_data' => ['name' => 'TVA'],
+            ],
+        ];
+        $totalCents += $taxUnit;
+    }
+
+    $applyCashRounding = true; // si tu veux 18.85 sur Stripe
+    if ($applyCashRounding) {
+        $lineItems[] = [
+            'quantity'   => 1,
+            'price_data' => [
+                'currency'     => $currency,
+                'unit_amount'  => 1, // +0.01 CHF
+                'product_data' => ['name' => 'Arrondi espèces (0.05)'],
+            ],
+        ];
+        $totalCents += 1;
     }
 
     // TVA (si pas de tax_rate Stripe)

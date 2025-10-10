@@ -339,7 +339,7 @@ if (($_POST['action'] ?? '') === 'set_qty') {
                             header("Location: ".$BASE."commande.php"); exit;
                         }
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK-:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
-                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c ET SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
                     } elseif ($newQ < $oldQ) {
                         $delta = $oldQ - $newQ;
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK+:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
@@ -479,8 +479,12 @@ $tax_reduced = round(($base_reduced + $ship_red)  * $RATE_REDUCED, 2);
 $tax_normal  = round(($base_normal  + $ship_norm) * $RATE_NORMAL,  2);
 $tax_total   = $tax_reduced + $tax_normal;
 
-/* Total (présentation comme avant: produits + livraison) */
-$total = $subtotal + $shipping;
+// Total TTC exact
+$total_ht  = $subtotal + $shipping;
+$total_ttc = round($total_ht + $tax_total, 2);
+
+// Arrondi au multiple de 0.05 CHF
+$total_arrondi = round($total_ttc * 20) / 20;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -592,6 +596,7 @@ $total = $subtotal + $shipping;
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
                         <div class="cart-total"><?= number_format($lt, 2, '.', ' ') ?> CHF</div>
 
+
                         <form class="trash-form" method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Supprimer cet article ?');">
                             <input type="hidden" name="action" value="del">
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
@@ -635,9 +640,15 @@ $total = $subtotal + $shipping;
             </div>
 
             <div class="sum-total">
-                <span>Total</span>
-                <span><?= number_format($total, 2, '.', ' ') ?> CHF</span>
+                <span>Total TTC</span>
+                <span><?= number_format($total_ttc, 2, '.', ' ') ?> CHF</span>
             </div>
+
+            <div class="sum-row small">
+                <span>Arrondi espèces (0.05)</span>
+                <span><?= number_format($total_arrondi, 2, '.', ' ') ?> CHF</span>
+            </div>
+
 
             <a id="btn-checkout"
                class="btn-primary"
