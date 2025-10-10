@@ -142,7 +142,7 @@ if (($_POST['action'] ?? '') === 'del') {
                 $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
             }
 
-            $_SESSION['message'] = "Article supprimé et stock rétabli.";
+            $_SESSION['message'] = "Article supprimé";
         } else {
             $_SESSION['message'] = "Action non autorisée.";
         }
