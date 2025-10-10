@@ -60,14 +60,17 @@ function count_user_orders(PDO $pdo, int $perId): int {
     return (int)$st->fetchColumn();
 }
 function get_last_orders(PDO $pdo, int $perId): array {
-    $sql = "SELECT COM_ID, COM_DATE, COM_STATUT
-            FROM COMMANDE
-            WHERE PER_ID=? AND COM_ARCHIVE=0
-            ORDER BY COM_DATE DESC, COM_ID DESC
+    $sql = "SELECT c.COM_ID, c.COM_DATE, c.COM_STATUT,
+                   l.LIV_MODE
+            FROM COMMANDE c
+            LEFT JOIN LIVRAISON l ON l.LIV_ID = c.LIV_ID
+            WHERE c.PER_ID = ? AND c.COM_ARCHIVE = 0
+            ORDER BY c.COM_DATE DESC, c.COM_ID DESC
             LIMIT 3";
     $st = $pdo->prepare($sql); $st->execute([$perId]);
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
+
 
 /* ---- NOTIFICATIONS (3 dernières) ---- */
 function count_user_notifs(PDO $pdo, int $perId): int {
@@ -330,26 +333,6 @@ $pickupNotifs = get_unread_pickup_notifs($pdo,$perId);
     <?php unset($_SESSION['toast_msg'], $_SESSION['toast_type']); ?>
 <?php endif; ?>
 
-<!-- ===== Alerte “prête au retrait” ===== -->
-<?php if (!empty($pickupNotifs)): ?>
-    <section class="alert-pickup" role="status" aria-live="polite">
-        <strong>Bonne nouvelle !</strong>
-        <?php foreach ($pickupNotifs as $n):
-            $deb = $n['COM_RETRAIT_DEBUT'] ? date('d.m.Y H:i', strtotime($n['COM_RETRAIT_DEBUT'])) : null;
-            $fin = $n['COM_RETRAIT_FIN']   ? date('d.m.Y H:i', strtotime($n['COM_RETRAIT_FIN']))   : null; ?>
-            <p><?= h($n['NOT_TEXTE']) ?> (commande #<?= (int)$n['COM_ID'] ?>).
-                <?php if($deb && $fin): ?><br>Retrait possible <strong>du <?= h($deb) ?></strong> au <strong><?= h($fin) ?></strong>.<?php endif; ?>
-            </p>
-        <?php endforeach; ?>
-        <div class="alert-actions">
-            <form method="post">
-                <input type="hidden" name="ack_all_pickup" value="1">
-                <button class="btn-ack" type="submit">OK, compris</button>
-            </form>
-        </div>
-    </section>
-<?php endif; ?>
-
 <main class="container page-profile variant-white" aria-label="Mes informations">
     <div class="grid-two">
 
@@ -455,7 +438,15 @@ $pickupNotifs = get_unread_pickup_notifs($pdo,$perId);
                                 <tr>
                                     <td><?= (int)$o['COM_ID'] ?></td>
                                     <td><?= h(fmtDate($o['COM_DATE'])) ?></td>
-                                    <td><?= h($o['COM_STATUT'] ?: '—') ?></td>
+                                    <?php
+                                    $map = ['BOUT'=>'Retrait boutique','GVA'=>'Livraison Genève','CH'=>'Livraison Suisse'];
+                                    ?>
+                                    <td>
+                                        <?= h($o['COM_STATUT'] ?: '—') ?>
+                                        <?php if (!empty($o['LIV_MODE'])): ?>
+                                            <span class="muted"> — <?= h($map[$o['LIV_MODE']] ?? $o['LIV_MODE']) ?></span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><a class="btn-secondary" href="<?= $BASE ?>detail_commande.php?com_id=<?= (int)$o['COM_ID'] ?>">Détails</a></td>
                                 </tr>
                             <?php endforeach; ?>

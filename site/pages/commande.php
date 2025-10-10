@@ -281,7 +281,7 @@ if (($_POST['action'] ?? '') === 'set_shipping') {
     $ship_mode = (($_POST['ship_mode'] ?? '') === 'retrait') ? 'retrait' : 'standard'; // 'standard' | 'retrait'
     $ship_zone = (($_POST['ship_zone'] ?? '') === 'suisse')  ? 'suisse'  : 'geneve';   // 'geneve' | 'suisse'
 
-    // 2) Map serveur -> GVA / CH / BOUT (on n'utilise PAS le hidden 'mode' du front)
+    // 2) Map serveur -> GVA / CH / BOUT
     $mode = '';
     if ($ship_mode === 'retrait') {
         $mode = 'BOUT';
@@ -297,29 +297,41 @@ if (($_POST['action'] ?? '') === 'set_shipping') {
     // 3) Persiste en session
     $_SESSION['ship_mode'] = $ship_mode;
     $_SESSION['ship_zone'] = $ship_zone;
-    $_SESSION['mode']      = $mode; // utile pour les étapes suivantes / facture / livraison
+    $_SESSION['mode']      = $mode; // utile pour les étapes suivantes
 
-    // 4) (Optionnel) Enregistre le mode sur la commande en préparation
+    // 4) Enregistre dans LIVRAISON (UPSERT sur la commande en préparation)
     try {
+        // 1) récupérer la commande en préparation
+        // après avoir déterminé $mode ('GVA'|'CH'|'BOUT')
         $st = $pdo->prepare("
-            SELECT COM_ID
-              FROM COMMANDE
-             WHERE PER_ID = :per AND COM_STATUT = 'en preparation'
-             ORDER BY COM_ID DESC
-             LIMIT 1
-        ");
-        $st->execute([':per' => $perId]);
+    SELECT COM_ID, LIV_ID
+      FROM COMMANDE
+     WHERE PER_ID = :per AND COM_STATUT = 'en preparation'
+     ORDER BY COM_ID DESC
+     LIMIT 1
+");
+        $st->execute([':per'=>$perId]);
         if ($row = $st->fetch(PDO::FETCH_ASSOC)) {
             $curComId = (int)$row['COM_ID'];
-            // Adapte le nom de colonne si différent (ex: COM_MODE)
-            $pdo->prepare("UPDATE COMMANDE SET COM_MODE = :m WHERE COM_ID = :cid")->execute([
-                ':m'   => $mode,
-                ':cid' => $curComId
-            ]);
+            $curLivId = $row['LIV_ID'] !== null ? (int)$row['LIV_ID'] : null;
+            $fees = ($mode==='GVA') ? 5.00 : (($mode==='CH') ? 10.00 : 0.00);
+
+            $pdo->beginTransaction();
+            if ($curLivId) {
+                $pdo->prepare("UPDATE LIVRAISON SET LIV_MODE=:m, LIV_MONTANT_FRAIS=:f, LIV_DATE=NOW() WHERE LIV_ID=:lid")
+                    ->execute([':m'=>$mode, ':f'=>$fees, ':lid'=>$curLivId]);
+            } else {
+                $pdo->prepare("INSERT INTO LIVRAISON (LIV_MODE, LIV_MONTANT_FRAIS, LIV_DATE) VALUES (:m,:f,NOW())")
+                    ->execute([':m'=>$mode, ':f'=>$fees]);
+                $newLivId = (int)$pdo->lastInsertId();
+                $pdo->prepare("UPDATE COMMANDE SET LIV_ID = :lid WHERE COM_ID = :cid")
+                    ->execute([':lid'=>$newLivId, ':cid'=>$curComId]);
+            }
+            $pdo->commit();
         }
+
     } catch (Throwable $e) {
-        // silencieux : ne bloque pas l'UX si l'update échoue
-        // log éventuel
+        if ($pdo->inTransaction()) $pdo->rollBack();
     }
 
     header("Location: ".$BASE."commande.php"); exit;
@@ -392,7 +404,8 @@ if (($_POST['action'] ?? '') === 'set_qty') {
                             header("Location: ".$BASE."commande.php"); exit;
                         }
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK-:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
-                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c ET SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                        // Correction ET -> AND
+                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
                     } elseif ($newQ < $oldQ) {
                         $delta = $oldQ - $newQ;
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK+:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
@@ -435,12 +448,13 @@ if (($_POST['action'] ?? '') === 'set_qty') {
 /* =========================================== */
 /* ========== CHARGEMENT DU PANIER =========== */
 /* =========================================== */
-/* On charge la COMMANDE du client en 'en preparation' (le panier actif) */
+/* On charge la COMMANDE du client en 'en preparation' (le panier actif) + LIV_MODE */
 $st  = $pdo->prepare("
-    SELECT COM_ID, COM_DATE
-      FROM COMMANDE
-     WHERE PER_ID = :per AND COM_STATUT = 'en preparation'
-     ORDER BY COM_ID DESC
+    SELECT c.COM_ID, c.COM_DATE, l.LIV_MODE
+      FROM COMMANDE c
+      LEFT JOIN LIVRAISON l ON l.LIV_ID = c.LIV_ID   -- <— ICI le bon ON
+     WHERE c.PER_ID = :per AND c.COM_STATUT = 'en preparation'
+     ORDER BY c.COM_ID DESC
      LIMIT 1
 ");
 $st->execute([':per'=>$perId]);
@@ -452,6 +466,24 @@ $comId = 0;
 
 if ($com) {
     $comId = (int)$com['COM_ID'];
+
+    // Si pas de session, pré-remplir en fonction du LIV_MODE
+    if (empty($_SESSION['ship_mode']) && !empty($com['LIV_MODE'])) {
+        switch ($com['LIV_MODE']) {
+            case 'BOUT':
+                $_SESSION['ship_mode'] = 'retrait';
+                $_SESSION['ship_zone'] = 'geneve';
+                break;
+            case 'GVA':
+                $_SESSION['ship_mode'] = 'standard';
+                $_SESSION['ship_zone'] = 'geneve';
+                break;
+            case 'CH':
+                $_SESSION['ship_mode'] = 'standard';
+                $_SESSION['ship_zone'] = 'suisse';
+                break;
+        }
+    }
 
     $sqlLines = "
         SELECT 'produit' AS KIND, p.PRO_ID AS ITEM_ID, p.PRO_NOM AS NAME,
@@ -533,7 +565,9 @@ $tax_normal  = round(($base_normal  + $ship_norm) * $RATE_NORMAL,  2);
 $tax_total   = $tax_reduced + $tax_normal;
 
 /* Total (présentation comme avant: produits + livraison) */
-$total = $subtotal + $shipping;
+$total_ht  = $subtotal + $shipping;         // hors TVA (produits + livraison)
+$total_tva = $tax_total;                    // TVA totale (2,6% + 8,1%)
+$total_ttc = $total_ht + $total_tva;        // TTC (ce qu'on affiche et facture)
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -687,10 +721,16 @@ $total = $subtotal + $shipping;
                 <span></span>
             </div>
 
-            <div class="sum-total">
-                <span>Total</span>
-                <span><?= number_format($total, 2, '.', ' ') ?> CHF</span>
+            <div class="sum-row muted small" style="margin-top:6px;">
+                <span>Total HT</span>
+                <span><?= number_format($total_ht, 2, '.', ' ') ?> CHF</span>
             </div>
+
+            <div class="sum-total">
+                <span>Total (TTC)</span>
+                <span><?= number_format($total_ttc, 2, '.', ' ') ?> CHF</span>
+            </div>
+
 
             <a id="btn-checkout"
                class="btn-primary"
@@ -698,8 +738,6 @@ $total = $subtotal + $shipping;
                aria-disabled="<?= ($subtotal <= 0 ? 'true' : 'false') ?>">
                 Valider ma commande
             </a>
-
-
 
             <div class="help">
                 <ul>
@@ -725,7 +763,7 @@ $total = $subtotal + $shipping;
 
             <form method="post" action="<?= $BASE ?>commande.php" id="shipForm">
                 <input type="hidden" name="action" value="set_shipping">
-                <!-- Ce champ caché portera GVA/CH/BOUT -->
+                <!-- Ce champ caché portera GVA/CH/BOUT (non utilisé côté serveur, mais utile si tu veux autosoumettre) -->
                 <input type="hidden" name="mode" id="liv_mode" value="">
 
                 <fieldset class="full group shipping-options">
@@ -797,18 +835,15 @@ $total = $subtotal + $shipping;
         })();
     </script>
 
-
     <br>
-            <div class="actions">
-                <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
-                <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
-            </div>
-            <br>
-            <?php if ($disableShipping): ?>
-                <p class="muted">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
-            <?php endif; ?>
-        </div>
-    </section>
+    <div class="actions">
+        <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
+        <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
+    </div>
+    <br>
+    <?php if ($disableShipping): ?>
+        <p class="muted">Le panier est vide : choisissez des articles pour sélectionner un mode de livraison.</p>
+    <?php endif; ?>
 </main>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

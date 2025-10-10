@@ -11,15 +11,25 @@ try {
     $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+    /* ---------- Helpers ---------- */
+    $to_cents = static function ($chf): int {
+        return (int) round(((float)$chf) * 100); // toujours ENTIER
+    };
+    $is_reduced = static function (array $row): bool {
+        $kind = strtolower((string)($row['kind'] ?? ''));
+        $sub  = strtolower((string)($row['subtype'] ?? ''));
+        return $kind === 'produit' && in_array($sub, ['fleur','bouquet'], true);
+    };
+
     /* ---------- URLs absolues (Stripe) ---------- */
-    $scheme  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $origin  = $scheme . '://' . $host;
-    $dir     = rtrim(dirname($_SERVER['PHP_SELF'] ?? ''), '/\\');
-    $PAGE_BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
-    $SITE_BASE = preg_replace('#pages/$#', '', $PAGE_BASE);
-    $SITE_BASE = preg_replace('#//+#', '/', $SITE_BASE);
-    $BASE_URL  = rtrim($origin, '/') . $SITE_BASE;
+    $scheme     = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host       = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $origin     = $scheme . '://' . $host;
+    $dir        = rtrim(dirname($_SERVER['PHP_SELF'] ?? ''), '/\\');
+    $PAGE_BASE  = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
+    $SITE_BASE  = preg_replace('#pages/$#', '', $PAGE_BASE);
+    $SITE_BASE  = preg_replace('#//+#', '/', $SITE_BASE);
+    $BASE_URL   = rtrim($origin, '/') . $SITE_BASE;
     $successUrl = $BASE_URL . 'pages/success_paiement.php?session_id={CHECKOUT_SESSION_ID}';
     $cancelUrl  = $BASE_URL . 'pages/adresse_paiement.php?canceled=1';
 
@@ -111,7 +121,7 @@ try {
         $tvaCHF      = (float)$r['tva'];
     }
 
-    // (fallback éventuel depuis la session, inchangé)
+    // fallback session
     if ($shippingCHF <= 0 && isset($_SESSION['ship_mode'])) {
         $ship_mode = $_SESSION['ship_mode'] ?? 'standard';
         $ship_zone = $_SESSION['ship_zone'] ?? 'geneve';
@@ -120,31 +130,56 @@ try {
             : 0.00;
     }
 
-    /* ---------- Construction des line_items (TTC) ---------- */
-    $currency   = 'chf';
-    $lineItems  = [];
-    $totalCents = 0;
+    /* ---------- Pré-calculs en CENTIMES ---------- */
+    $currency    = 'chf';
+    $lineItems   = [];
+    $totalCents  = 0;
+    $freeCents   = 0;
 
-    $SHOW_FREE = true;
-    $freeCents = 0;
+    // Sommes HT par taux
+    $baseReducedC = 0;
+    $baseNormalC  = 0;
 
     foreach ($rows as $r) {
-        $name = (string)($r['name'] ?? 'Article');
-        $qty  = max(1, (int)($r['qty'] ?? 1));
-        $prc  = (float)($r['price'] ?? 0.0);
+        $qty   = max(1, (int)($r['qty'] ?? 1));
+        $price = (float)($r['price'] ?? 0.0);
+        $unitC = $price > 0 ? $to_cents($price) : 0;
+        if ($unitC <= 0) continue; // gratuits: on les traitera à part pour l'affichage éventuel
 
-        if ($prc <= 0) {
-            if ($SHOW_FREE) {
-                $unit = 1; // 0.01 CHF pour afficher l'article gratuit
-                $freeCents += $unit * $qty;
-            } else {
-                continue;
-            }
+        $ltC = $unitC * $qty;
+        if ($is_reduced($r)) $baseReducedC += $ltC; else $baseNormalC += $ltC;
+    }
+
+    // Ventilation livraison en centimes
+    $shippingC = $to_cents($shippingCHF);
+    $goodsC    = $baseReducedC + $baseNormalC;
+    $shipRedC  = 0;
+    $shipNorC  = 0;
+    if ($shippingC > 0 && $goodsC > 0) {
+        $shipRedC = (int) floor($shippingC * ($baseReducedC / $goodsC)); // arrondi bas
+        $shipNorC = $shippingC - $shipRedC;                              // reste → somme exacte
+    }
+
+    /* ---------- Tax rates Stripe (optionnel mais recommandé) ---------- */
+    $TAX_REDUCED_ID = defined('STRIPE_TAX_REDUCED_ID') ? STRIPE_TAX_REDUCED_ID : null; // 2.6 %
+    $TAX_STANDARD_ID= defined('STRIPE_TAX_STANDARD_ID')? STRIPE_TAX_STANDARD_ID: null; // 8.1 %
+    $canUseStripeTax= $TAX_REDUCED_ID && $TAX_STANDARD_ID;
+
+    /* ---------- Lignes articles (payants) ---------- */
+    foreach ($rows as $r) {
+        $name  = (string)($r['name'] ?? 'Article');
+        $qty   = max(1, (int)($r['qty'] ?? 1));
+        $price = (float)($r['price'] ?? 0.0);
+
+        if ($price <= 0) {
+            // articles gratuits → on les affiche visuellement à 0.01 CHF puis on compense par coupon total
+            $freeCents += 1 * $qty;
+            $unit = 1;
         } else {
-            $unit = (int)round($prc * 100);
+            $unit = $to_cents($price);
         }
 
-        $lineItems[] = [
+        $item = [
             'quantity'   => $qty,
             'price_data' => [
                 'currency'     => $currency,
@@ -152,79 +187,106 @@ try {
                 'product_data' => ['name' => $name],
             ],
         ];
+
+        if ($price > 0 && $canUseStripeTax) {
+            $item['tax_rates'] = [$is_reduced($r) ? $TAX_REDUCED_ID : $TAX_STANDARD_ID];
+        }
+
+        $lineItems[] = $item;
         $totalCents += $unit * $qty;
     }
 
-    // Livraison
-    if ($shippingCHF > 0) {
-        $unit = (int)round($shippingCHF * 100);
-        $lineItems[] = [
-            'quantity'   => 1,
-            'price_data' => [
-                'currency'     => $currency,
-                'unit_amount'  => $unit,
-                'product_data' => ['name' => ($shippingCHF >= 10.00 ? 'Livraison Suisse (48h)' : 'Livraison Genève (48h)')],
-            ],
-        ];
-        $totalCents += $unit;
+    /* ---------- Livraison scindée ---------- */
+    if ($shippingC > 0) {
+        if ($canUseStripeTax) {
+            if ($shipRedC > 0) {
+                $lineItems[] = [
+                    'quantity'   => 1,
+                    'price_data' => [
+                        'currency'     => $currency,
+                        'unit_amount'  => $shipRedC,
+                        'product_data' => ['name' => 'Livraison (part 2.6 %)'],
+                    ],
+                    'tax_rates'   => [$TAX_REDUCED_ID],
+                ];
+                $totalCents += $shipRedC;
+            }
+            if ($shipNorC > 0) {
+                $lineItems[] = [
+                    'quantity'   => 1,
+                    'price_data' => [
+                        'currency'     => $currency,
+                        'unit_amount'  => $shipNorC,
+                        'product_data' => ['name' => 'Livraison (part 8.1 %)'],
+                    ],
+                    'tax_rates'   => [$TAX_STANDARD_ID],
+                ];
+                $totalCents += $shipNorC;
+            }
+        } else {
+            // Pas de tax rates disponibles → une seule ligne livraison
+            $lineItems[] = [
+                'quantity'   => 1,
+                'price_data' => [
+                    'currency'     => $currency,
+                    'unit_amount'  => $shippingC,
+                    'product_data' => ['name' => ($shippingCHF >= 10.00 ? 'Livraison Suisse (48h)' : 'Livraison Genève (48h)')],
+                ],
+            ];
+            $totalCents += $shippingC;
+        }
     }
 
-    // TVA (ligne dédiée si tu veux qu’elle apparaisse dans Stripe)
-    if ($tvaCHF > 0) {
-        $taxUnit = (int)round($tvaCHF * 100);
-        $lineItems[] = [
-            'quantity'   => 1,
-            'price_data' => [
-                'currency'     => $currency,
-                'unit_amount'  => $taxUnit,
-                'product_data' => ['name' => 'TVA'],
-            ],
-        ];
-        $totalCents += $taxUnit;
+    /* ---------- Fallback TVA unique si pas de tax rates ---------- */
+    if (!$canUseStripeTax && $tvaCHF > 0) {
+        $tvaC = $to_cents($tvaCHF);
+        if ($tvaC > 0) {
+            $lineItems[] = [
+                'quantity'   => 1,
+                'price_data' => [
+                    'currency'     => $currency,
+                    'unit_amount'  => $tvaC,
+                    'product_data' => ['name' => 'TVA (calculée)'],
+                ],
+            ];
+            $totalCents += $tvaC;
+        }
     }
 
-    // Peti arrondi si souhaité
-    $applyCashRounding = true;
-    if ($applyCashRounding) {
-        $lineItems[] = [
-            'quantity'   => 1,
-            'price_data' => [
-                'currency'     => $currency,
-                'unit_amount'  => 1,
-                'product_data' => ['name' => 'Arrondi espèces (0.05)'],
-            ],
-        ];
-        $totalCents += 1;
-    }
-
-    if (!$lineItems) throw new RuntimeException('Aucun article facturable.');
-    if ($totalCents <= 0 && $freeCents === 0) throw new RuntimeException('Montant total invalide (0).');
-
-    // Méthodes de paiement
-    $uiMethod = $_POST['pay_method'] ?? 'card';
-    $allowed  = ['card', 'twint', 'revolut_pay'];
-    $methods  = in_array($uiMethod, $allowed, true) ? [$uiMethod] : ['card'];
-
-    // Créer la Checkout Session
-    $payload = [
-        'mode'                  => 'payment',
-        'payment_method_types'  => $methods,
-        'line_items'            => $lineItems,
-        'success_url'           => $successUrl,
-        'cancel_url'            => $cancelUrl,
-        'client_reference_id'   => (string)$comId,
-        'metadata'              => ['per_id' => (string)$perId, 'com_id' => (string)$comId],
-    ];
-
-    if ($SHOW_FREE && $freeCents > 0) {
+    /* ---------- Coupon exact pour compenser les gratuits ---------- */
+    if ($freeCents > 0) {
+        // On a ajouté +1 cent par gratuit → on compense EXACTEMENT la somme
         $coupon = \Stripe\Coupon::create([
             'currency'   => $currency,
             'amount_off' => $freeCents,
             'duration'   => 'once',
             'name'       => 'Remise articles offerts',
         ]);
-        $payload['discounts'] = [['coupon' => $coupon->id]];
+        $discounts = [['coupon' => $coupon->id]];
+    } else {
+        $discounts = null;
     }
+
+    if (!$lineItems) throw new RuntimeException('Aucun article facturable.');
+    if ($totalCents <= 0) throw new RuntimeException('Montant total invalide (0).');
+
+    // Méthodes de paiement
+    $uiMethod = $_POST['pay_method'] ?? 'card';
+    $allowed  = ['card', 'twint', 'revolut_pay'];
+    $methods  = in_array($uiMethod, $allowed, true) ? [$uiMethod] : ['card'];
+
+    /* ---------- Créer la Checkout Session ---------- */
+    $payload = [
+        'mode'                  => 'payment',
+        'payment_method_types'  => $methods,
+        'line_items'            => $lineItems,
+        'success_url'           => $successUrl,
+        'cancel_url'            => $cancelUrl,
+        'allow_promotion_codes' => false,
+        'client_reference_id'   => (string)$comId,
+        'metadata'              => ['per_id' => (string)$perId, 'com_id' => (string)$comId],
+    ];
+    if ($discounts) { $payload['discounts'] = $discounts; }
 
     $session = \Stripe\Checkout\Session::create($payload);
 
@@ -233,7 +295,6 @@ try {
     /* ---------- PRÉ-CRÉER le paiement + lier à la commande ---------- */
     $pdo->beginTransaction();
 
-    // 1) Créer la ligne PAIEMENT "en_attente"
     $ins = $pdo->prepare("
         INSERT INTO PAIEMENT
             (PER_ID, PAI_MODE, PAI_MONTANT, PAI_MONNAIE, PAI_STATUT, PAI_DATE, PAI_LAST_EVENT_TYPE)
@@ -242,23 +303,22 @@ try {
     ");
     $ins->execute([
         ':per'     => $perId,
-        ':mode'    => $methods[0],     // 'card' | 'twint' | 'revolut_pay'
-        ':montant' => $expectedChf,    // total TTC attendu
-        ':monnaie' => strtoupper($currency), // 'CHF'
+        ':mode'    => $methods[0],
+        ':montant' => $expectedChf,
+        ':monnaie' => strtoupper($currency),
         ':statut'  => 'en_attente',
         ':evt'     => 'checkout.session.created',
     ]);
     $paiId = (int)$pdo->lastInsertId();
 
-    // 2) Lier PAIEMENT à la COMMANDE et stocker la session Stripe
     $upd = $pdo->prepare("
-        UPDATE COMMANDE
-           SET PAI_ID            = :pai,
-               STRIPE_SESSION_ID = :sid,
-               COM_STATUT        = 'en attente de paiement',
-               TOTAL_PAYER_CHF   = :expected
-         WHERE COM_ID = :cid AND PER_ID = :pid
-         LIMIT 1
+       UPDATE COMMANDE
+   SET PAI_ID            = :pai,
+       STRIPE_SESSION_ID = :sid,
+       TOTAL_PAYER_CHF   = :expected
+ WHERE COM_ID = :cid AND PER_ID = :pid
+ LIMIT 1
+
     ");
     $upd->execute([
         ':pai'      => $paiId,

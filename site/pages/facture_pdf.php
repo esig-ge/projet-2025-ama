@@ -75,6 +75,31 @@ if(!$adresse && !empty($head['LIV_ID']) && columnExists($pdo,'LIVRAISON','ADR_ID
     WHERE l.LIV_ID=:lid LIMIT 1", [':lid'=>(int)$head['LIV_ID']]);
 }
 
+/* Adresse facturation (prioritaire pour l'impression) */
+$billing = null;
+
+/* a) COMMANDE.ADR_ID_FACTURATION si tu l’as */
+if (columnExists($pdo, 'COMMANDE','ADR_ID_FACTURATION')) {
+    $billing = fetchOne($pdo, "SELECT a.ADR_RUE,a.ADR_NUMERO,a.ADR_NPA,a.ADR_VILLE,a.ADR_PAYS
+                               FROM COMMANDE c
+                               JOIN ADRESSE a ON a.ADR_ID = c.ADR_ID_FACTURATION
+                               WHERE c.COM_ID = :cid LIMIT 1", [':cid'=>$comId]);
+}
+
+/* b) Sinon PERSONNE → adresse par défaut (si colonnes présentes) */
+if (!$billing && columnExists($pdo,'PERSONNE','PER_ADR_RUE')) {
+    $billing = fetchOne($pdo, "SELECT PER_ADR_RUE AS ADR_RUE,
+                                      PER_ADR_NUMERO AS ADR_NUMERO,
+                                      PER_ADR_NPA AS ADR_NPA,
+                                      PER_ADR_VILLE AS ADR_VILLE,
+                                      PER_ADR_PAYS AS ADR_PAYS
+                               FROM PERSONNE WHERE PER_ID=:id LIMIT 1", [':id'=>$perId]);
+}
+
+/* c) Fallback final : utiliser l’adresse de livraison si dispo */
+if (!$billing && $adresse) { $billing = $adresse; }
+
+
 /* Lignes produits / suppléments / emballages */
 $st = $pdo->prepare("SELECT p.PRO_NOM, p.PRO_PRIX AS prix_u, COALESCE(cp.CP_QTE_COMMANDEE,1) AS qte
                      FROM COMMANDE_PRODUIT cp JOIN PRODUIT p ON p.PRO_ID=cp.PRO_ID

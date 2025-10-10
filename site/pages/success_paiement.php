@@ -60,6 +60,14 @@ if ($paid) {
 
     // 3) Dire à /commande.php de purger le localStorage une seule fois
     $_SESSION['just_paid'] = 1;
+    if (!empty($_SESSION['just_paid'])): ?>
+<script>
+  localStorage.removeItem('DK_CART');
+  localStorage.removeItem('DK_CART_ITEMS');
+  window.history.replaceState({}, document.title, window.location.pathname);
+</script>
+<?php unset($_SESSION['just_paid']); endif;
+
 
     // 4) (optionnel) purge immédiate si l’utilisateur revient avec le bouton retour
     echo "<script>try{localStorage.removeItem('DK_CART');localStorage.removeItem('DK_CART_ITEMS');}catch(e){}</script>";
@@ -99,7 +107,7 @@ if ($paid) {
 <body>
 <div class="wrap">
     <h1>Paiement <?= $paid ? '<span class="ok">confirmé</span>' : '<span class="ko">en attente</span>' ?></h1>
-    <p>Merci pour votre commande <?= $email ? '— un reçu Stripe sera envoyé à <b>'.htmlspecialchars($email).'</b>.' : '.' ?></p>
+    <p>Merci pour ta commande <?= $email ? '— un reçu Stripe est disponible dans ton espace client.' : '.' ?></p>
     <?php if ($orderId): ?>
         <p><b>Commande #<?= htmlspecialchars((string)$orderId) ?></b></p>
     <?php endif; ?>

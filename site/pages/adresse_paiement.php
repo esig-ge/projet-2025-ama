@@ -443,10 +443,12 @@ if ($ship_mode === 'standard') {
 
                 <input type="hidden" name="csrf_checkout" value="<?= htmlspecialchars($_SESSION['csrf_checkout'] ?? '') ?>">
                 <div id="totaux"
-                     data-com-id="<?= (int)($_SESSION['current_com_id'] ?? 0) ?>"
+                     data-com-id="<?= (int)$comId ?>"
                      data-liv-chf="<?= number_format($shippingCHF, 2, '.', '') ?>"
                      data-liv-mode="<?= htmlspecialchars($ship_mode, ENT_QUOTES) ?>">
                 </div>
+
+
 
                 <button type="submit" id="btn-pay" class="btn-primary">Payer maintenant</button>
                 <p id="form-msg" class="muted" role="status" style="margin-top:10px"></p>
@@ -542,48 +544,81 @@ if ($ship_mode === 'standard') {
     setShippingDisabled(same.checked); // état initial
 
     /* ==========================
-       2) Soumission → create_checkout.php
-       ========================== */
+   2) Soumission → save_addresses → (optionnel) save_totaux → create_checkout
+   ========================== */
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        msg.textContent = 'Création du paiement en cours…';
+        msg.textContent = 'Préparation du paiement…';
 
-        const fd = new FormData(form);
-        fd.append('action', 'create_checkout');
-        fd.append('same_as_billing', same.checked ? '1' : '0');
-        fd.append('csrf', window.CSRF_CHECKOUT);
+        const comId = (document.getElementById('totaux')?.dataset.comId || '0');
+        const csrfVal = window.CSRF_CHECKOUT;
+        const payMethod = (new FormData(form).get('pay_method')) || 'card';
 
-        // Flags d’enregistrement d’adresse (cases affichées uniquement si pas d’adresse existante)
+        // 0) Flags d’enregistrement des adresses
         const saveBillingEl  = document.getElementById('save_billing');
         const saveShippingEl = document.getElementById('save_shipping');
-        fd.append('save_billing',  saveBillingEl  ? (saveBillingEl.checked  ? '1':'0') : '0');
-        fd.append('save_shipping', saveShippingEl ? (saveShippingEl.checked ? '1':'0') : '0');
+        const saveBilling    = saveBillingEl  ? (saveBillingEl.checked  ? '1':'0') : '0';
+        const saveShipping   = saveShippingEl ? (saveShippingEl.checked ? '1':'0') : '0';
 
         try {
-            const res  = await fetch(window.CREATE_CHECKOUT_URL, {
+            /* 1) Sauvegarder ADRESSES + lier à la COMMANDE */
+            const fdAdr = new FormData(form);        // contient bill_* et ship_*
+            fdAdr.append('com_id', comId);
+            fdAdr.append('save_billing',  saveBilling);
+            fdAdr.append('save_shipping', saveShipping);
+
+            const rAdr = await fetch('api/save_addresses.php', {
                 method: 'POST',
-                body: fd,
+                body: fdAdr,
                 credentials: 'same-origin'
             });
-            const text = await res.text();
-            let data = null;
-            try { data = JSON.parse(text); } catch (_) {}
+            const jAdr = await rAdr.json();
+            if (!rAdr.ok || !jAdr.ok) throw new Error(jAdr.error || 'Erreur enregistrement des adresses');
 
-            if (res.ok && data && data.ok && data.url) {
-                window.location.href = data.url; return;
+            /* 2) (optionnel) Sauvegarder les totaux (TVA / livraison) si tu utilises encore cette API */
+            const box = document.getElementById('totaux');
+            if (box) {
+                const rTot = await fetch('api/save_totaux_commande.php', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                    body: new URLSearchParams({
+                        csrf: csrfVal,
+                        com_id: comId,
+                        tva_taux: box.dataset.tvaTaux || '',
+                        tva_chf:  box.dataset.tvaChf  || '',
+                        liv_chf:  box.dataset.livChf  || '',
+                        liv_mode: box.dataset.livMode || ''
+                    })
+                });
+                const jTot = await rTot.json();
+                if (!rTot.ok || !jTot.ok) throw new Error(jTot.error || 'Erreur enregistrement des totaux');
             }
-            if (res.redirected) { window.location.href = res.url; return; }
-            if (!res.ok) throw new Error(`HTTP ${res.status} — ${text.slice(0,200)}`);
 
-            const m = text.match(/https:\/\/checkout\.stripe\.com\/pay\/[A-Za-z0-9_%\-]+/);
-            if (m) { window.location.href = m[0]; return; }
+            /* 3) Créer la session Stripe */
+            const fdPay = new URLSearchParams();
+            fdPay.append('action', 'create_checkout');
+            fdPay.append('csrf',   csrfVal);
+            fdPay.append('pay_method', String(payMethod));
 
-            throw new Error('Réponse inattendue de create_checkout.php');
+            const res = await fetch(window.CREATE_CHECKOUT_URL, {
+                method: 'POST',
+                headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                body: fdPay,
+                credentials: 'same-origin'
+            });
+
+            const data = await res.json().catch(()=>null);
+            if (res.ok && data && data.ok && data.url) {
+                window.location.href = data.url;
+                return;
+            }
+            throw new Error((data && data.error) || `HTTP ${res.status}`);
         } catch (err) {
             console.error(err);
-            msg.textContent = "Oups, impossible de démarrer le paiement. Réessaie ou contacte-nous.";
+            msg.textContent = "Oups, impossible de démarrer le paiement. Corrigez les infos d'adresse et réessayez.";
         }
     });
+
 
     /* ==========================
        3) Mini-récap du panier (lecture seule) — laissé en commentaire
