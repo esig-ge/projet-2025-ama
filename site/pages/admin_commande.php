@@ -29,7 +29,6 @@ function sendPickupEmail(PDO $pdo, int $perId, int $comId, DateTime $debut, Date
     $dateDeb = $debut->format('d.m.Y H:i');
     $dateFin = $fin->format('d.m.Y H:i');
 
-    // À personnaliser:
     $adresseBoutique = "DK Bloom, Rue des Roses 12, 1200 Genève";
     $horaires        = "Lun–Ven 10:00–18:30, Sam 10:00–17:00";
 
@@ -59,18 +58,15 @@ function addNotification(PDO $pdo, int $perId, int $comId, string $type, string 
 
 /** Mise au statut 'en attente de ramassage' + fenêtre + notif + mail */
 function setCommandePickupReady(PDO $pdo, int $comId): void {
-    // Récup client + statut actuel
     $st = $pdo->prepare("SELECT PER_ID FROM COMMANDE WHERE COM_ID=?");
     $st->execute([$comId]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
     if (!$row) return;
     $perId = (int)$row['PER_ID'];
 
-    // Fenêtre par défaut: maintenant → +5 jours
     $debut = new DateTime('now');
     $fin   = (new DateTime('now'))->modify('+5 days');
 
-    // MAJ commande
     $up = $pdo->prepare("UPDATE COMMANDE
                          SET COM_STATUT = 'en attente de ramassage',
                              COM_RETRAIT_DEBUT = :deb,
@@ -82,7 +78,6 @@ function setCommandePickupReady(PDO $pdo, int $comId): void {
         ':id'=>$comId
     ]);
 
-    // Notif + e-mail
     addNotification($pdo, $perId, $comId, 'pickup_ready', "Votre commande #$comId est prête au retrait en boutique.");
     sendPickupEmail($pdo, $perId, $comId, $debut, $fin);
 }
@@ -92,18 +87,17 @@ $COM_STATUTS = [
     'en preparation',
     "en attente d'expédition",
     'expediee',
-    'en attente de ramassage',   // <— nouveau
+    'en attente de ramassage',
     'livree',
     'annulee'
 ];
 
 /* ===== Ordre des statuts + règle de transition ===== */
-/* On impose un avancement strict (pas de latéralité). */
 $STATUS_RANK = [
     'en preparation'             => 1,
     "en attente d'expédition"    => 2,
     'expediee'                   => 3,
-    'en attente de ramassage'    => 3, // même “niveau” d’avancement que expédiée (pour tri), mais pas de retour latéral
+    'en attente de ramassage'    => 3, // même niveau que expédiée pour le tri
     'livree'                     => 4,
     'annulee'                    => -1,
 ];
@@ -111,31 +105,21 @@ $STATUS_RANK = [
 function can_transition_status(string $from, string $to, array $rank): bool {
     $from = strtolower(trim($from));
     $to   = strtolower(trim($to));
-
-    // même statut : autorisé (idempotent)
-    if ($from === $to) return true;
-
-    // annulation : toujours autorisée ; une fois annulée, figée
+    if ($from === $to) return true;                 // idempotent
     if ($from === 'annulee') return ($to === 'annulee');
-    if ($to   === 'annulee') return true;
-
-    // ancien enregistrements vides/inconnus : autoriser la 1re mise à jour
+    if ($to   === 'annulee') return true;           // annulation toujours possible
     if ($from === '' || !isset($rank[$from])) return true;
-
-    // pas de latéralité : on n'autorise **pas** un passage entre deux rangs égaux
     if (!isset($rank[$to])) return false;
-    return $rank[$to] > $rank[$from]; // strictement supérieur
+    return $rank[$to] > $rank[$from];               // pas de latéralité
 }
 
-
-
-/* Libellés sections */
+/* Libellés sections (affichage) */
 $DISPLAY_ORDER = [
-    'livree'                   => 'Livrées',
     'en preparation'           => 'En préparation',
     "en attente d'expédition"  => "En attente d'expédition",
     'expediee'                 => 'Expédiées',
     'en attente de ramassage'  => 'Prêtes au retrait',
+    'livree'                   => 'Livrées',
     'annulee'                  => 'Annulées',
 ];
 
@@ -145,6 +129,7 @@ $q            = trim($_GET['q'] ?? '');
 /* ===== POST: mise à jour du statut / archivage ===== */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
+
     if ($action === 'update') {
         $comId     = (int)($_POST['com_id'] ?? 0);
         $comStatut = $_POST['com_statut'] ?? '';
@@ -162,7 +147,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['flash'] = "Transition refusée : on ne peut pas revenir en arrière (sauf annulation).";
                 } else {
                     if ($comStatut === 'en attente de ramassage') {
-                        // Statut spécial: set fenêtre + notif + mail
                         setCommandePickupReady($pdo, $comId);
                         $_SESSION['flash'] = "Commande #$comId mise “en attente de ramassage”. Notification et e-mail envoyés.";
                     } else {
@@ -235,22 +219,22 @@ function get_commandes(PDO $pdo, string $filtreStatut, string $q): array {
                pa.PAI_MONTANT
       ORDER BY 
         CASE 
-          WHEN c.COM_STATUT='livree' THEN 1
-          WHEN c.COM_STATUT='en preparation' THEN 2
-          WHEN c.COM_STATUT='en attente d''expédition' THEN 3
-          WHEN c.COM_STATUT='expediee' THEN 4
-          WHEN c.COM_STATUT='en attente de ramassage' THEN 4
+          WHEN c.COM_STATUT='en preparation' THEN 1
+          WHEN c.COM_STATUT='en attente d''expédition' THEN 2
+          WHEN c.COM_STATUT='expediee' THEN 3
+          WHEN c.COM_STATUT='en attente de ramassage' THEN 3
+          WHEN c.COM_STATUT='livree' THEN 4
           WHEN c.COM_STATUT='annulee' THEN 5
           ELSE 99
         END,
-       /* Sépare fermement “expédiées” et “prêtes au retrait” */
-  CASE 
-    WHEN c.COM_STATUT='expediee' THEN 0
-    WHEN c.COM_STATUT='en attente de ramassage' THEN 1
-    ELSE 2
-  END,
-  c.COM_DATE DESC,
-  c.COM_ID DESC
+        /* Sépare clairement “expédiées” et “prêtes au retrait” à rang égal */
+        CASE 
+          WHEN c.COM_STATUT='expediee' THEN 0
+          WHEN c.COM_STATUT='en attente de ramassage' THEN 1
+          ELSE 2
+        END,
+        c.COM_DATE DESC,
+        c.COM_ID DESC
     ";
     $st = $pdo->prepare($sql);
     $st->execute($params);
@@ -266,11 +250,25 @@ function badgeClass($s) {
         'livree'                  => 'badge-success',
         'expediee'                => 'badge-blue',
         "en attente d'expédition" => 'badge-dark',
-        'en attente de ramassage' => 'badge-blue', // ← bleu comme “expédiée”
+        'en attente de ramassage' => 'badge-blue',
         'annulee'                 => 'badge-danger',
         default                   => 'badge-warn', // en preparation
     };
 }
+
+function norm_statut(string $s): string {
+    $s = strtolower($s);
+    // Apostrophe typographique → simple
+    $s = str_replace('’', "'", $s);
+    // Dé-accentuation rapide
+    $from = ['é','è','ê','ë','à','â','ä','î','ï','ô','ö','û','ù','ü','ç'];
+    $to   = ['e','e','e','e','a','a','a','i','i','o','o','u','u','u','c'];
+    $s = str_replace($from, $to, $s);
+    // Espaces multiples → un espace
+    $s = preg_replace('/\s+/', ' ', trim($s));
+    return $s;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -325,14 +323,14 @@ function badgeClass($s) {
         .badge-danger{background:var(--danger-bg);color:var(--danger)}
         .badge-success{background:#e6f6ea;color:#155c2e}
         .badge-dark{background:#f1f1f3;color:#111}
-        .badge-blue{ background:#e6f0ff; color:#0b4fb9; }  /* pour 'expediee' */
+        .badge-blue{ background:#e6f0ff; color:#0b4fb9; }
 
         .row-form{display:flex;gap:8px;align-items:center;justify-content:flex-end}
         .row-form select{border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px 10px;background:#fff;color:var(--text);min-width:210px}
 
-        .table td:last-child { min-width: 180px; white-space: normal; }
+        .table td:last-child { min-width: 220px; white-space: normal; }
         .row-form { flex-direction: column; align-items: stretch; }
-        .row-form select, .row-form button { width: 100%; }
+        .row-form select, .row-form button, .row-form a { width: 100%; text-align:center; }
 
         .section-row td{ padding:0; background:transparent; border-top:0; }
         .section-head{
@@ -342,6 +340,42 @@ function badgeClass($s) {
             border-top:1px solid var(--line); border-bottom:1px solid var(--line);
             letter-spacing:.2px;
         }
+        .btn-ghost{display:inline-block;text-decoration:none;border:1px solid var(--brand);color:var(--brand);padding:8px 14px;border-radius:10px;background:#fff}
+        .btn-ghost:hover{background:#f9f5f5}
+
+        /* Bouton Livraison — couleurs selon statut */
+        .btn-livraison{
+            display:inline-block;
+            padding:8px 12px;
+            font-size:13px;
+            font-weight:700;
+            border-radius:10px;
+            text-decoration:none;
+            border:1px solid transparent;
+            transition:.2s ease;
+        }
+
+        .btn-livraison.default{
+            background:#f3f4f6;
+            color:#111;
+            border-color:#e5e7eb;
+        }
+        .btn-livraison.default:hover{ background:#eceff3; }
+
+        .btn-livraison.orange{
+            background:#fff4e5;         /* orange pastel */
+            color:#b46900;
+            border-color: rgba(228, 175, 113, 0.89);
+        }
+        .btn-livraison.orange:hover{ background:#ffedd4; }
+
+        .btn-livraison.green{
+            background:#e6f6ea;         /* vert succès */
+            color:#155c2e;
+            border-color:#a8e1bc;
+        }
+        .btn-livraison.green:hover{ background:#d7f0e3; }
+
     </style>
 </head>
 <body>
@@ -397,7 +431,7 @@ function badgeClass($s) {
                         if ($statut !== $current) {
                             $current = $statut;
                             $label = $DISPLAY_ORDER[$statut] ?? ucfirst($statut);
-                            echo '<tr class="section-row"><td colspan="8"><div class="section-head">'.$label.'</div></td></tr>';
+                            echo '<tr class="section-row"><td colspan="8"><div class="section-head">'.h($label).'</div></td></tr>';
                         }
                         $isLivree = ($statut === 'livree');
                         ?>
@@ -437,6 +471,27 @@ function badgeClass($s) {
                                         <?php endforeach; ?>
                                     </select>
                                     <button class="btn" type="submit">Mettre à jour</button>
+
+                                    <!-- Bouton Livraison (préremplit admin_livraisons) -->
+                                    <?php
+                                    $statutRaw = (string)($r['statut_commande'] ?? '');
+                                    $statutNor = norm_statut($statutRaw); // ex: "en attente d'expedition", "expediee", "livree"
+
+                                    $btnClass = 'default';
+                                    if (in_array($statutNor, ["en attente d'expedition", 'expediee', 'en attente de ramassage'], true)) {
+                                        $btnClass = 'orange';
+                                    } elseif ($statutNor === 'livree') {
+                                        $btnClass = 'green';
+                                    }
+                                    ?>
+                                    <a class="btn-livraison <?= $btnClass ?>"
+                                       href="<?= $BASE ?>admin_livraisons.php?prefill=1&com_id=<?= (int)$r['commande_id'] ?>"
+                                       title="Pré-remplir une livraison pour cette commande">
+                                        Livraison
+                                    </a>
+
+
+
                                 </form>
                             </td>
                         </tr>

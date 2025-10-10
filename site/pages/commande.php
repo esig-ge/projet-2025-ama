@@ -268,10 +268,54 @@ if (($_POST['action'] ?? '') === 'clear_all') {
 
 /* -- A4) CHOIX LIVRAISON (standard / retrait + zone Genève/Suisse) -- */
 if (($_POST['action'] ?? '') === 'set_shipping') {
-    $_SESSION['ship_mode'] = ($_POST['ship_mode'] ?? 'standard') === 'retrait' ? 'retrait' : 'standard';
-    $_SESSION['ship_zone'] = ($_POST['ship_zone'] ?? 'geneve') === 'suisse' ? 'suisse' : 'geneve';
+    // 1) Normalise les entrées
+    $ship_mode = (($_POST['ship_mode'] ?? '') === 'retrait') ? 'retrait' : 'standard'; // 'standard' | 'retrait'
+    $ship_zone = (($_POST['ship_zone'] ?? '') === 'suisse')  ? 'suisse'  : 'geneve';   // 'geneve' | 'suisse'
+
+    // 2) Map serveur -> GVA / CH / BOUT (on n'utilise PAS le hidden 'mode' du front)
+    $mode = '';
+    if ($ship_mode === 'retrait') {
+        $mode = 'BOUT';
+    } elseif ($ship_mode === 'standard') {
+        $mode = ($ship_zone === 'geneve') ? 'GVA' : 'CH';
+    }
+
+    if (!in_array($mode, ['GVA','CH','BOUT'], true)) {
+        $_SESSION['message'] = "Veuillez choisir un mode de livraison valide.";
+        header("Location: ".$BASE."commande.php"); exit;
+    }
+
+    // 3) Persiste en session
+    $_SESSION['ship_mode'] = $ship_mode;
+    $_SESSION['ship_zone'] = $ship_zone;
+    $_SESSION['mode']      = $mode; // utile pour les étapes suivantes / facture / livraison
+
+    // 4) (Optionnel) Enregistre le mode sur la commande en préparation
+    try {
+        $st = $pdo->prepare("
+            SELECT COM_ID
+              FROM COMMANDE
+             WHERE PER_ID = :per AND COM_STATUT = 'en preparation'
+             ORDER BY COM_ID DESC
+             LIMIT 1
+        ");
+        $st->execute([':per' => $perId]);
+        if ($row = $st->fetch(PDO::FETCH_ASSOC)) {
+            $curComId = (int)$row['COM_ID'];
+            // Adapte le nom de colonne si différent (ex: COM_MODE)
+            $pdo->prepare("UPDATE COMMANDE SET COM_MODE = :m WHERE COM_ID = :cid")->execute([
+                ':m'   => $mode,
+                ':cid' => $curComId
+            ]);
+        }
+    } catch (Throwable $e) {
+        // silencieux : ne bloque pas l'UX si l'update échoue
+        // log éventuel
+    }
+
     header("Location: ".$BASE."commande.php"); exit;
 }
+
 
 /* ========= A1) MISE À JOUR QUANTITÉ ========= */
 if (($_POST['action'] ?? '') === 'set_qty') {
@@ -678,14 +722,15 @@ $total_arrondi = round($total_ttc * 20) / 20;
         <div class="inner">
             <div class="section-title">Type de livraison</div>
 
-            <!-- Formulaire des options de livraison -->
             <form method="post" action="<?= $BASE ?>commande.php" id="shipForm">
                 <input type="hidden" name="action" value="set_shipping">
+                <!-- Ce champ caché portera GVA/CH/BOUT -->
+                <input type="hidden" name="mode" id="liv_mode" value="">
 
                 <fieldset class="full group shipping-options">
                     <label class="opt">
                         <input type="radio" name="ship_mode" value="standard" <?= $disabledAttr ?> <?= ($ship_mode==='standard'?'checked':'') ?>>
-                        <span>🚚 Standard (48h)</span>
+                        <span>🚚 Standard</span>
                     </label>
                     <label class="opt">
                         <input type="radio" name="ship_mode" value="retrait" <?= $disabledAttr ?> <?= ($ship_mode==='retrait'?'checked':'') ?>>
@@ -707,8 +752,52 @@ $total_arrondi = round($total_ttc * 20) / 20;
                     <div class="note">La TVA sur la livraison est ventilée entre 2,6 % et 8,1 % selon le contenu.</div>
                 </div>
             </form>
+        </div>
+    </section>
 
-            <br>
+    <script>
+        (function(){
+            const form     = document.getElementById('shipForm');
+            const modeIn   = document.getElementById('liv_mode');
+            const zoneWrap = document.getElementById('zoneWrap');
+
+            function current(name){
+                return form.querySelector(`input[name="${name}"]:checked`)?.value || '';
+            }
+
+            function recomputeMode(){
+                const shipMode = current('ship_mode');   // 'standard' | 'retrait'
+                const shipZone = current('ship_zone');   // 'geneve' | 'suisse' | ''
+                // Affichage/masquage des zones
+                if (shipMode === 'retrait') {
+                    zoneWrap.style.display = 'none';
+                } else {
+                    zoneWrap.style.display = '';
+                }
+                // Mapping vers GVA/CH/BOUT
+                let m = '';
+                if (shipMode === 'retrait') m = 'BOUT';
+                else if (shipMode === 'standard' && shipZone === 'geneve') m = 'GVA';
+                else if (shipMode === 'standard' && shipZone === 'suisse') m = 'CH';
+                modeIn.value = m;
+            }
+
+            // Écouteurs
+            form.querySelectorAll('input[name="ship_mode"], input[name="ship_zone"]').forEach(i=>{
+                i.addEventListener('change', () => {
+                    recomputeMode();
+                    // Option: auto-submit quand tout est choisi
+                    // if (modeIn.value) form.submit();
+                });
+            });
+
+            // Init au chargement (utile quand on revient sur la page)
+            recomputeMode();
+        })();
+    </script>
+
+
+    <br>
             <div class="actions">
                 <a class="btn-ghost" href="<?= $BASE ?>interface_selection_produit.php">Continuer mes achats</a>
                 <a class="btn-ghost" href="<?= $BASE ?>interface_supplement.php">Ajouter des suppléments</a>
