@@ -11,6 +11,15 @@ header('Expires: 0');
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
+/* ===== Bloquer les administrateurs ===== */
+$isAdmin = !empty($_SESSION['is_admin']) || !empty($_SESSION['adm_id']);
+if ($isAdmin) {
+    $_SESSION['toast_type'] = 'error';
+    $_SESSION['toast_msg']  = "Les administrateurs ne peuvent pas passer de commande.";
+    header('Location: '.$BASE.'adminAccueil.php');
+    exit;
+}
+
 /* ===== Accès ===== */
 if (empty($_SESSION['per_id'])) {
     $_SESSION['message'] = "Veuillez vous connecter pour voir votre commande.";
@@ -142,7 +151,7 @@ if (($_POST['action'] ?? '') === 'del') {
                 $pdo->prepare("DELETE FROM COMMANDE_EMBALLAGE WHERE COM_ID=:c AND EMB_ID=:id")->execute([':c'=>$delCom, ':id'=>$itemId]);
             }
 
-            $_SESSION['message'] = "Article supprimé";
+            $_SESSION['message'] = "Article supprimé et stock rétabli.";
         } else {
             $_SESSION['message'] = "Action non autorisée.";
         }
@@ -383,7 +392,7 @@ if (($_POST['action'] ?? '') === 'set_qty') {
                             header("Location: ".$BASE."commande.php"); exit;
                         }
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK-:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
-                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c AND SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
+                        $pdo->prepare("UPDATE COMMANDE_SUPP SET CS_QTE_COMMANDEE=:q WHERE COM_ID=:c ET SUP_ID=:id")->execute([':q'=>$newQ, ':c'=>$comId, ':id'=>$itemId]);
                     } elseif ($newQ < $oldQ) {
                         $delta = $oldQ - $newQ;
                         $pdo->prepare("UPDATE SUPPLEMENT SET SUP_QTE_STOCK=SUP_QTE_STOCK+:d WHERE SUP_ID=:id")->execute([':d'=>$delta, ':id'=>$itemId]);
@@ -523,12 +532,8 @@ $tax_reduced = round(($base_reduced + $ship_red)  * $RATE_REDUCED, 2);
 $tax_normal  = round(($base_normal  + $ship_norm) * $RATE_NORMAL,  2);
 $tax_total   = $tax_reduced + $tax_normal;
 
-// Total TTC exact
-$total_ht  = $subtotal + $shipping;
-$total_ttc = round($total_ht + $tax_total, 2);
-
-// Arrondi au multiple de 0.05 CHF
-$total_arrondi = round($total_ttc * 20) / 20;
+/* Total (présentation comme avant: produits + livraison) */
+$total = $subtotal + $shipping;
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -640,7 +645,6 @@ $total_arrondi = round($total_ttc * 20) / 20;
                         <div class="cart-unit"><?= number_format($pu, 2, '.', ' ') ?> CHF</div>
                         <div class="cart-total"><?= number_format($lt, 2, '.', ' ') ?> CHF</div>
 
-
                         <form class="trash-form" method="post" action="<?= $BASE ?>commande.php" onsubmit="return confirm('Supprimer cet article ?');">
                             <input type="hidden" name="action" value="del">
                             <input type="hidden" name="com_id"  value="<?= $comId ?>">
@@ -684,15 +688,9 @@ $total_arrondi = round($total_ttc * 20) / 20;
             </div>
 
             <div class="sum-total">
-                <span>Total TTC</span>
-                <span><?= number_format($total_ttc, 2, '.', ' ') ?> CHF</span>
+                <span>Total</span>
+                <span><?= number_format($total, 2, '.', ' ') ?> CHF</span>
             </div>
-
-            <div class="sum-row small">
-                <span>Arrondi espèces (0.05)</span>
-                <span><?= number_format($total_arrondi, 2, '.', ' ') ?> CHF</span>
-            </div>
-
 
             <a id="btn-checkout"
                class="btn-primary"
@@ -700,6 +698,9 @@ $total_arrondi = round($total_ttc * 20) / 20;
                aria-disabled="<?= ($subtotal <= 0 ? 'true' : 'false') ?>">
                 Valider ma commande
             </a>
+
+
+
             <div class="help">
                 <ul>
                     <li>Expédition en 1 semaine</li>
