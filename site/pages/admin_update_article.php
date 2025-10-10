@@ -1,4 +1,4 @@
-<?php
+ <?php
 
 // /site/pages/admin_update_article.php
 session_start();

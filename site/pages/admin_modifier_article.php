@@ -1,4 +1,5 @@
 <?php
+/* admin_modifier_article.php */
 session_start();
 
 /* ===== Connexion DB ===== */

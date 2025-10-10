@@ -22,10 +22,10 @@ if (!$sessionId) {
 
 try {
     // On récupère la session + quelques infos utiles
-    $session = \Stripe\Checkout\Session::retrieve([
-        'id'     => $sessionId,
-        'expand' => ['payment_intent', 'line_items.data.price.product']
-    ]);
+    $session = \Stripe\Checkout\Session::retrieve(
+        $sessionId,
+        ['expand' => ['payment_intent', 'line_items.data.price.product']]
+    );
 
     $paid     = ($session->payment_status ?? '') === 'paid';
     $amount   = (int)($session->amount_total ?? 0); // en centimes

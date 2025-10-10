@@ -123,6 +123,16 @@ $CSRF = $_SESSION['csrf_checkout'];
 
 // Helpers affichage
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+
+// --- Montant livraison choisi dans le panier (session) ---
+$ship_mode = $_SESSION['ship_mode'] ?? 'standard'; // 'standard' | 'retrait'
+$ship_zone = $_SESSION['ship_zone'] ?? 'geneve';   // 'geneve' | 'suisse'
+
+$shippingCHF = 0.00;
+if ($ship_mode === 'standard') {
+    $shippingCHF = ($ship_zone === 'suisse') ? 10.00 : 5.00;
+}
+
 ?>
 <!doctype html>
 <html lang="fr">
@@ -434,10 +444,9 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
                 <input type="hidden" name="csrf_checkout" value="<?= htmlspecialchars($_SESSION['csrf_checkout'] ?? '') ?>">
                 <div id="totaux"
                      data-com-id="<?= (int)($_SESSION['current_com_id'] ?? 0) ?>"
-                     data-tva-taux="8.1"
-                     data-tva-chf="1.18"
-                     data-liv-chf="5.00"
-                     data-liv-mode="standard"></div>
+                     data-liv-chf="<?= number_format($shippingCHF, 2, '.', '') ?>"
+                     data-liv-mode="<?= htmlspecialchars($ship_mode, ENT_QUOTES) ?>">
+                </div>
 
                 <button type="submit" id="btn-pay" class="btn-primary">Payer maintenant</button>
                 <p id="form-msg" class="muted" role="status" style="margin-top:10px"></p>

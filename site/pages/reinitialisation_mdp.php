@@ -6,6 +6,10 @@ session_start();
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
+// Récupérer l'info
+$devNote = $_SESSION['dev_code'] ?? null;
+unset($_SESSION['dev_code']);
+
 /* ===== Toast (venant d'une redirection) ===== */
 $toastType = $_SESSION['toast_type'] ?? null;
 $toastMsg  = $_SESSION['toast_msg']  ?? null;
@@ -74,10 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="reset-page">
 <main class="reset-card">
     <h1>Réinitialisation du mot de passe</h1>
-
-    <?php if ($devNote): ?>
-        <p class="note"><?= nl2br(htmlspecialchars($devNote)) ?></p>
-    <?php endif; ?>
 
     <?php if ($error): ?>
         <p class="note err"><?= htmlspecialchars($error) ?></p>
@@ -179,5 +179,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (btn) btn.addEventListener('click', ()=>t.classList.remove('show'));
     })();
 </script>
+
+<?php
+// Considère "dev" si: localhost, esig-sandbox, ou ?dev=1
+$IS_DEV = (stripos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false)
+    || (stripos($_SERVER['HTTP_HOST'] ?? '', 'esig-sandbox') !== false)
+    || isset($_GET['dev']);
+?>
+<?php if ($devNote && $IS_DEV): ?>
+    <script>
+        (function(){
+            const note = <?= json_encode($devNote, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) ?>;
+            console.groupCollapsed('%c🧩 DK Bloom — reset (DEV)', 'color:#8A1B2E;font-weight:bold');
+            console.log(note);
+            console.groupEnd();
+        })();
+    </script>
+<?php endif; ?>
+
 </body>
 </html>

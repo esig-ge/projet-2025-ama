@@ -1,5 +1,0 @@
-
-.conteneur_form { max-width: 520px; width: 100%; }
-.flash-ok   { background:#e6ffed; color:#0a5; border:1px solid #b6f2c7; padding:10px 12px; border-radius:6px; margin-bottom:12px; }
-.flash-err  { background:#ffecec; color:#a00; border:1px solid #f5bcbc; padding:10px 12px; border-radius:6px; margin-bottom:12px; }
-.hint       { color:#ffdede; font-size:.85rem; margin-top:-8px; margin-bottom:12px; }

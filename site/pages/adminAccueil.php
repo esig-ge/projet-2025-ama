@@ -14,6 +14,7 @@ if (!$isAdmin) {
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
+
 /* ===== Connexion BDD ===== */
 $pdo = null;
 try {
@@ -118,13 +119,11 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
         <a class="nav-item active" href="<?= $BASE ?>adminAccueil.php">
             <span class="ico">🏠</span> <span>Dashboard</span>
         </a>
+        <a class="nav-item" href="<?= $BASE ?>admin_clients.php"><span class="ico">👤</span> <span>Clients</span></a>
         <a class="nav-item" href="<?= $BASE ?>admin_catalogue.php"><span class="ico">💐</span> <span>Produits</span></a>
         <a class="nav-item" href="<?= $BASE ?>admin_commande.php"><span class="ico">🧾</span> <span>Commandes</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminClients.php"><span class="ico">👤</span> <span>Clients</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminPromos.php"><span class="ico">🏷️</span> <span>Promotions</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminAvis.php"><span class="ico">⭐</span> <span>Avis</span></a>
-        <a class="nav-item" href="<?= $BASE ?>admin_messages.php"><span class="ico">📩</span> <span>Messages</span></a>
-        <a class="nav-item" href="<?= $BASE ?>adminParametres.php"><span class="ico">⚙️</span> <span>Paramètres</span></a>
+        <a class="nav-item" href="<?= $BASE ?>admin_livraisons.php"><span class="ico">📦</span> <span>Livraisons</span></a>
+
     </nav>
     <div class="adm-footer">© <?= date('Y') ?> DK Bloom</div>
 </aside>
@@ -264,15 +263,177 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
     </section>
 
     <section class="grid-2">
-        <article class="card">
-            <div class="card-head">
-                <h2>Ventes du mois (placeholder)</h2>
-                <h2>Ventes du mois (placeholder)</h2>
+        <?php
+        /* ====== Filtres ====== */
+        // années disponibles dans la BDD
+        $years = $pdo->query("SELECT DISTINCT YEAR(COM_DATE) AS y FROM COMMANDE ORDER BY y DESC")->fetchAll(PDO::FETCH_COLUMN);
+        $yearSelected = (int)($_GET['year'] ?? (date('Y')));
+        $excludeCanceled = (isset($_GET['excl']) ? (int)$_GET['excl'] : 1); // 1 = exclure (défaut)
+        $STATUT_ANNULE = 'annulee'; // adapte si besoin
+
+        // garde de sécurité si l’année n’existe pas
+        if ($years && !in_array($yearSelected, array_map('intval', $years), true)) {
+            $yearSelected = (int)$years[0];
+        }
+
+        /* ====== Données par mois ====== */
+        $sqlMonths = "
+  SELECT 
+      DATE_FORMAT(c.COM_DATE, '%Y-%m') AS ym,
+      SUM(cp.CP_QTE_COMMANDEE * p.PRO_PRIX) AS total_chf,
+      COUNT(DISTINCT c.COM_ID) AS nb_commandes,
+      SUM(cp.CP_QTE_COMMANDEE) AS produits_vendus
+  FROM COMMANDE c
+  JOIN COMMANDE_PRODUIT cp ON cp.COM_ID = c.COM_ID
+  JOIN PRODUIT p           ON p.PRO_ID  = cp.PRO_ID
+  WHERE YEAR(c.COM_DATE) = :y
+    ".($excludeCanceled ? "AND (c.COM_STATUT IS NULL OR c.COM_STATUT <> :ann)" : "")."
+  GROUP BY ym
+  ORDER BY ym ASC
+";
+        $st = $pdo->prepare($sqlMonths);
+        $st->bindValue(':y', $yearSelected, PDO::PARAM_INT);
+        if ($excludeCanceled) $st->bindValue(':ann', $STATUT_ANNULE, PDO::PARAM_STR);
+        $st->execute();
+        $months = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        /* ====== Produit le plus vendu / mois ====== */
+        $sqlTop = "
+  SELECT x.PRO_ID, pr.PRO_NOM, x.qte
+  FROM (
+      SELECT cp.PRO_ID, SUM(cp.CP_QTE_COMMANDEE) AS qte
+      FROM COMMANDE c
+      JOIN COMMANDE_PRODUIT cp ON cp.COM_ID = c.COM_ID
+      WHERE YEAR(c.COM_DATE)=:y
+        AND DATE_FORMAT(c.COM_DATE,'%Y-%m') = :ym
+        ".($excludeCanceled ? "AND (c.COM_STATUT IS NULL OR c.COM_STATUT <> :ann)" : "")."
+      GROUP BY cp.PRO_ID
+      ORDER BY qte DESC
+      LIMIT 1
+  ) x
+  JOIN PRODUIT pr ON pr.PRO_ID = x.PRO_ID
+";
+        $stTop = $pdo->prepare($sqlTop);
+
+        // label FR
+        function fr_month_label_from_ym(string $ym): string {
+            static $mois = [1=>'janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+            [$y,$m] = array_map('intval', explode('-', $ym));
+            return ($mois[$m] ?? $ym) . " $y";
+        }
+
+        // préparer lignes + totaux année
+        $rows = [];
+        $sumCA=0.0; $sumCmd=0; $sumProd=0;
+
+        foreach ($months as $m) {
+            $ym   = $m['ym'];
+            $ca   = (float)$m['total_chf'];
+            $cmd  = (int)$m['nb_commandes'];
+            $prod = (int)$m['produits_vendus'];
+
+            $params = [':y'=>$yearSelected, ':ym'=>$ym];
+            if ($excludeCanceled) $params[':ann'] = $STATUT_ANNULE;
+            $stTop->execute($params);
+            $top = $stTop->fetch(PDO::FETCH_ASSOC);
+
+            $rows[] = [
+                'label'   => fr_month_label_from_ym($ym),
+                'total'   => $ca,
+                'cmd'     => $cmd,
+                'prod'    => $prod,
+                'top_nom' => $top['PRO_NOM'] ?? '—',
+                'top_qte' => isset($top['qte']) ? (int)$top['qte'] : 0,
+            ];
+
+            $sumCA  += $ca;
+            $sumCmd += $cmd;
+            $sumProd+= $prod;
+        }
+        ?>
+
+        <article class="card" style="margin-top:16px">
+            <div class="card-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <h2 style="margin:0">Ventes par mois — <?= (int)$yearSelected ?></h2>
+
+                <!-- Filtres -->
+                <form method="get" style="display:flex;gap:8px;align-items:center;">
+                    <label for="year" style="font-size:.9rem;color:#555;">Année</label>
+                    <select id="year" name="year" onchange="this.form.submit()" style="padding:6px 8px;border:1px solid #ddd;border-radius:8px;">
+                        <?php foreach ($years as $y): ?>
+                            <option value="<?= (int)$y ?>" <?= ((int)$y === $yearSelected ? 'selected' : '') ?>><?= (int)$y ?></option>
+                        <?php endforeach; ?>
+                    </select>
+
+                    <label style="display:flex;gap:6px;align-items:center;font-size:.9rem;color:#555;">
+                        <input type="checkbox" name="excl" value="1" <?= $excludeCanceled ? 'checked' : '' ?> onchange="this.form.submit()">
+                        Exclure annulées
+                    </label>
+                </form>
             </div>
-            <div class="chart-placeholder">Graphique à ajouter ici</div>
+
+            <table class="table-ventes" style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.08)">
+                <thead>
+                <tr style="background:#8A1B2E;color:#fff">
+                    <th style="text-align:left;padding:10px">Mois</th>
+                    <th style="text-align:right;padding:10px">Total ventes (CHF)</th>
+                    <th style="text-align:right;padding:10px">Commandes</th>
+                    <th style="text-align:right;padding:10px">Produits vendus</th>
+                    <th style="text-align:left;padding:10px">Produit le plus vendu</th>
+                    <th style="text-align:right;padding:10px">Qté</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (!$rows): ?>
+                    <tr><td colspan="6" style="text-align:center;padding:14px;color:#777">Aucune donnée pour cette année.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($rows as $r): ?>
+                        <tr>
+                            <td style="padding:10px"><?= htmlspecialchars($r['label']) ?></td>
+                            <td style="padding:10px;text-align:right"><?= number_format($r['total'], 2, '.', "'") ?> CHF</td>
+                            <td style="padding:10px;text-align:right"><?= (int)$r['cmd'] ?></td>
+                            <td style="padding:10px;text-align:right"><?= (int)$r['prod'] ?></td>
+                            <td style="padding:10px"><?= htmlspecialchars($r['top_nom']) ?></td>
+                            <td style="padding:10px;text-align:right"><?= (int)$r['top_qte'] ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+
+                    <!-- Ligne Total année -->
+                    <tr style="background:#fff6f7;font-weight:700">
+                        <td style="padding:10px">Total année <?= (int)$yearSelected ?></td>
+                        <td style="padding:10px;text-align:right"><?= number_format($sumCA, 2, '.', "'") ?> CHF</td>
+                        <td style="padding:10px;text-align:right"><?= (int)$sumCmd ?></td>
+                        <td style="padding:10px;text-align:right"><?= (int)$sumProd ?></td>
+                        <td style="padding:10px" colspan="2"></td>
+                    </tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
         </article>
 
-        <?php
+        <style>
+            .table-ventes {
+                width:100%;
+                border-collapse:collapse;
+                background:#fff;
+                box-shadow:0 2px 6px rgba(0,0,0,0.1);
+                border-radius:8px;
+                overflow:hidden;
+            }
+            .table-ventes th {
+                background:#8A1B2E;
+                color:#fff;
+                text-align:left;
+                padding:10px;
+            }
+            .table-ventes td {
+                padding:10px;
+                border-bottom:1px solid #eee;
+            }
+
+        </style>
+
+    <?php
         /* ===== Liste des produits en alerte stock (TOP 5) ===== */
         $threshold   = 5;
         $lowStocks   = [];
@@ -413,16 +574,10 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
         document.body.classList.toggle('aside-closed');
     });
 </script>
+
 <script>
     (() => {
-        const admId = <?= json_encode($admId, JSON_UNESCAPED_UNICODE) ?>;
-        const STORAGE_KEY = `dkb_admin_todos_${admId||'guest'}`;
-
-        /*** State ***/
-        let todos = load() ?? seed();
-        let filter = 'all';
-
-        /*** Elements ***/
+        const API = '<?= $BASE ?>api/todo.php';
         const $list   = document.getElementById('todo-list');
         const $input  = document.getElementById('todo-input');
         const $form   = document.getElementById('todo-add');
@@ -432,17 +587,47 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
         const $clearD = document.getElementById('todo-clear-done');
         const $clearA = document.getElementById('todo-clear-all');
 
-        /*** Init ***/
-        render();
+        let todos = [];
+        let filter = 'all';
 
-        /*** Events ***/
-        $form.addEventListener('submit', (e)=>{
+        // --- util fetch ---
+        async function post(data) {
+            const body = new URLSearchParams(data);
+            const r = await fetch(API, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+            return r.json();
+        }
+        async function load() {
+            const r = await fetch(API + '?op=list');
+            const j = await r.json();
+            todos = (j.items || []).map(x => ({
+                id: String(x.TODO_ID),
+                text: x.TEXTE,
+                done: Number(x.DONE) === 1
+            }));
+            render();
+        }
+
+        // --- events ---
+        $form.addEventListener('submit', async (e)=>{
             e.preventDefault();
             const t = ($input.value||'').trim();
-            if(!t) return;
-            todos.push({ id: uid(), text: t, done:false });
-            $input.value='';
-            save(); render();
+            if (!t) return;
+            $input.value = '';
+            // Optimiste
+            const tempId = 'tmp_'+Date.now();
+            todos.push({id:tempId, text:t, done:false});
+            render();
+            // Persist
+            const j = await post({op:'add', text:t});
+            if (j.ok && j.item) {
+                const i = todos.findIndex(x=>x.id===tempId);
+                if (i>=0) todos[i].id = String(j.item.TODO_ID || j.item.todo_id || j.item.id || todos[i].id);
+            } else {
+                // rollback
+                todos = todos.filter(x=>x.id!==tempId);
+                alert("Erreur ajout tâche");
+            }
+            render();
         });
 
         $chips.forEach(ch=>{
@@ -454,15 +639,20 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             });
         });
 
-        $clearD.addEventListener('click', ()=>{
+        $clearD.addEventListener('click', async ()=>{
             todos = todos.filter(t=>!t.done);
-            save(); render();
-        });
-        $clearA.addEventListener('click', ()=>{
-            if(confirm('Tout effacer ?')) { todos = []; save(); render(); }
+            render();
+            await post({op:'clear_done'});
         });
 
-        /*** Drag to reorder ***/
+        $clearA.addEventListener('click', async ()=>{
+            if (!confirm('Tout effacer ?')) return;
+            todos = [];
+            render();
+            await post({op:'clear_all'});
+        });
+
+        // --- DnD re-order ---
         let dragId = null;
         $list.addEventListener('dragstart', e=>{
             const li = e.target.closest('li.todo-item');
@@ -480,23 +670,25 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             if(!dragging) return;
             if(after==null) $list.appendChild(dragging); else $list.insertBefore(dragging, after);
         });
-        $list.addEventListener('drop', ()=>{
-            // Rebuild order from DOM
+        $list.addEventListener('drop', async ()=>{
             const ids = [...$list.querySelectorAll('.todo-item')].map(li=>li.dataset.id);
+            // local reorder
             todos.sort((a,b)=> ids.indexOf(a.id) - ids.indexOf(b.id));
-            save(); render(); // re-render to reset classes
+            render();
+            // persist order
+            const form = new URLSearchParams(); form.append('op','reorder');
+            ids.forEach(id=>form.append('ids[]', id));
+            await fetch(API, {method:'POST', body:form});
         });
 
-        /*** Helpers ***/
+        // --- render helpers ---
         function render(){
-            // filter
             const filtered = todos.filter(t=>{
                 if(filter==='open') return !t.done;
                 if(filter==='done') return t.done;
                 return true;
             });
 
-            // list
             $list.innerHTML = '';
             filtered.forEach(t=>{
                 const li = document.createElement('li');
@@ -507,26 +699,32 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
                 const check = document.createElement('button');
                 check.className = 'todo-check'+(t.done?' checked':'');
                 check.innerHTML = '<span class="mark">✔</span>';
-                check.addEventListener('click', ()=>{
-                    t.done = !t.done; save(); render();
+                check.addEventListener('click', async ()=>{
+                    t.done = !t.done; render();
+                    await post({op:'toggle', id:t.id, done: t.done ? 1 : 0});
                 });
 
                 const lbl = document.createElement('div');
                 lbl.className = 'todo-label';
                 lbl.textContent = t.text;
+                lbl.title = 'Double-clic pour renommer';
+                lbl.addEventListener('dblclick', async ()=>{
+                    const nv = prompt('Modifier la tâche :', t.text);
+                    if (nv===null) return;
+                    t.text = (nv||'').trim(); render();
+                    await post({op:'edit', id:t.id, text:t.text});
+                });
 
                 const del = document.createElement('button');
                 del.className = 'todo-del';
                 del.title = 'Supprimer';
                 del.innerHTML = '🗑️';
-                del.addEventListener('click', ()=>{
-                    todos = todos.filter(x=>x.id!==t.id);
-                    save(); render();
+                del.addEventListener('click', async ()=>{
+                    const keep = todos; // rollback possible
+                    todos = todos.filter(x=>x.id!==t.id); render();
+                    const j = await post({op:'delete', id:t.id});
+                    if (!j.ok) { todos = keep; render(); alert('Suppression échouée'); }
                 });
-
-                const wrap = document.createElement('div');
-                wrap.className = 'todo-check-wrap';
-                wrap.appendChild(check);
 
                 li.appendChild(check);
                 li.appendChild(lbl);
@@ -534,7 +732,6 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
                 $list.appendChild(li);
             });
 
-            // progress
             const total = todos.length;
             const done  = todos.filter(t=>t.done).length;
             $count.textContent = `${done}/${total}`;
@@ -554,24 +751,11 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); }
-        function load(){
-            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); }
-            catch(e){ return null; }
-        }
-        function uid(){ return Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
-        function seed(){
-            // Première visite : quelques tâches de départ (modifiables/supprimables)
-            const s = [
-                {id:uid(), text:'Vérifier les alertes stock', done:false},
-                {id:uid(), text:'Répondre aux avis clients', done:false},
-                {id:uid(), text:'Créer la promo du week-end', done:true},
-            ];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-            return s;
-        }
+        // go
+        load();
     })();
 </script>
+
 
 </body>
 </html>

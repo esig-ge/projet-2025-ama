@@ -14,21 +14,128 @@ $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 $pdo = require __DIR__ . '/../database/config/connexionBDD.php';
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+/* ===== Utils ===== */
+function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+
+/** Envoi de l’e-mail de retrait prêt */
+function sendPickupEmail(PDO $pdo, int $perId, int $comId, DateTime $debut, DateTime $fin): void {
+    $st = $pdo->prepare("SELECT PER_EMAIL, PER_PRENOM FROM PERSONNE WHERE PER_ID = :id");
+    $st->execute([':id'=>$perId]);
+    $u = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$u) return;
+
+    $email   = (string)$u['PER_EMAIL'];
+    $prenom  = (string)($u['PER_PRENOM'] ?? 'Client');
+    $dateDeb = $debut->format('d.m.Y H:i');
+    $dateFin = $fin->format('d.m.Y H:i');
+
+    // À personnaliser:
+    $adresseBoutique = "DK Bloom, Rue des Roses 12, 1200 Genève";
+    $horaires        = "Lun–Ven 10:00–18:30, Sam 10:00–17:00";
+
+    $subject = "Ta commande #$comId est prête au retrait";
+    $body = "Coucou $prenom,
+
+Ta commande #$comId est prête pour être retirée en boutique.
+
+Période de retrait : $dateDeb → $dateFin
+Adresse : $adresseBoutique
+Horaires : $horaires
+
+Merci de te munir de ton numéro de commande et d’une pièce d’identité.
+
+À très vite,
+DK Bloom";
+
+    @mb_send_mail($email, $subject, $body, "From: DK Bloom <no-reply@dkbloom.ch>\r\n");
+}
+
+/** Création d’une notification simple */
+function addNotification(PDO $pdo, int $perId, int $comId, string $type, string $texte): void {
+    $st = $pdo->prepare("INSERT INTO NOTIFICATION (PER_ID, COM_ID, NOT_TYPE, NOT_TEXTE)
+                         VALUES (:per, :com, :type, :txt)");
+    $st->execute([':per'=>$perId, ':com'=>$comId, ':type'=>$type, ':txt'=>$texte]);
+}
+
+/** Mise au statut 'en attente de ramassage' + fenêtre + notif + mail */
+function setCommandePickupReady(PDO $pdo, int $comId): void {
+    // Récup client + statut actuel
+    $st = $pdo->prepare("SELECT PER_ID FROM COMMANDE WHERE COM_ID=?");
+    $st->execute([$comId]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$row) return;
+    $perId = (int)$row['PER_ID'];
+
+    // Fenêtre par défaut: maintenant → +5 jours
+    $debut = new DateTime('now');
+    $fin   = (new DateTime('now'))->modify('+5 days');
+
+    // MAJ commande
+    $up = $pdo->prepare("UPDATE COMMANDE
+                         SET COM_STATUT = 'en attente de ramassage',
+                             COM_RETRAIT_DEBUT = :deb,
+                             COM_RETRAIT_FIN   = :fin
+                         WHERE COM_ID = :id");
+    $up->execute([
+        ':deb'=>$debut->format('Y-m-d H:i:s'),
+        ':fin'=>$fin->format('Y-m-d H:i:s'),
+        ':id'=>$comId
+    ]);
+
+    // Notif + e-mail
+    addNotification($pdo, $perId, $comId, 'pickup_ready', "Votre commande #$comId est prête au retrait en boutique.");
+    sendPickupEmail($pdo, $perId, $comId, $debut, $fin);
+}
+
 /* ===== Paramètres / Filtres ===== */
 $COM_STATUTS = [
     'en preparation',
     "en attente d'expédition",
     'expediee',
+    'en attente de ramassage',   // <— nouveau
     'livree',
     'annulee'
 ];
 
-/* Ordre d'affichage des sections (libellés jolis) */
+/* ===== Ordre des statuts + règle de transition ===== */
+/* On impose un avancement strict (pas de latéralité). */
+$STATUS_RANK = [
+    'en preparation'             => 1,
+    "en attente d'expédition"    => 2,
+    'expediee'                   => 3,
+    'en attente de ramassage'    => 3, // même “niveau” d’avancement que expédiée (pour tri), mais pas de retour latéral
+    'livree'                     => 4,
+    'annulee'                    => -1,
+];
+
+function can_transition_status(string $from, string $to, array $rank): bool {
+    $from = strtolower(trim($from));
+    $to   = strtolower(trim($to));
+
+    // même statut : autorisé (idempotent)
+    if ($from === $to) return true;
+
+    // annulation : toujours autorisée ; une fois annulée, figée
+    if ($from === 'annulee') return ($to === 'annulee');
+    if ($to   === 'annulee') return true;
+
+    // ancien enregistrements vides/inconnus : autoriser la 1re mise à jour
+    if ($from === '' || !isset($rank[$from])) return true;
+
+    // pas de latéralité : on n'autorise **pas** un passage entre deux rangs égaux
+    if (!isset($rank[$to])) return false;
+    return $rank[$to] > $rank[$from]; // strictement supérieur
+}
+
+
+
+/* Libellés sections */
 $DISPLAY_ORDER = [
     'livree'                   => 'Livrées',
     'en preparation'           => 'En préparation',
     "en attente d'expédition"  => "En attente d'expédition",
     'expediee'                 => 'Expédiées',
+    'en attente de ramassage'  => 'Prêtes au retrait',
     'annulee'                  => 'Annulées',
 ];
 
@@ -43,25 +150,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $comStatut = $_POST['com_statut'] ?? '';
         if ($comId > 0 && $comStatut !== '' && in_array($comStatut, $COM_STATUTS, true)) {
             try {
-                $pdo->prepare("UPDATE COMMANDE SET COM_STATUT=? WHERE COM_ID=?")->execute([$comStatut, $comId]);
-                $_SESSION['flash'] = "Commande #$comId mise à jour.";
+                $st = $pdo->prepare("SELECT COM_STATUT, COM_ARCHIVE FROM COMMANDE WHERE COM_ID=?");
+                $st->execute([$comId]);
+                $row = $st->fetch(PDO::FETCH_ASSOC);
+
+                if (!$row) {
+                    $_SESSION['flash'] = "Commande #$comId introuvable.";
+                } elseif ((int)($row['COM_ARCHIVE'] ?? 0) === 1) {
+                    $_SESSION['flash'] = "Commande #$comId archivée — modification impossible.";
+                } elseif (!can_transition_status((string)$row['COM_STATUT'], $comStatut, $STATUS_RANK)) {
+                    $_SESSION['flash'] = "Transition refusée : on ne peut pas revenir en arrière (sauf annulation).";
+                } else {
+                    if ($comStatut === 'en attente de ramassage') {
+                        // Statut spécial: set fenêtre + notif + mail
+                        setCommandePickupReady($pdo, $comId);
+                        $_SESSION['flash'] = "Commande #$comId mise “en attente de ramassage”. Notification et e-mail envoyés.";
+                    } else {
+                        $pdo->prepare("UPDATE COMMANDE SET COM_STATUT=? WHERE COM_ID=?")->execute([$comStatut, $comId]);
+                        $_SESSION['flash'] = "Commande #$comId mise à jour.";
+                    }
+                }
             } catch (Throwable $e) {
                 $_SESSION['flash'] = "Échec mise à jour (#$comId).";
             }
         }
         header("Location: ".$_SERVER['REQUEST_URI']); exit;
     }
+
     if ($action === 'archive') {
         $comId = (int)($_POST['com_id'] ?? 0);
         if ($comId > 0) {
-            // On s'assure que la commande est bien livrée et pas déjà archivée
             $st = $pdo->prepare("SELECT COM_STATUT, COM_ARCHIVE FROM COMMANDE WHERE COM_ID=?");
             $st->execute([$comId]);
             $row = $st->fetch(PDO::FETCH_ASSOC);
             if ($row && strtolower($row['COM_STATUT'] ?? '') === 'livree' && (int)$row['COM_ARCHIVE'] === 0) {
                 $pdo->prepare("UPDATE COMMANDE SET COM_ARCHIVE=1, COM_ARCHIVED_AT=NOW() WHERE COM_ID=?")->execute([$comId]);
                 $_SESSION['flash'] = "Commande #$comId archivée.";
-                // Redirection vers la page d'archives
                 header("Location: {$BASE}admin_commandes_archivees.php"); exit;
             } else {
                 $_SESSION['flash'] = "Archivage impossible : statut non 'livrée' ou déjà archivée.";
@@ -113,13 +237,20 @@ function get_commandes(PDO $pdo, string $filtreStatut, string $q): array {
         CASE 
           WHEN c.COM_STATUT='livree' THEN 1
           WHEN c.COM_STATUT='en preparation' THEN 2
-          WHEN c.COM_STATUT=\"en attente d'expédition\" THEN 3
+          WHEN c.COM_STATUT='en attente d''expédition' THEN 3
           WHEN c.COM_STATUT='expediee' THEN 4
+          WHEN c.COM_STATUT='en attente de ramassage' THEN 4
           WHEN c.COM_STATUT='annulee' THEN 5
           ELSE 99
         END,
-        c.COM_DATE DESC,
-        c.COM_ID DESC
+       /* Sépare fermement “expédiées” et “prêtes au retrait” */
+  CASE 
+    WHEN c.COM_STATUT='expediee' THEN 0
+    WHEN c.COM_STATUT='en attente de ramassage' THEN 1
+    ELSE 2
+  END,
+  c.COM_DATE DESC,
+  c.COM_ID DESC
     ";
     $st = $pdo->prepare($sql);
     $st->execute($params);
@@ -129,13 +260,13 @@ $commandes = get_commandes($pdo, $filtreStatut, $q);
 $nb = count($commandes);
 
 /* ===== Helpers UI ===== */
-function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function badgeClass($s) {
     $s = strtolower((string)$s);
     return match ($s) {
         'livree'                  => 'badge-success',
         'expediee'                => 'badge-blue',
         "en attente d'expédition" => 'badge-dark',
+        'en attente de ramassage' => 'badge-blue', // ← bleu comme “expédiée”
         'annulee'                 => 'badge-danger',
         default                   => 'badge-warn', // en preparation
     };
@@ -194,23 +325,15 @@ function badgeClass($s) {
         .badge-danger{background:var(--danger-bg);color:var(--danger)}
         .badge-success{background:#e6f6ea;color:#155c2e}
         .badge-dark{background:#f1f1f3;color:#111}
+        .badge-blue{ background:#e6f0ff; color:#0b4fb9; }  /* pour 'expediee' */
 
         .row-form{display:flex;gap:8px;align-items:center;justify-content:flex-end}
         .row-form select{border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px 10px;background:#fff;color:var(--text);min-width:210px}
 
-        .table td:last-child {
-            min-width: 180px; /* assez pour voir le bouton */
-            white-space: normal; /* permet le retour à la ligne */
-        }
-        .row-form {
-            flex-direction: column; /* les inputs et le bouton empilés verticalement */
-            align-items: stretch;
-        }
-        .row-form select,
-        .row-form button {
-            width: 100%;
-        }
-        /* Sections */
+        .table td:last-child { min-width: 180px; white-space: normal; }
+        .row-form { flex-direction: column; align-items: stretch; }
+        .row-form select, .row-form button { width: 100%; }
+
         .section-row td{ padding:0; background:transparent; border-top:0; }
         .section-head{
             position:sticky; top:38px; z-index:1;
@@ -219,41 +342,6 @@ function badgeClass($s) {
             border-top:1px solid var(--line); border-bottom:1px solid var(--line);
             letter-spacing:.2px;
         }
-        @media (max-width: 800px) {
-            .table thead { display: none; } /* optionnel : cacher en-tête */
-            .table tr { display: block; margin-bottom: 12px; border:1px solid var(--line); border-radius:10px; }
-            .table td { display: block; width: 100% !important; border:none; }
-            .table td::before { font-weight:700; display:block; margin-bottom:4px; }
-        }
-
-
-        /* Case à cocher d'archivage */
-        .archiver-cell{white-space:nowrap}
-        .archiver{display:flex;align-items:center;gap:8px}
-        .archiver small{color:var(--muted)}
-        .archiver input[type=checkbox]{width:18px;height:18px;cursor:pointer}
-
-        /* --- Badges --- */
-        .badge-blue{ background:#e6f0ff; color:#0b4fb9; }  /* pour 'expediee' */
-
-        /* --- Largeurs de colonnes (facultatif mais utile) --- */
-        .table thead th:nth-child(1){ width:4.5%; }   /* ID un peu plus étroit */
-        .table thead th:nth-child(2){ width:16%; }    /* Date un peu plus large */
-
-        /* --- Typo par colonne --- */
-        .table tbody td:nth-child(1){                 /* ID */
-            font-size: 12px;
-            color: #6b7280;
-            white-space: nowrap;
-        }
-        .table tbody td:nth-child(2){                 /* Date */
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: .2px;
-            color:#111;
-            white-space: nowrap;
-        }
-
     </style>
 </head>
 <body>
@@ -316,7 +404,6 @@ function badgeClass($s) {
                         <tr>
                             <td class="archiver-cell">
                                 <?php if ($isLivree): ?>
-                                    <!-- Case archivage + message -->
                                     <form method="post" class="archiver" onsubmit="return confirm('Archiver cette commande ?');">
                                         <input type="hidden" name="action" value="archive">
                                         <input type="hidden" name="com_id" value="<?= (int)$r['commande_id'] ?>">
@@ -340,8 +427,13 @@ function badgeClass($s) {
                                     <input type="hidden" name="com_id" value="<?= (int)$r['commande_id'] ?>">
                                     <select name="com_statut" title="Statut commande">
                                         <option value="">Statut commande…</option>
-                                        <?php foreach ($COM_STATUTS as $opt): ?>
-                                            <option value="<?= h($opt) ?>" <?= ($opt === ($r['statut_commande'] ?? '')) ? 'selected' : '' ?>><?= h($opt) ?></option>
+                                        <?php
+                                        $cur = (string)($r['statut_commande'] ?? '');
+                                        foreach ($COM_STATUTS as $opt):
+                                            $disabled = can_transition_status($cur, $opt, $STATUS_RANK) ? '' : 'disabled';
+                                            $selected = ($opt === $cur) ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= h($opt) ?>" <?= $selected ?> <?= $disabled ?>><?= h($opt) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                     <button class="btn" type="submit">Mettre à jour</button>

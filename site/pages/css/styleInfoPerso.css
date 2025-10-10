@@ -1,15 +1,235 @@
-.page-profile .grid{display:grid;gap:20px;grid-template-columns:1fr}
-@media(min-width:900px){.page-profile .grid{grid-template-columns:1.1fr .9fr}}
-.card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:16px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.form-row-3{display:grid;grid-template-columns:1fr .5fr .6fr;gap:12px}
-.field label{display:block;font-size:.9rem;margin:4px 0 6px;color:#7a0000}
-.field input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:1rem}
-.section-title{color:#7a0000;margin:4px 0 12px}
-.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-.btn-primary{background:#7a0000;color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
-.btn-secondary{background:#f3f3f3;color:#333;border:1px solid #e7e7e7;padding:10px 14px;border-radius:10px;cursor:pointer}
-table.orders{width:100%;border-collapse:collapse}
-table.orders th,table.orders td{padding:10px 8px;border-bottom:1px solid #eee;text-align:left}
-table.orders th{color:#7a0000;font-weight:600}
-.flash{background:#eaf7ea;color:#205520;padding:10px 12px;border-radius:10px;margin:0 0 12px}
+/* ============================================================
+   DK Bloom — styleInfoPerso.css
+   Page : /site/pages/info_perso.php
+   Version simplifiée et commentée (niveau étudiant 2e année)
+   ============================================================ */
+
+/* -------------------------------
+   Structure principale de la page
+   ------------------------------- */
+
+/* Le contenu principal commence un peu plus bas pour éviter
+   qu’il soit caché par le header fixe. */
+.page-profile {
+    margin-top: calc(var(--header-h, 80px) + 20px);
+}
+
+/* Organisation en grille :
+   - Sur petit écran → une colonne
+   - Sur grand écran → 2 colonnes (profil + commandes) */
+.page-profile .grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1fr;
+}
+@media (min-width: 900px) {
+    .page-profile .grid {
+        grid-template-columns: 1.1fr .9fr;
+    }
+}
+
+/* Chaque “bloc” (carte blanche) du profil */
+.card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    padding: 16px;
+}
+
+/* -------------------------------
+   Titres, séparateurs, textes
+   ------------------------------- */
+
+.section-title {
+    color: #7a0000;         /* Rouge bordeaux DK Bloom */
+    margin: 4px 0 12px;
+}
+
+.muted {
+    margin-top: 10px;
+    font-size: .9rem;
+    color: #555;
+}
+
+/* Ligne séparatrice (équivaut à un <hr> visuel propre) */
+.sep {
+    margin: 16px 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+/* -------------------------------
+   Formulaire du profil
+   ------------------------------- */
+
+/* Disposition des champs :
+   2 colonnes pour .form-row et 3 pour .form-row-3 */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr .5fr .6fr;
+    gap: 12px;
+}
+
+/* Étiquettes (labels) des champs */
+.field label {
+    display: block;
+    font-size: .9rem;
+    margin: 4px 0 6px;
+    color: #7a0000;
+}
+
+/* Champs de saisie */
+.field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+/* Case “Utiliser la même adresse” alignée proprement */
+.same-check {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin: .5rem 0 1rem;
+}
+
+/* -------------------------------
+   Boutons
+   ------------------------------- */
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Bouton principal (rouge DK Bloom) */
+.btn-primary {
+    background: #7a0000;
+    color: #fff;
+    border: 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Bouton secondaire (gris clair) */
+.btn-secondary {
+    background: #f3f3f3;
+    color: #333;
+    border: 1px solid #e7e7e7;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* -------------------------------
+   Tableau des commandes
+   ------------------------------- */
+
+table.orders {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table.orders th,
+table.orders td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+table.orders th {
+    color: #7a0000;
+    font-weight: 600;
+}
+
+/* -------------------------------
+   Messages (flash / toast)
+   ------------------------------- */
+
+/* Message “flash” (non flottant) */
+.flash {
+    background: #eaf7ea;
+    color: #205520;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+/* “Toast” flottant en haut de la page (message temporaire) */
+.toast {
+    position: fixed;
+    left: 50%;
+    top: 16px;
+    transform: translateX(-50%);
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.12);
+    font-weight: 600;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+    background: #f5fff5;
+    color: #0b7a0b;
+    border: 1px solid #cce8cc;
+}
+
+/* Toast version “erreur” (fond rouge clair) */
+.toast.error {
+    background: #fff6f6;
+    color: #a31010;
+    border-color: #f1c8c8;
+}
+
+/* Quand le toast est actif → il apparaît à l’écran */
+.toast.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* -------------------------------
+   Variante visuelle “blanc pur”
+   (désactive les styles sombres)
+   ------------------------------- */
+
+/* Utilisée avec : <main class="page-profile variant-white"> */
+.page-profile.variant-white .card {
+    background: #fff !important;
+    border: 1px solid #ececec !important;
+    box-shadow: 0 6px 24px rgba(0,0,0,.08) !important;
+}
+
+.page-profile.variant-white .field input {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #dcdcdc !important;
+}
+
+.page-profile.variant-white .field input:focus {
+    outline: none;
+    border-color: #caa !important;
+    box-shadow: 0 0 0 3px rgba(122,0,0,.12);
+}
+
+.page-profile.variant-white .btn-secondary {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1px solid #e5e5e5 !important;
+}
+
+/* Titres forcés en bordeaux pour rester visibles */
+.page-profile.variant-white .section-title,
+.page-profile.variant-white .field label {
+    color: #7a0000 !important;
+}

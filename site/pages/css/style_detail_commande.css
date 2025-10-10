@@ -1,0 +1,129 @@
+:root {
+    --bordeaux: #5C0012;
+    --bordeaux-2: #8A1B2E;
+    --ink: #1b1b1b;
+    --paper: #fff;
+    --muted: #6b6b6b;
+    --radius: 20px;
+    --shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+
+.container {
+    max-width: 1100px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+
+h1 {
+    font-size: 1.6rem;
+    color: var(--bordeaux);
+    margin: 8px 0 16px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 18px;
+}
+
+.card {
+    background: var(--paper) !important;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    color: var(--ink) !important;
+}
+
+.meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.meta div {
+    background: #f7f1f2 !important;
+    border-radius: 14px;
+    padding: 10px 12px;
+    color: var(--ink);
+}
+
+.meta b {
+    display: block;
+    font-size: .85rem;
+    color: var(--muted);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff !important;
+}
+
+th, td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    color: var(--ink);
+}
+
+th {
+    font-size: .9rem;
+    color: #444 !important;
+}
+
+.right { text-align: right; }
+
+.section-title {
+    color: var(--bordeaux-2) !important;
+    font-size: 1.1rem;
+    margin: 8px 0 12px;
+}
+
+.totals { margin-top: 12px; }
+
+.totals .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+.totals .grand {
+    border-top: 1px solid #eee;
+    margin-top: 6px;
+    padding-top: 10px;
+    font-weight: 700;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: .85rem;
+    background: #f1e7e9 !important;
+    color: var(--bordeaux-2) !important;
+}
+
+.back {
+    display: inline-block;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: var(--bordeaux-2);
+}
+
+.addr { line-height: 1.4; color: #333; }
+
+.btn {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--bordeaux) !important;
+    color: #fff !important;
+    text-decoration: none;
+}
+
+.muted { color: var(--muted) !important; }
+
+@media(max-width:900px) {
+    .grid { grid-template-columns: 1fr; }
+}
