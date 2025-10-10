@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Champs spécifiques (fleur)
     $fle_couleur = trim($_POST['fle_couleur'] ?? 'rouge');
-    $fle_stock   = (int)($_POST['fle_stock'] ?? 50);
+    $fle_stock   = (int)($_POST['fle_stock'] ?? 10);
     if ($pro_type === 'fleur') {
         if ($fle_stock < 0) $errors[] = "Le stock fleur doit être ≥ 0.";
     }
@@ -145,17 +145,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (in_array($pro_type, ['bouquet','fleur','coffret'], true)) {
                 // 1) PRODUIT (comme tu fais déjà)
-                $sql = "INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX, PRO_TYPE, PRO_DESC, PRO_IMG)
-                VALUES (:nom, :prix, :type, :descr, :img)";
+                $sql = "INSERT INTO PRODUIT (PRO_NOM, PRO_PRIX, PRO_IMG)
+        VALUES (:nom, :prix, :img)";
                 $st = $pdo->prepare($sql);
                 $st->execute([
                     ':nom'  => $pro_nom,
                     ':prix' => $pro_prix,
-                    ':type' => $pro_type,
-                    ':descr'=> $pro_desc !== '' ? $pro_desc : null,
-                    ':img'  => $imgPath
+                    ':img'  => $imgPath // peut être NULL si pas d’upload
                 ]);
                 $newId = (int)$pdo->lastInsertId();
+                if ($imgPath) {
+                    $pdo->prepare("UPDATE PRODUIT SET PRO_IMG_URL = :u WHERE PRO_ID = :id")
+                        ->execute([':u' => $imgPath, ':id' => $newId]);
+                }
+
 
                 // 2) Sous-table selon le type
                 if ($pro_type === 'bouquet') {

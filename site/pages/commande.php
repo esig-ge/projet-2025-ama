@@ -11,6 +11,15 @@ header('Expires: 0');
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
+/* ===== Bloquer les administrateurs ===== */
+$isAdmin = !empty($_SESSION['is_admin']) || !empty($_SESSION['adm_id']);
+if ($isAdmin) {
+    $_SESSION['toast_type'] = 'error';
+    $_SESSION['toast_msg']  = "Les administrateurs ne peuvent pas passer de commande.";
+    header('Location: '.$BASE.'adminAccueil.php');
+    exit;
+}
+
 /* ===== Accès ===== */
 if (empty($_SESSION['per_id'])) {
     $_SESSION['message'] = "Veuillez vous connecter pour voir votre commande.";
@@ -646,10 +655,7 @@ $total = $subtotal + $shipping;
                 Valider ma commande
             </a>
 
-            <div class="coupon">
-                <input type="text" placeholder="Code promo (optionnel)" disabled>
-                <button class="btn-ghost" disabled>Appliquer</button>
-            </div>
+
 
             <div class="help">
                 <ul>

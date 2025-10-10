@@ -9,6 +9,9 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $dir  = rtrim(dirname($_SERVER['PHP_SELF'] ?? $_SERVER['SCRIPT_NAME']), '/\\');
 $BASE = ($dir === '' || $dir === '.') ? '/' : $dir . '/';
 
+/* ===== Debug temporaire ===== */
+echo "<!-- DEBUG BASE={$BASE} FILE=".__FILE__." -->";
+echo "<!-- AJT EXISTS? " . (is_file(__DIR__ . '/admin_produit_ajt.php') ? 'YES' : 'NO') . " -->";
 /* ==============================
    Fonctions de récupération
    ============================== */
@@ -84,6 +87,7 @@ function recup_donnee_emballage(PDO $pdo): array {
     $st->execute();
     return $st->fetchAll(PDO::FETCH_ASSOC);
 }
+
 ?>
 <!doctype html>
 <html lang="fr">
