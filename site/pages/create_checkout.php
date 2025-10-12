@@ -144,7 +144,7 @@ try {
         $qty   = max(1, (int)($r['qty'] ?? 1));
         $price = (float)($r['price'] ?? 0.0);
         $unitC = $price > 0 ? $to_cents($price) : 0;
-        if ($unitC <= 0) continue; // gratuits: on les traitera à part pour l'affichage éventuel
+        if ($unitC <= 0) continue;
 
         $ltC = $unitC * $qty;
         if ($is_reduced($r)) $baseReducedC += $ltC; else $baseNormalC += $ltC;
@@ -224,7 +224,6 @@ try {
                 $totalCents += $shipNorC;
             }
         } else {
-            // Pas de tax rates disponibles → une seule ligne livraison
             $lineItems[] = [
                 'quantity'   => 1,
                 'price_data' => [
@@ -255,7 +254,6 @@ try {
 
     /* ---------- Coupon exact pour compenser les gratuits ---------- */
     if ($freeCents > 0) {
-        // On a ajouté +1 cent par gratuit → on compense EXACTEMENT la somme
         $coupon = \Stripe\Coupon::create([
             'currency'   => $currency,
             'amount_off' => $freeCents,
@@ -277,16 +275,19 @@ try {
 
     /* ---------- Créer la Checkout Session ---------- */
     $payload = [
-        'mode'                  => 'payment',
-        'payment_method_types'  => $methods,
-        'line_items'            => $lineItems,
-        'success_url'           => $successUrl,
-        'cancel_url'            => $cancelUrl,
-        'allow_promotion_codes' => false,
-        'client_reference_id'   => (string)$comId,
-        'metadata'              => ['per_id' => (string)$perId, 'com_id' => (string)$comId],
+        'mode'                 => 'payment',
+        'payment_method_types' => $methods,
+        'line_items'           => $lineItems,
+        'success_url'          => $successUrl,
+        'cancel_url'           => $cancelUrl,
+        // NE PAS ENVOYER allow_promotion_codes si on utilise discounts
+        'client_reference_id'  => (string)$comId,
+        'metadata'             => ['per_id' => (string)$perId, 'com_id' => (string)$comId],
     ];
-    if ($discounts) { $payload['discounts'] = $discounts; }
+    if ($discounts) {
+        $payload['discounts'] = $discounts; // applique seulement ce champ
+    }
+    // Sinon on n’ajoute rien : par défaut, les codes promo sont désactivés.
 
     $session = \Stripe\Checkout\Session::create($payload);
 
@@ -318,7 +319,6 @@ try {
        TOTAL_PAYER_CHF   = :expected
  WHERE COM_ID = :cid AND PER_ID = :pid
  LIMIT 1
-
     ");
     $upd->execute([
         ':pai'      => $paiId,
