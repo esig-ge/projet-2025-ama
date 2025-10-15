@@ -140,7 +140,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <body>
 <header class="admin-header">
     <nav class="breadcrumb">
-        <a href="<?= htmlspecialchars($BASE) ?>adminAccueil.php">Dashboard</a> › <a href="<?= htmlspecialchars($BASE) ?>admin_catalogue.php">Produits</a>
+        <a href="<?= htmlspecialchars($BASE) ?>adminAccueil.php">Dashboard</a> › <a href="<?= htmlspecialchars($BASE) ?>admin_modifier_article.php">Produits</a>
     </nav>
     <h1>Modifier les articles</h1>
 </header>
