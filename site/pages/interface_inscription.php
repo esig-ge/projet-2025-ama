@@ -101,6 +101,14 @@ if (!isset($BASE)) {
             transition:background .2s ease;
         }
         .visitor a:hover{ background:rgba(255,255,255,.26); }
+
+        .password-hint {
+            font-size: 12px;             /* plus petit */
+            color: #8A1B2E;              /* rouge bordeaux DK Bloom */
+            margin-top: 4px;             /* petit espace sous le champ */
+            opacity: 0.9;                /* léger adoucissement */
+        }
+
     </style>
 </head>
 
@@ -134,6 +142,7 @@ if (!isset($BASE)) {
                                 onclick="togglePassword('password', this)"
                                 style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:0; cursor:pointer;">👁</button>
                     </div>
+                    <p class="password-hint">Le mot de passe doit comporter une majuscule, une minuscule, un numéro et un caractère spécial.</p>
 
                     <div class="actions">
                         <button type="submit" class="btn-primary">S’inscrire</button>

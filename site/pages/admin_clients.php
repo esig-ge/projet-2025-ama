@@ -254,6 +254,7 @@ function qurl(array $merge = []): string {
                     <th>Nom &amp; Prénom</th>
                     <th>Email</th>
                     <th class="muted">Actions</th>
+                    <th>Compte actif</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -273,6 +274,9 @@ function qurl(array $merge = []): string {
                             <!-- Liens d’exemple (ajuste les routes si besoin) -->
                             <a class="page" href="<?= h($BASE.'admin_client_detail.php?per_id='.$r['PER_ID']) ?>">Voir</a>
                             <a class="page" href="<?= h($BASE.'admin_client_commandes.php?per_id='.$r['PER_ID']) ?>">Commandes</a>
+                        </td>
+                        <td>
+                            <?= ((int)($row['PER_COMPTE_ACTIF'] ?? 0) === 1) ? 'Non' : 'Oui'; ?>
                         </td>
                     </tr>
                 <?php endforeach; endif; ?>

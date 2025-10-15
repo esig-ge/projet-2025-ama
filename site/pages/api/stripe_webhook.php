@@ -1,5 +1,18 @@
 <?php
 // /site/pages/api/stripe_webhook.php
+// ============================================================================
+// BUT DU FICHIER (Webhook Stripe → callbacks serveur)
+// ----------------------------------------------------------------------------
+// Stripe nous envoie des notifications (webhooks) sur diverses actions
+// (paiement réussi, échec, session expirée, remboursement, …).
+// Ce point d’entrée :
+//   1) vérifie que la requête est un POST,
+//   2) valide la signature Stripe (sécurité),
+//   3) enregistre l’event pour éviter les doublons (idempotence),
+//   4) route selon le type d’événement et met à jour notre BDD,
+//   5) renvoie une réponse 2xx à Stripe si tout est OK.
+// ============================================================================
+
 declare(strict_types=1); // Typage strict : limite les conversions implicites → moins d'erreurs subtiles.
 
 header('Content-Type: text/plain; charset=utf-8'); // Le webhook répond en texte brut (utile pour Stripe, pas besoin de JSON).
@@ -236,6 +249,51 @@ try {
                     ")->execute([
                         ':st'=>$STATUS_PAID, ':amt'=>$amountChf, ':pai'=>$paiId, ':cid'=>$comId
                     ]);
+
+                    // === 🔸 Sauvegarde des montants détaillés Stripe (HT, TVA, livraison, TTC) ===
+                    try {
+                        $full = \Stripe\Checkout\Session::retrieve([
+                            'id' => $sessionId,
+                            'expand' => ['total_details.breakdown', 'shipping_cost.shipping_rate']
+                        ]);
+
+                        $amount_total    = (int)($full->amount_total ?? 0);
+                        $amount_subtotal = (int)($full->amount_subtotal ?? 0);
+                        $amount_tax      = (int)($full->total_details->amount_tax ?? 0);
+                        $ship_total      = (int)($full->shipping_cost->amount_total ?? 0);
+
+                        $sub_ht_chf   = $amount_subtotal / 100.0;
+                        $tva_chf      = $amount_tax / 100.0;
+                        $ship_ttc_chf = $ship_total / 100.0;
+                        $total_ttc_chf= $amount_total / 100.0;
+                        $effective_rate = $amount_subtotal > 0 ? round(100 * $amount_tax / $amount_subtotal, 1) : null;
+
+                        $pdo->prepare("
+        UPDATE COMMANDE
+           SET COM_TVA_TAUX      = :taux,
+               COM_TVA_MONTANT   = :tva,
+               COM_MONTANT_TOTAL = :sub_ht,
+               TOTAL_PAYER_CHF   = :total_ttc
+         WHERE COM_ID = :cid
+         LIMIT 1
+    ")->execute([
+                            ':taux'      => $effective_rate,
+                            ':tva'       => $tva_chf,
+                            ':sub_ht'    => $sub_ht_chf,
+                            ':total_ttc' => $total_ttc_chf,
+                            ':cid'       => $comId,
+                        ]);
+
+                        // Optionnel : MAJ montant livraison
+                        $livId = (int)$pdo->query("SELECT LIV_ID FROM COMMANDE WHERE COM_ID=".(int)$comId)->fetchColumn();
+                        if ($livId > 0) {
+                            $pdo->prepare("UPDATE LIVRAISON SET LIV_MONTANT_FRAIS=:m WHERE LIV_ID=:lid LIMIT 1")
+                                ->execute([':m'=>$ship_ttc_chf, ':lid'=>$livId]);
+                        }
+                    } catch (\Throwable $e) {
+                        // silencieux si problème réseau ou colonne absente
+                    }
+
                 } else {
                     // Fallback : on marque au moins la commande comme payée (si pas de PI/per_id)
                     $pdo->prepare("UPDATE COMMANDE SET COM_STATUT=:st WHERE COM_ID=:c LIMIT 1")

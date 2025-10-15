@@ -1,6 +1,7 @@
 <?php
 // site/database/config/connexionBDD.php
 
+// La connexion bdd
 if (!function_exists('dbConnect')) {
     function dbConnect(): PDO {
         $DB_HOST = getenv('DB_HOST') ?: 'hhva.myd.infomaniak.com';

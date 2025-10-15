@@ -337,10 +337,6 @@ $paidAmount  = isset($paiement['PAI_MONTANT']) ? (float)$paiement['PAI_MONTANT']
                 <?php endif; ?>
 
                 <div class="row grand"><span>Total</span><strong><?= h($fmt($totalPaye)) ?></strong></div>
-
-                <?php if ($paidAmount !== null): ?>
-                    <div class="row"><span class="muted">Montant facturé</span><strong><?= h($fmt($paidAmount/100)) ?></strong></div>
-                <?php endif; ?>
             </div>
         </section>
 

@@ -120,7 +120,7 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             <span class="ico">🏠</span> <span>Dashboard</span>
         </a>
         <a class="nav-item" href="<?= $BASE ?>admin_clients.php"><span class="ico">👤</span> <span>Clients</span></a>
-        <a class="nav-item" href="<?= $BASE ?>admin_catalogue.php"><span class="ico">💐</span> <span>Produits</span></a>
+        <a class="nav-item" href="<?= $BASE ?>admin_modifier_article.php"><span class="ico">💐</span> <span>Produits</span></a>
         <a class="nav-item" href="<?= $BASE ?>admin_commande.php"><span class="ico">🧾</span> <span>Commandes</span></a>
         <a class="nav-item" href="<?= $BASE ?>admin_livraisons.php"><span class="ico">📦</span> <span>Livraisons</span></a>
 
@@ -136,7 +136,6 @@ $admId = (int)($_SESSION['adm_id'] ?? 0); // pour persister les todos par admin
             <p>Bienvenue au dashboard administrateur!</p>
         </div>
         <div class="top-actions">
-            <a class="btn ghost" href="<?= $BASE ?>index.php">Voir le site</a>
             <a class="btn" href="<?= $BASE ?>admin_deconnexion.php">Se déconnecter</a>
 
         </div>

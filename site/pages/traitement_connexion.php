@@ -1,5 +1,5 @@
 <?php
-// /site/pages/traitement_connexion.php
+// /site/pages/traitement_connexion.php VF
 session_start();
 
 // Base URL pour redirections robustes
@@ -32,8 +32,8 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 50) {
     header('Location: '.$BASE.'interface_connexion.php'); exit;
 }
 
-// Lookup utilisateur
-$sql = "SELECT PER_ID, PER_NOM, PER_PRENOM, PER_EMAIL, PER_MDP
+// Lookup utilisateur (on récupère aussi l'activité)
+$sql = "SELECT PER_ID, PER_NOM, PER_PRENOM, PER_EMAIL, PER_MDP, PER_COMPTE_ACTIF
         FROM PERSONNE
         WHERE PER_EMAIL = :email
         LIMIT 1";
@@ -41,8 +41,20 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([':email' => $email]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Utilisateur introuvable
+if (!$user) {
+    $_SESSION['toast'] = ['type'=>'error','text'=>'Identifiants incorrects, veuillez réessayer.'];
+    header('Location: '.$BASE.'interface_connexion.php'); exit;
+}
+
+// Compte inactif -> blocage
+if ((int)$user['PER_COMPTE_ACTIF'] !== 1) {
+    $_SESSION['toast'] = ['type'=>'error','text'=>"Votre compte est désactivé. Réinscrivez-vous avec le même e-mail pour le réactiver."];
+    header('Location: '.$BASE.'interface_connexion.php'); exit;
+}
+
 // Vérification mot de passe (non hashé, choix assumé)
-if (!$user || ($password !== $user['PER_MDP'])) {
+if ($password !== $user['PER_MDP']) {
     $_SESSION['toast'] = ['type'=>'error','text'=>'Identifiants incorrects, veuillez réessayer.'];
     header('Location: '.$BASE.'interface_connexion.php'); exit;
 }

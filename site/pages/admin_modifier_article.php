@@ -140,7 +140,7 @@ function recup_donnee_emballage(PDO $pdo): array {
 <body>
 <header class="admin-header">
     <nav class="breadcrumb">
-        <a href="<?= htmlspecialchars($BASE) ?>adminAccueil.php">Dashboard</a> › <a href="<?= htmlspecialchars($BASE) ?>admin_catalogue.php">Produits</a>
+        <a href="<?= htmlspecialchars($BASE) ?>adminAccueil.php">Dashboard</a> › <a href="<?= htmlspecialchars($BASE) ?>admin_modifier_article.php">Produits</a>
     </nav>
     <h1>Modifier les articles</h1>
 </header>
@@ -167,6 +167,7 @@ function recup_donnee_emballage(PDO $pdo): array {
                     <td><strong>Prix</strong></td>
                     <td><strong>Couleur</strong></td>
                     <td><strong>Stock</strong></td>
+                    <td><strong>Actif</strong></td>
                     <td class="actions"><strong>Actions</strong></td>
                 </tr>
                 </thead>
@@ -183,6 +184,7 @@ function recup_donnee_emballage(PDO $pdo): array {
                             <td><input type="number" step="0.05" min="0" name="rows[<?= $id ?>][PRO_PRIX]" value="<?= htmlspecialchars($fleur['PRO_PRIX']) ?>" required></td>
                             <td><input type="text" name="rows[<?= $id ?>][FLE_COULEUR]" value="<?= htmlspecialchars($fleur['FLE_COULEUR'] ?? '') ?>"></td>
                             <td><input type="number" step="1" min="0" name="rows[<?= $id ?>][FLE_QTE_STOCK]" value="<?= htmlspecialchars($fleur['FLE_QTE_STOCK'] ?? 0) ?>"></td>
+                            <td><?= ((int)($row['PROD_ACTIF'] ?? 0) === 1) ? 'Non' : 'Oui'; ?></td> <!-- ICI CORRIGER SELON SI C FLEUR/BOUQUET/ COFFRET/SUPPLEMENT/EMBALLAGE-->
                             <td class="actions">
                                 <button class="btn" type="submit" name="save_id" value="<?= $id ?>">Enregistrer</button>
                                 <input type="hidden" name="rows[<?= $id ?>][type]" value="fleur">
